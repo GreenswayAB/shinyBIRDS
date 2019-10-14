@@ -1,0 +1,118 @@
+input[type="number"] {
+  max-width: 80%;
+}
+.main-header .logo {
+  font-family: 'Fira Sans', sans-serif;
+  font-weight: bold;
+  font-size: 17px;
+}
+/*div.outer {
+  position: fixed;
+  top: 51px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  padding: 0;
+}*/
+div.col-sm-6 {
+	padding-right: 1px;
+}
+
+h1, h2, h3, h4 { 
+  font-weight: 400;
+  margin: 1px 1px 1px 1px;
+  padding: 1px 0px 0px 0px;
+}
+h4, .h4, h5, .h5, h6, .h6 {
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
+.form-group {
+    margin-bottom: 5px;
+}
+
+.skin-green .main-header .navbar {
+    background-color: #6aa039;
+}
+.skin-green .main-header .logo {
+    background-color: #6aa039;
+    color: #fff;
+    border-bottom: 0 solid transparent;
+}
+
+.nav-tabs-custom .nav-tabs li.active:hover a, .nav-tabs-custom .nav-tabs li.active a {
+     background-color: transparent;
+     border-color: transparent;
+}
+
+.nav-tabs-custom .nav-tabs li.active {
+     border-top-color: #6aa039;
+}
+
+.btn-success {
+	background-color: #6aa039;
+	border-color: #6aa039;
+}
+.legend {
+    line-height: 19px;
+}
+.footer {
+   left: 0;
+   bottom: 0;
+   background-color: #6aa039;
+   color: white;
+   text-align: rigth;
+}
+
+.selectize-control {
+    margin-bottom: 0px;
+}
+
+/* If not using map tiles, show a white background */
+.leaflet-container {
+  background-color: white !important;
+}
+
+.shiny-progress-notificatiion .progress {
+  height: 12px;
+}
+
+.shiny-progress-notification .progress-bar {
+  color: #6aa039 !important;
+  background-color: #6aa039; /* #9933cc*/
+  opacity: 1.0;
+}
+p.bubble {
+    border-bottom: 1px dotted;
+}
+p.bubble:hover {
+    cursor: help;
+    position: relative
+}
+p.bubble span {
+    display: none
+}
+p.bubble:hover span {
+    border: #c0c0c0 1px dotted;
+    padding: 5px 20px 5px 5px;
+    display: block;
+    z-index: 100;
+    background: #ECF0F5;
+    left: 0px;
+    margin: 10px;
+    width: auto;
+	min-width: 150px;
+    position: absolute;
+    top: 10px;
+}
+
+/* Allows pop-up modal to not be greyed out*/
+.modal-backdrop {
+z-index: 1000;
+}
+
+.message {
+	color: red;
+}

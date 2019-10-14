@@ -1,33 +1,32 @@
-#
-# This is the user-interface definition of a Shiny web application. You can
-# run the application by clicking 'Run App' above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
+body<-dashboardBody(
+  useShinyjs(),
+  tags$head(
+    tags$link(rel="shortcut icon", href="img/Canopy-Icon-180307-1 sm w.png"),
+    
+    # Include our custom CSS
+    includeCSS("styles.css"),
+    tags$link(rel="stylesheet", href="https://use.fontawesome.com/releases/v5.1.0/css/all.css", integrity="sha384-lKuwvrZot6UHsBSfcMvOkWwlCMgc0TaWr+30HWe3a4ltaBwTZhyTEggF5tJv8tbt", crossorigin="anonymous")
+    # includeScript("www/js/ai_external.js"),
+    # includeScript("www/js/ga-allapps.js"),
+    # includeScript("www/js/googleAnalytics.js")
+  ),
+  fluidRow(
+    load_ui_content("ui/tabbox_options.R"),# end of TABbox
+    
+    load_ui_content("ui/tabbox_outputs.R")# end of TABbox and column
+                  
+  ), # end of fluid row
+  tags$footer( tags$a(img(src='img/Greensway-Powered-By-logo-171101-1.png', width = 125), href="https://www.greensway.se", target="new"),
+               style = "position:fixed; bottom:0; left:0px; width:25vw; height:auto; background-color: #6AA039; padding: 0px; z-index:1000; ")
+  # tags$div(class="footer",  
+  #          tags$a(img(src='img/Greensway-Powered-By-logo-171101-1.png', width = 125), href="https://www.greensway.se"),
+  #          width="25%")
+) #end dashboard body
 
-library(shiny)
+dashboardPage(title="Species Observations Explorer", skin = "green",
+    dashboardHeader(title=HTML('<div><img src="./img/Canopy-Icon-180307-1 sm w.png" alt="" height="40" align="top">&nbsp;&nbsp;Species Observations Explorer <sup>&beta; v0.95</sup></div>'),
+                    titleWidth = "25vw"),
+    dashboardSidebar(disable = TRUE),
+    body
+) # end dashboard page
 
-# Define UI for application that draws a histogram
-shinyUI(fluidPage(
-
-    # Application title
-    titlePanel("Old Faithful Geyser Data"),
-
-    # Sidebar with a slider input for number of bins
-    sidebarLayout(
-        sidebarPanel(
-            sliderInput("bins",
-                        "Number of bins:",
-                        min = 1,
-                        max = 50,
-                        value = 30)
-        ),
-
-        # Show a plot of the generated distribution
-        mainPanel(
-            plotOutput("distPlot")
-        )
-    )
-))
