@@ -6,43 +6,38 @@ tagList(
                   
          ),
          tabPanel(tagList(shiny::icon("table"),"Data"),
-                  # fluidRow(
-                  #   column(1, offset = 11,
-                  #       actionBttn("refresh", "Rephresh", icon("refresh"))
-                  #   )
-                  # ),
+            tabBox(id = "data-typess", width = 12,
+              tabPanel(tagList(icon("binoculars"),"PBD"),
                   fluidRow(  
-                    column(5,
-                           textOutput("EmptyDataMessage"),
-                           plotOutput("plotSpp", height = "300px"), #, width = "600px"
-                           br(),
-                           plotOutput("plotTime", height = "300px") #, width = "600px"
-                    ),
-                    column(6,
-                           
-                           plotOutput("plotData", height = "600px"), #width = "600px"
-                           # prettySwitch("plotLog", "Log scale", value = TRUE, status="success", fill = TRUE),
-                           materialSwitch("plotLog", "Log scale", value = TRUE,status = "primary", right=TRUE),
-                           # checkboxInput("plotLog", "Log scale", value = TRUE),
-                           DT::dataTableOutput("TableIgn", width = "90%")
+                      DT::dataTableOutput("TablePBD", width = "90%")
                     )
-                  )#,
-                  # fluidRow(  
-                  #   column(12,
-                  #          DT::dataTableOutput("TableIgn", width = "90%")
-                  #          )
-                  # )
-         ),
-         tabPanel(tagList(shiny::icon("stats"),"Statistics"),
-                  shinydashboard::box(title = NULL, width = 12, height = "900px", collapsible = FALSE, solidHeader = TRUE,
-                                      div(style = "height: 800px; width:auto", # needs to be in fixed height container
-                                          esquisserUI(
-                                            id = "statsPanel",
-                                            header = FALSE, # dont display gadget title
-                                            choose_data = FALSE # dont display button to change data
-                                          )
-                                      )
                   )
-         )
-  )
+              ),
+              tabPanel(tagList(icon("sitemap"),"Organised"),
+                      ## explore visits
+                      shinydashboard::box(title = NULL, width = 12, height = "900px", collapsible = FALSE, solidHeader = TRUE,
+                                          div(style = "height: 800px; width:auto", # needs to be in fixed height container
+                                              esquisserUI(
+                                                id = "statsPanel",
+                                                header = FALSE, # dont display gadget title
+                                                choose_data = FALSE # dont display button to change data
+                                              )
+                                          )
+                      )
+                      ## and map?
+                        
+              ),
+              tabPanel(tagList(icon("chart-line"),"Summarised"),
+                       
+              ),
+              tabPanel(tagList(icon("file-export"),"For export"),
+                       selectInput(inputId = "Proj",
+                                   label = h5(tags$p("Coordinate Reference Systems", tags$span("Projection system of the layers. Source EPSG.org"), class="bubble")),
+                                   choices = epsg.choices, #structure(EPSG.code, names=EPSG.name), 
+                                   multiple = FALSE, selected = 4326, width = "100%"),
+                       downloadButton("downloadData", "Download", class="btn-success btn-sm")
+              )
+         ) # end tabPanel Data
+  
+  ) # end tabBox
 )

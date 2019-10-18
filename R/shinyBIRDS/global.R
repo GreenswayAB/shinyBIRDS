@@ -1,5 +1,6 @@
 library(shiny)
 library(shinyjs)
+library(shinyalert)
 library(shinythemes)
 library(shinyWidgets)
 library(shinydashboard)
@@ -21,6 +22,7 @@ require(geosphere)
 
 library(RColorBrewer)
 library(plot3D)
+library(esquisse)
 
 library(httr)
 library(jsonlite)
@@ -32,8 +34,8 @@ options(stringsAsFactors = FALSE)
 # library(parallel)
 # library(foreach)
 
-library(remotes)
-remotes::install_github('Greensway/BIRDS')
+# library(remotes)
+# remotes::install_github('Greensway/BIRDS')
 
 source("external/helpers.R")
 source("external/extra_functions.R")
@@ -56,30 +58,6 @@ GBIFWtGbins<-c("#EDF8E9", "#BAE4B3", "#74C476", "#31A354", "#006D2C")
 GBIFWtG<-colorBin(GBIFWtGbins, domain=c(1,1e+6), bins=c(1,10,100,1000,10000,1e+6), na.color = "transparent")
 GBIFtiles<-c(1,11,101,1001,10001); GBIFtilesLab<-c("1-10","11-100","101-1000","1001-10000","10001+")
 
-TaxonA<- c("All Animals", 
-          "> Insecta",
-          ">> Lepidoptera",
-          ">> Odonata",
-          ">> Hymenoptera",
-          "> Actinopterygii (~bony fishes)",
-          "> Elasmobranchii (~cartil. fishes)",
-          "> Amphibia",
-          "> Reptilia",
-          "> Aves",
-          "> Mamalia",
-          ">> Chiroptera")
-TaxonP<-c("All Plants",
-          "> Tracheophyta",
-          ">> Liliopsida (Monocots)",
-          ">> Magnoliopsida (Dicots)")
-TaxonF<-c("All Fungi",
-          "> 'Lichenized'")
-TaxonCodeA<- c(1, 216, 797, 789, 1457, 204, 121, 131, 358, 212, 359, 734)
-TaxonCodeP<-c(6, 7707728, 196, 220)
-TaxonCodeF<-c(5, 180)
-taxonChoices<-list("Animalia"=structure(TaxonCodeA, names=TaxonA),
-                   "Plantae"=structure(TaxonCodeP, names=TaxonP),
-                   "Fungi"=structure(TaxonCodeF, names=TaxonF))
 
 epsg.choices<-c("WGS84" = "4326",
                 "WGS84 Mercator" = "3857",
@@ -87,31 +65,7 @@ epsg.choices<-c("WGS84" = "4326",
                 "Equal Area US" = "2163",
                 "SWEREF99TM" = "3006") 
 
-ISOcount<-read.csv(file = "./data/ISO countrydata.csv", encoding = "UTF-8")
-Countries<-as.character(ISOcount$Name)
-CountriesCode<-as.character(ISOcount$Code)
 
 BoRCode<-c("HUMAN_OBSERVATION", "OBSERVATION", "MACHINE_OBSERVATION","LITERATURE", "LIVING_SPECIMEN", "PRESERVED_SPECIMEN", "FOSSIL_SPECIMEN",  "MATERIAL_SAMPLE", "UNKNOWN")
 BoR<-c("Human Observation", "Observation", "Machine Observation", "Literature",  "Living Specimen", "Preserved Specimen", "Fossil Specimen", "Material Sample",  "Unknown")
-# BoRCode<-c("HUMAN_OBSERVATION", "LITERATURE", "MACHINE_OBSERVATION", "PRESERVED_SPECIMEN", "UNKNOWN")
-# BoR<-c("Human Observation", "Literature","Machine Observation", "Preserved Specimen", "Unknown")
-
-# Fossil # An occurrence record describing a fossilized specimen.
-# HUMAN_OBSERVATION # An occurrence record describing an observation made by one or more people.
-# LITERATURE # An occurrence record based on literature alone.
-# LIVING_SPECIMEN # An occurrence record describing a living specimen, e.g.
-# MACHINE_OBSERVATION # An occurrence record describing an observation made by a machine.
-# MATERIAL_SAMPLE # An occurrence record based on samples taken from other specimens or the environment.
-# OBSERVATION # An occurrence record describing an observation.
-# PRESERVED_SPECIMEN # An occurrence record describing a preserved specimen.
-# UNKNOWN # Unknown basis for the record.
-
-# ## This can be dynamics dependent on the other search preferences to limit the number of outpots
-# url<-"http://api.gbif.org"
-# pathPublisher <- paste0("v1/dataset/search?type=OCCURRENCE",
-pathPublisher <- paste0("v1/dataset/search?", 
-                        "&facet=publishingOrg&publishingOrg.facetLimit=50&publishingOrg.facetOffset=0","&limit=200")
-Organizations <- fromJSON(paste0(url,"/",pathPublisher))$results[,c("title","key","hostingOrganizationTitle", "publishingCountry","publishingOrganizationTitle","recordCount")]
-OrgCode <- Organizations$key
-OrgTitle <- paste(Organizations$title, "(",Organizations$publishingCountry,")")
 
