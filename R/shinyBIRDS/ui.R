@@ -6,9 +6,6 @@ body<-dashboardBody(
     # Include our custom CSS
     includeCSS("styles.css"),
     tags$link(rel="stylesheet", href="https://use.fontawesome.com/releases/v5.1.0/css/all.css", integrity="sha384-lKuwvrZot6UHsBSfcMvOkWwlCMgc0TaWr+30HWe3a4ltaBwTZhyTEggF5tJv8tbt", crossorigin="anonymous")
-    # includeScript("www/js/ai_external.js"),
-    # includeScript("www/js/ga-allapps.js"),
-    # includeScript("www/js/googleAnalytics.js")
   ),
   fluidRow(
     load_ui_content("ui/tabbox_options.R"),# end of TABbox

@@ -28,12 +28,15 @@ library(lubridate)
 library(stringr)
 options(stringsAsFactors = FALSE)
 
-library(doSNOW)
-library(parallel)
-library(foreach)
+# library(doSNOW)
+# library(parallel)
+# library(foreach)
 
+library(remotes)
+remotes::install_github('Greensway/BIRDS')
 
 source("external/helpers.R")
+source("external/extra_functions.R")
 
 td <- file.path(paste0(tempdir(), "/SppObsExp"))
 dir.create(td, showWarnings = FALSE)
@@ -112,21 +115,3 @@ Organizations <- fromJSON(paste0(url,"/",pathPublisher))$results[,c("title","key
 OrgCode <- Organizations$key
 OrgTitle <- paste(Organizations$title, "(",Organizations$publishingCountry,")")
 
-funM<-function(x, y, ...){
-  return(max(c(x,y), na.rm=T))
-}
-
-IgnComb <- function(x,y,o05,o05spp, ...) {
-  IgnOI <- o05spp/(o05spp + x)
-  IgnOb <- o05/(o05 + y)
-  # return( Ign <- 1-((1-IgnOI)*(1-IgnOb)) )  ## why not 1-...
-  return( Ign <- 1-sqrt((1-IgnOI)*(1-IgnOb)) )  ## why not 1-...
-  # return( Ign <- sqrt(IgnOI*IgnOb) )
-}
-
-##Estimate mode
-est.mode <- function(x,from=min(x, na.rm = TRUE),to=max(x, na.rm = TRUE)) {
-  d <- density(x,from=from, to=to, na.rm = TRUE)
-  d$x[which.max(d$y)]
-}
-# options(digits=4)
