@@ -33,12 +33,16 @@ tagList(
                   #          )
                   # )
          ),
-         tabPanel(tagList(shiny::icon("info"),"Read Me and Tutorial"),
-                  fixedRow(
-                    column(10,
-                           includeHTML("data/Description.htm"),
-                           offset=1)
+         tabPanel(tagList(shiny::icon("stats"),"Statistics"),
+                  shinydashboard::box(title = NULL, width = 12, height = "900px", collapsible = FALSE, solidHeader = TRUE,
+                                      div(style = "height: 800px; width:auto", # needs to be in fixed height container
+                                          esquisserUI(
+                                            id = "statsPanel",
+                                            header = FALSE, # dont display gadget title
+                                            choose_data = FALSE # dont display button to change data
+                                          )
+                                      )
                   )
-         )#,
+         )
   )
 )
