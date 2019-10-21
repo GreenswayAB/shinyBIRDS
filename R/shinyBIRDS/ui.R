@@ -2,7 +2,7 @@ body<-dashboardBody(
   useShinyjs(),
   useShinyalert(),
   tags$head(
-      tags$link(rel="shortcut icon", href="img/favicon.ico"),
+    tags$link(rel="shortcut icon", href="img/favicon.ico"),
     
     # Include our custom CSS
     includeCSS("styles.css"),

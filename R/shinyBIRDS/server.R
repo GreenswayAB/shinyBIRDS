@@ -1,7 +1,8 @@
 shinyServer(function(input, output, session) {
   drawnPoly<-reactiveValues(data=NULL)
   StudyArea<-reactiveValues(data=NULL)
-  inFileR<-reactiveValues(fileCSV=NULL, newCSV=NULL, fileSHP=NULL, newSHP=NULL )
+  inFileR<-reactiveValues(fileCSV=NULL, newCSV=NULL, okCSV=NULL,
+                          fileSHP=NULL, newSHP=NULL )
   gridR<-reactiveValues(data=NULL, new=NULL)
   shapeWr<-reactiveValues(msg=NULL)
   csvWr<-reactiveValues(msg=NULL)
@@ -37,57 +38,87 @@ shinyServer(function(input, output, session) {
     #           title = "No. Observations  <br /> <small>Data from GBIF.org</small>", opacity = 1)
   }) ## end render map
  
+  output$csvMessage<-renderUI(div(HTML(csvWr$msg ), class="message"))
+  
   ### Upload the csv and make it spatial.
   observe({
     csvWr$msg<-""
     if(is.null(input$csvFile)) return()
-      inFileR$fileCSV <- input$csvFile  
-      inFileR$newCSV <- TRUE
-      csvWr$msg<-""
-      # if( "condition while loading"){
+    inFileR$fileCSV <- input$csvFile  
+    inFileR$newCSV <- TRUE
+    
+    # if( "condition while loading"){
       #   csvWr$msg<-"WARNING MESSAGE csvWr"
       #   return()
       # }
   })
-  
-  output$csvMessage<-renderUI(div(HTML(csvWr$msg ), class="message"))
-  
-  ### read the csv, make it spatial and return warnings
-  observe({  
+
+  ### read the csv
+  observe({
     if(is.null(inFileR$newCSV)) return()
     if(inFileR$newCSV){
-      inFile <- inFileR$fileCSV
-print(inFile)
-      dir<-dirname(inFile[1,4])
-print(dir)
+      inFileR$okCSV <- FALSE
+      # rm(PBDin)
+      # inFile <- inFileR$fileCSV
+      # dir <- dirname(inFile[1,4])
+      # file.rename(inFile[1,4], paste0(dir,"/",inFile[1,1]))
+      # 
+      # getcsv <- list.files(dir, pattern="*.csv", full.names=TRUE)
+
+      tryCatch({
+        PBDin <- read.csv(file=input$csvFile$datapath, #getcsv, 
+                          stringsAsFactors = FALSE, encoding = ifelse(input$csvUTF,"UTF-8","unknown"), 
+                          header = input$csvHeader, sep = input$csvSep, quote = input$csvQuote)
+        inFileR$newCSV <- FALSE
+       }, error = function(e) e, warning = function(w) w, 
+      finally = {
+        if (exists("PBDin")) {
+          if (class(PBDin)=="data.frame") {
+            inFileR$okCSV<-TRUE
+          }  
+        } else {
+          inFileR$okCSV<-FALSE
+        }
+    })
       
-      for ( i in 1:nrow(inFile)) {
-        file.rename(inFile[i,4], paste0(dir,"/",inFile[i,1]))}
-      
-      getcsv <- list.files(dir, pattern="*.csv", full.names=TRUE)
-      if(length(getshp)>1) {
-        csvWr$msg<-"Please select only one set of files"
-        return()
+      if(inFileR$okCSV){
+    print(head(PBDin))
+        colnames(PBDin) <- tolower(colnames(PBDin))
+        PBDcolnames <- colnames(PBDin)
+        csvWr$msg <- paste0("The input file consist of ", length(PBDcolnames), " columns and ", nrow(PBDin), " observations.")
+        
+        ## Check columns
+        updateSelectInput(session, inputId = "csvTaxon", choices = PBDcolnames, selected = ifelse("taxonrank" %in% PBDcolnames, "taxonrank", NULL) )
+        #c("family", "genus", "species", "taxonrank", "scientificname", "countrycode", "locality", "decimallatitude", "decimallongitude", 
+        #            "coordinateuncertaintyinmeters", "coordinateprecision","elevation", "elevationaccuracy", "eventdate", "day", "month", "year", 
+        #            "taxonkey", "specieskey", "basisofrecord", "institutioncode", "rightsholder", "recordedby","issue")]
+        # PDBcheck<-PBDin[PBDin$taxonrank %in% c("SPECIES","SUBSPECIES"),]  #"GENUS",
+        # 
+        
+        # sppCol = "scientificName", timeCol = c("Year"="year", "Month"="month", "Day"="day"),
+        # visitsIdentifier = c("locality", "day", "month", "year", "recordedBy"), presenceCol=NULL,
+        # xyCols=c("decimalLongitude", "decimalLatitude"), dataCRS = "+init=epsg:4326",
+        # taxonRankCol=NULL, taxonRank=c("SPECIES","SUBSPECIES","VARIETY"), simplifySppName=FALSE)
+        
+        # PBD$data <- PDBcheck
+        
+        enable("organiseGo")  
+      } else {
+        csvWr$msg <- paste0("The input file is not valid. Check reading parameters.")
       }
-      csvWr$msg<-""
       
-      PBDin<-read.csv(file=getshp, stringsAsFactors = FALSE)
-      ## Check
-      # columns... 
-      
-      # sppCol = "scientificName", timeCol = c("Year"="year", "Month"="month", "Day"="day"),
-      # visitsIdentifier = c("locality", "day", "month", "year", "recordedBy"), presenceCol=NULL,
-      # xyCols=c("decimalLongitude", "decimalLatitude"), dataCRS = "+init=epsg:4326",
-      # taxonRankCol=NULL, taxonRank=c("SPECIES","SUBSPECIES","VARIETY"), simplifySppName=FALSE)
-      PBD$data <- PDBcheck
-      
-      inFileR$newCSV<-FALSE   
-      enable("organiseGo")
     }
   })
   
+  # observe({
+  #   uiOutput("PBDsummary"),
+  #   uiOutput("PBDcolumns")
+  # })
+  
   ## organise it and make it spatial
   observeEvent(input$organiseGO, {
+    # TODO rename the columns
+      
     # PBD$organised <-
     bboxMat<- as.matrix(shapeTrans@bbox)
     polygonSA<-matrix(c(bboxMat[1,1], bboxMat[2,1],
@@ -135,14 +166,11 @@ print(dir)
   ######### GRID
   ## observe grid method
   output$gridMethodUI <- renderUI({
-    print(input$gridMethod)
       if(input$gridMethod == 1){
-        print("trigger")
         load_ui_content("ui/grid_shp.R")
-      } 
-      if(input$gridMethod == 2) load_ui_content("ui/grid_extent.R")
-      if(input$gridMethod == 3) load_ui_content("ui/grid_draw.R")
-    
+      } else if(input$gridMethod == 2){
+        load_ui_content("ui/grid_extent.R")
+      } else if(input$gridMethod == 3) load_ui_content("ui/grid_draw.R")
   })
 
   #Observe the draw input

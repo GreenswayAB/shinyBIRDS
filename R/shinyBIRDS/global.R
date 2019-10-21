@@ -37,6 +37,11 @@ options(stringsAsFactors = FALSE)
 # library(remotes)
 # remotes::install_github('Greensway/BIRDS')
 
+options(shiny.maxRequestSize = 300*1024^2)
+
+w <- simpleWarning("WARNING")
+e <- simpleError("ERROR")
+
 source("external/helpers.R")
 source("external/extra_functions.R")
 

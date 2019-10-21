@@ -3,12 +3,40 @@ tagList(
     tabPanel(tagList(shiny::icon("th"),"PBD"), 
       h3("The Data"),
       h4("Upload a .csv file with the observations", class="panel-title"),
-      fileInput("csvFile", label = h5(tags$p("Select file", tags$span("accepted files are '.csv'"), class="bubble")),
+      fileInput("csvFile", label = h5(tags$p("Select file", tags$span("accepted files formats are: '.csv'. Max file size 300 MB."), class="bubble")),
              accept=c('.csv'), multiple=FALSE),
+      fluidRow(
+        column(6,
+               checkboxInput("csvHeader", "Header", TRUE),
+               radioButtons("csvSep", "Separator",
+                            choices = c(Comma = ",",
+                                        Semicolon = ";",
+                                        Tab = "\t"),
+                            selected = "\t")
+        ),
+        column(6, 
+               checkboxInput("csvUTF", label = "Encoding = UTF-8", TRUE),
+               radioButtons("csvQuote", "Quote",
+                            choices = c(None = "",
+                                        "Double Quote" = '"',
+                                        "Single Quote" = "'"),
+                            selected = "")
+        )
+      ),
+      
       htmlOutput("csvMessage", inline=FALSE),
-      uiOutput("PBDsummary"),
+      tags$hr(),
+      h4("Column names"),
+      selectInput("csvTaxon", label = "Taxon rank", choices = "taxonrank"),
+      # "family", "genus", "species", "taxonrank", "scientificname", "countrycode", "locality", "decimallatitude", "decimallongitude", 
+      #            "coordinateuncertaintyinmeters", "coordinateprecision","elevation", "elevationaccuracy", "eventdate", "day", "month", "year", 
+      #            "taxonkey", "specieskey", "basisofrecord", "institutioncode", "rightsholder", "recordedby","issue")]
+      # dat<-dat[dat$taxonrank %in% c("SPECIES","SUBSPECIES"),]  #"GENUS",
+      
+      tags$hr(),
+      h4("Visits"),
       br(),
-      actionButton("organiseGo", HTML("&nbsp;&nbsp;Organise"), width = "75", icon = icon("sitemap"), class="btn-success btn-sm"),
+      actionButton("organiseGo", HTML("&nbsp;&nbsp;Organise"), width = "100", icon = icon("sitemap"), class="btn-success btn-sm"),
              
       h3("The Grid"),
       ## radio buttons with optios
