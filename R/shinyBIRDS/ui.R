@@ -1,6 +1,6 @@
 body<-dashboardBody(
   useShinyjs(),
-  useShinyalert(),
+  # useShinyalert(),
   tags$head(
     tags$link(rel="shortcut icon", href="img/favicon.ico"),
     

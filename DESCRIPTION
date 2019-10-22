@@ -9,8 +9,9 @@ Authors@R: c(
     person("Alejandro", "Ruete", email = "alejandro@greensway.se", role = c("aut","cre"),
             comment = c(ORCID = "0000-0001-7681-2812")),
     person("Anton", "Hammarström", email = "anton@greensway.se", role = "aut"))
-Description: A set of tools to review and make decisions upon the use of
-    biodiversity data. 
+Description: This is an interactive interface for BIRDS (Biodiversity Information 
+    Review and Decision Support), a set of tools to review and make decisions upon the
+    use of biodiversity data. 
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
