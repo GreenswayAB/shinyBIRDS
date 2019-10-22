@@ -31,8 +31,6 @@ tagList(
       selectInput("csvLat", label = "Latitud", choices = "decimallatitude"),
       selectInput("csvLon", label = "Longitud", choices = "decimallongitude"),
       selectInput("csvCRS", label = "Coordinate Reference System (CRS)", choices = epsg.choices),    
-  # textInput("csvCRS", label = "Coordinate Reference System (CRS)", 
-  #               value = "+init=epsg:4326", placeholder = "CRS string (e.g. '+init=epsg:4326')"),
       pickerInput("timeCols", label = "Time columns", choices = "day",
                 multiple = TRUE,  options = list(`actions-box` = TRUE)),
       
