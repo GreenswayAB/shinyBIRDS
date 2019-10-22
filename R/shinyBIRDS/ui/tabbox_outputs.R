@@ -6,12 +6,12 @@ tagList(
                   
          ),
          tabPanel(tagList(shiny::icon("table"),"Data"),
+            fluidRow(
             tabBox(id = "data-typess", width = 12,
               tabPanel(tagList(icon("binoculars"),"PBD"),
                   fluidRow(  
                       DT::dataTableOutput("TablePBD", width = "90%")
                     )
-                  )
               ),
               tabPanel(tagList(icon("sitemap"),"Organised"),
                       ## explore visits
@@ -37,6 +37,8 @@ tagList(
                                    multiple = FALSE, selected = 4326, width = "100%"),
                        downloadButton("downloadData", "Download", class="btn-success btn-sm")
               )
+            ), # end of tabbox
+            br() ) # end of fluidbox
          ) # end tabPanel Data
   
   ) # end tabBox

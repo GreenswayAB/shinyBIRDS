@@ -6,6 +6,7 @@ shinyServer(function(input, output, session) {
   gridR<-reactiveValues(data=NULL, new=NULL)
   shapeWr<-reactiveValues(msg=NULL)
   csvWr<-reactiveValues(msg=NULL)
+  csvInfo<-reactiveValues(msg=NULL)
   
   PBD<-reactiveValues(data=NULL, spatial=NULL)
 
@@ -13,6 +14,12 @@ shinyServer(function(input, output, session) {
   disable("clearButton")
   disable("Proj")
   disable("organiseGo")
+  disable("csvSpp")
+  disable("csvTaxonEnable")
+  disable("csvLat")
+  disable("csvLon")
+  disable("timeCols")
+  disable("visitCols")
   
   # Create the map
   output$map <- renderLeaflet({
@@ -31,7 +38,7 @@ shinyServer(function(input, output, session) {
                                                    fill = TRUE, fillColor = "#ff0066", fillOpacity = 0.2),
                      singleFeature = TRUE) %>% 
     addLayersControl(#baseGroups = c("Google Satellite", "OSM (Hot)","Open Topo", "ESRI Street"),
-                    overlayGroups = c("Study Area", "Grid"), 
+                    overlayGroups = c("PBD","Study Area", "Grid"), 
                     options = layersControlOptions(collapsed=FALSE,  position = "bottomright")) #%>% 
     # addLegend(position = "bottomleft", colors =  
     #           labels = "", 
@@ -39,10 +46,12 @@ shinyServer(function(input, output, session) {
   }) ## end render map
  
   output$csvMessage<-renderUI(div(HTML(csvWr$msg ), class="message"))
+  output$csvInfo<-renderUI(div(HTML(csvInfo$msg ), class="infotext"))
   
   ### Upload the csv and make it spatial.
   observe({
     csvWr$msg<-""
+    csvInfo$msg<-""
     if(is.null(input$csvFile)) return()
     inFileR$fileCSV <- input$csvFile  
     inFileR$newCSV <- TRUE
@@ -66,14 +75,15 @@ shinyServer(function(input, output, session) {
       # getcsv <- list.files(dir, pattern="*.csv", full.names=TRUE)
 
       tryCatch({
-        PBDin <- read.csv(file=input$csvFile$datapath, #getcsv, 
-                          stringsAsFactors = FALSE, encoding = ifelse(input$csvUTF,"UTF-8","unknown"), 
-                          header = input$csvHeader, sep = input$csvSep, quote = input$csvQuote)
+        PBDin <- fread(file=input$csvFile$datapath, #getcsv, 
+                        stringsAsFactors = FALSE, encoding = ifelse(input$csvUTF,"UTF-8","unknown"), 
+                        header = input$csvHeader, sep = input$csvSep, 
+                        quote = input$csvQuote, na.strings = "", data.table = FALSE)
         inFileR$newCSV <- FALSE
        }, error = function(e) e, warning = function(w) w, 
       finally = {
         if (exists("PBDin")) {
-          if (class(PBDin)=="data.frame") {
+          if (class(PBDin)=="data.frame" && length(colnames(PBDin)) > 1) {
             inFileR$okCSV<-TRUE
           }  
         } else {
@@ -82,86 +92,142 @@ shinyServer(function(input, output, session) {
     })
       
       if(inFileR$okCSV){
-    print(head(PBDin))
+        enable("csvSpp")
+        enable("csvTaxonEnable")
+        enable("csvLat")
+        enable("csvLon")
+        enable("timeCols")
+        enable("visitCols")
+        
         colnames(PBDin) <- tolower(colnames(PBDin))
         PBDcolnames <- colnames(PBDin)
-        csvWr$msg <- paste0("The input file consist of ", length(PBDcolnames), " columns and ", nrow(PBDin), " observations.")
-        
+        csvWr$msg <- ""
+        csvInfo$msg <- paste0("The input file consist of ", length(PBDcolnames), 
+                            " columns and ", nrow(PBDin), " observations.")
+
         ## Check columns
-        updateSelectInput(session, inputId = "csvTaxon", choices = PBDcolnames, selected = ifelse("taxonrank" %in% PBDcolnames, "taxonrank", NULL) )
-        #c("family", "genus", "species", "taxonrank", "scientificname", "countrycode", "locality", "decimallatitude", "decimallongitude", 
-        #            "coordinateuncertaintyinmeters", "coordinateprecision","elevation", "elevationaccuracy", "eventdate", "day", "month", "year", 
-        #            "taxonkey", "specieskey", "basisofrecord", "institutioncode", "rightsholder", "recordedby","issue")]
-        # PDBcheck<-PBDin[PBDin$taxonrank %in% c("SPECIES","SUBSPECIES"),]  #"GENUS",
-        # 
+        updateSelectInput(session, inputId = "csvSpp", choices = PBDcolnames, 
+                          selected = ifelse("scientificname" %in% PBDcolnames, "scientificname", PBDcolnames[1]) )
+        updateSelectInput(session, inputId = "csvLat", choices = PBDcolnames, 
+                          selected = ifelse("decimallatitude" %in% PBDcolnames, "decimallatitude", PBDcolnames[1]) )
+        updateSelectInput(session, inputId = "csvLon", choices = PBDcolnames, 
+                          selected = ifelse("decimallongitude" %in% PBDcolnames, "decimallongitude", PBDcolnames[1]) )
         
-        # sppCol = "scientificName", timeCol = c("Year"="year", "Month"="month", "Day"="day"),
-        # visitsIdentifier = c("locality", "day", "month", "year", "recordedBy"), presenceCol=NULL,
-        # xyCols=c("decimalLongitude", "decimalLatitude"), dataCRS = "+init=epsg:4326",
-        # taxonRankCol=NULL, taxonRank=c("SPECIES","SUBSPECIES","VARIETY"), simplifySppName=FALSE)
+        # presenceCol=NULL,
+        wColT <- which(stdTimeCol %in% PBDcolnames) 
+        timeCol.selected<-if(length(wColT)>0) stdTimeCol[wColT] else PBDcolnames[1]
+        updatePickerInput(session, inputId = "timeCols", choices = PBDcolnames, 
+                          selected = timeCol.selected )
         
-        # PBD$data <- PDBcheck
+        wColV <- which(stdVisitCol %in% PBDcolnames)
+        ### If year, month, day is included in time, then it will also be use in visit
+        wColV <- wColV[-match(timeCol.selected, stdVisitCol)] 
+        visitCol.selected<-if(length(wColV)>0) stdVisitCol[wColV] else PBDcolnames[1]
+        updatePickerInput(session, inputId = "visitCols", choices = PBDcolnames, 
+                          selected = visitCol.selected )
+  
+  #### TODO check input conditions
+        #columns for time
+        #if (length(input$timeCols) %in% c(1,3))
+        # columns for visits
+        # valid CRS
+        
+        PBD$data <- PBDin
         
         enable("organiseGo")  
       } else {
-        csvWr$msg <- paste0("The input file is not valid. Check reading parameters.")
+        disable("csvSpp")
+        disable("csvTaxonEnable")
+        disable("csvLat")
+        disable("csvLon")
+        disable("timeCols")
+        disable("visitCols")
+        csvInfo$msg <- ""
+        csvWr$msg <- "The input file is not valid. Check reading parameters."
       }
       
     }
   })
   
-  # observe({
-  #   uiOutput("PBDsummary"),
-  #   uiOutput("PBDcolumns")
-  # })
+  ### update taxonrank
+  output$taxonRankUI <- renderUI({
+    req(PBD$data)
+    if (input$csvTaxonEnable) {
+      PBDin <- PBD$data
+      PBDcolnames <- colnames(PBDin)
+      tagList(
+        selectInput("csvTaxon", label = "Taxon rank column", choices = PBDcolnames, 
+                    selected = ifelse("taxonrank" %in% PBDcolnames, "taxonrank", PBDcolnames[1]) ),
+        pickerInput("taxonRankVal", label = "Taxon rank to keep", choices = stdTaxonRank,
+                    selected = stdTaxonRank[1],
+                    multiple = TRUE,  options = list(`actions-box` = TRUE))
+      )
+    } else {
+      return()
+    }  
+  })
   
+  observe({
+    req(input$csvTaxon)
+    PBDin <- PBD$data
+    taxons <- unique(PBD$data[,input$csvTaxon])
+    wTax <- which(stdTaxonRank %in% taxons)
+    updatePickerInput(session, "taxonRankVal", label = "Taxon rank to keep", choices = taxons,
+                    selected = ifelse(length(wTax) > 0, stdTaxonRank[wTax], taxons[1]))
+  })
+ 
   ## organise it and make it spatial
-  observeEvent(input$organiseGO, {
-    # TODO rename the columns
-      
-    # PBD$organised <-
-    bboxMat<- as.matrix(shapeTrans@bbox)
-    polygonSA<-matrix(c(bboxMat[1,1], bboxMat[2,1],
+  observeEvent(input$organiseGo, {
+    req(PBD$data)
+    PBD$data <- PBD$data[,c(input$csvSpp, input$csvLat, input$csvLon,
+                      input$timeCols, input$visitCols, input$csvTaxon)]
+
+    timeCol.selected <- if(length(input$timeCols) == 3) c("Year"="year", "Month"="month", "Day"="day") else input$timeCols
+    visitCol.selected <- c("year","month","day",input$visitCol) ### IF check box
+    
+    PBD$organised <- organizeBirds(PBD$data, 
+          sppCol = input$csvSpp, 
+          timeCol = timeCol.selected,
+          visitsIdentifier = visitCol.selected, 
+          presenceCol = NULL,
+          xyCols = c(input$csvLon, input$csvLat), dataCRS = input$csvCRS,
+          taxonRankCol = switch(input$csvTaxonEnable, input$csvTaxon, NULL),
+          taxonRank = switch(input$csvTaxonEnable, input$taxonRankVal, stdTaxonRank),
+          simplifySppName = input$simplifySpp)
+
+    if (is.null(PBD$organised)) return()
+    
+    bboxMat <- as.matrix(PBD$organised$spdf@bbox)
+    polygonSA <- matrix(c(bboxMat[1,1], bboxMat[2,1],
                         bboxMat[1,1], bboxMat[2,2],
                         bboxMat[1,2], bboxMat[2,2],
                         bboxMat[1,2], bboxMat[2,1],
                         bboxMat[1,1], bboxMat[2,1]), ncol = 2, nrow = 5, byrow = TRUE)
     
-    # print(polygonSA)
     SpP <- SpatialPolygons(list(
       Polygons(list(Polygon(polygonSA)), 1)
     ))
     proj4string(SpP) <- CRS("+init=epsg:4326")
     StudyArea$data <- SpP
-    inFileR$newCSV<-FALSE      
-  })
   
-  ## Plot the observations 
-  observe({
-    if(is.null(PBD$organised)) return()
-    if(inFileR$newCSV){
-      # PBDpoints<- PBD$data
-      ## make it spatial?
-      PBDpoints<- PBD$spatial
-      SpP <- StudyArea$data
+    boundsStudy <- bboxMat
+    lng2shift <- boundsStudy[3]
       
-      boundsStudy<-PBDpoints@bbox 
-      lng2shift<-boundsStudy[3]
+    PBDpoints <- PBD$organised$spdf
+    PBDpointsGJ <- geojson_json( PBDpoints, geometry = "points" )
       
-      # PBDpoints<-geojson_json( PBDpoints, geometry = "points" )
-      
-      proxy<-leafletProxy(mapId="map")
-      proxy %>% 
+    proxy <- leafletProxy(mapId="map")
+    proxy %>% 
         fitBounds(lng1=boundsStudy[1], lat1=boundsStudy[2], lng2=lng2shift, lat2=boundsStudy[4]) %>% 
-        addMarkers(PBDpoints, group = "PBD", layerId= "PBD", weight = 2, col = "black", fillOpacity = 0) %>% 
+        # addGeoJSON(PBDpointsGJ, group = "PBD", layerId= "PBDGJ", weight = 2, col = "black", fillOpacity = 0) %>% 
+        # addMarkers(data=PBDpoints, group = "PBD", layerId= "PBD") %>% 
         addPolygons(data = SpP, group = "Study Area", weight = 2, col = "#ff0066", fillOpacity = 0)  
       
-      inFileR$newCSV<-FALSE
-      enable("downloadData")
-    }
-  })
+      inFileR$newCSV <- FALSE
+
+    enable("downloadData")
   
-  # UIOUTPUT(PBDsummary)
+  })
   
   ######### GRID
   ## observe grid method
