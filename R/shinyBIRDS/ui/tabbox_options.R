@@ -28,26 +28,27 @@ tagList(
   ### TODO something else than just column names like dataset parameters... 
       h4("Column names", class="panel-title"),
       selectInput("csvSpp", label = "Scientific species name", choices = "scientificname"),
+      checkboxInput("simplifySpp", 
+                label = h5(tags$p("Simplify the species name", 
+                                  tags$span("i.e. remove infraspecific epithets and authors name"), 
+                                  class="bubble")),
+                FALSE),
+  ## TODO dynamically show example of how the name would look like simplified
+      # presenceCol=NULL,
       selectInput("csvLat", label = "Latitud", choices = "decimallatitude"),
       selectInput("csvLon", label = "Longitud", choices = "decimallongitude"),
-      selectInput("csvCRS", label = "Coordinate Reference System (CRS)", choices = epsg.choices),    
-      pickerInput("timeCols", label = "Time columns", choices = "day",
-                multiple = TRUE,  options = list(`actions-box` = TRUE)),
+      # selectInput("csvCRS", label = "Coordinate Reference System (CRS)", choices = epsg.choices),    
+      textInput("csvCRS", label = "Coordinate Reference System (CRS)", value = 4326, placeholder = "Search for a EPSG number of CRS name"),    
+      htmlOutput("epsgInfo", inline = FALSE),
       
-      # presenceCol=NULL,
-  
-      checkboxInput("csvTaxonEnable", "Select taxon ranks", FALSE),
-      uiOutput("taxonRankUI"),
-      
-      checkboxInput("simplifySpp", 
-                    label = h5(tags$p("Simplify the species name", 
-                                      tags$span("i.e. remove infraspecific epithets and authors name"), 
-                                      class="bubble")),
-                    FALSE),
-## TODO dynamically show example of how the name would look like simplified
-
       tags$hr(),
       h4("Visits", class="panel-title"),
+      pickerInput("timeCols", label = "Time columns", choices = "day",
+                  multiple = TRUE,  options = list(`actions-box` = TRUE)),
+      
+      checkboxInput("csvTaxonEnable", "Select taxon ranks", FALSE),
+      uiOutput("taxonRankUI"),
+
       pickerInput("visitCols", label = h5(tags$p("Visit identifier columns", 
                                                  tags$span("day, month and year will also be added"), 
                                                  class="bubble")),
@@ -58,7 +59,8 @@ tagList(
       actionButton("organiseGo", HTML("&nbsp;&nbsp;Organise"), width = "100", 
                    icon = icon("sitemap"), class="btn-success btn-sm"),
     ),
-    ### Grid
+
+    ######## Grid
     tabPanel(tagList(shiny::icon("th"),"Grid"),          
       ## radio buttons with optios
       prettyRadioButtons("gridMethod", label = "Make your grid by: ", 

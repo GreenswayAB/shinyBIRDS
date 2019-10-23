@@ -54,7 +54,8 @@ stdVisitCol <- c("locality", "day", "month", "year", "recordedby")
 stdTimeCol <- c("year", "month", "day")
 stdTaxonRank <- c("SPECIES","SUBSPECIES","VARIETY")
 
-url  <- "http://api.gbif.org"
+urlGBIF <- "http://api.gbif.org"
+urlEPGS <- "http://epsg.io"
 
 palRWB <- colorNumeric(c("blue","white", "red"), c(0,1), na.color = "transparent")
 palGWR <- colorNumeric(c("red","lightpink", "green4"), c(0,1), na.color = "transparent")

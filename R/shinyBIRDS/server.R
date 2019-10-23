@@ -5,8 +5,9 @@ shinyServer(function(input, output, session) {
                           fileSHP=NULL, newSHP=NULL )
   gridR<-reactiveValues(data=NULL, new=NULL)
   shapeWr<-reactiveValues(msg=NULL)
-  csvWr<-reactiveValues(msg=NULL)
-  csvInfo<-reactiveValues(msg=NULL)
+  # csvWr<-reactiveValues(msg=NULL)
+  csvInfo<-reactiveValues(msg=NULL, wng=NULL)
+  epsgInfo<-reactiveValues(msg=NULL, wng=NULL, code=NULL, proj4=NULL)
   
   PBD<-reactiveValues(data=NULL, spatial=NULL)
 
@@ -45,19 +46,19 @@ shinyServer(function(input, output, session) {
     #           title = "No. Observations  <br /> <small>Data from GBIF.org</small>", opacity = 1)
   }) ## end render map
  
-  output$csvMessage<-renderUI(div(HTML(csvWr$msg ), class="message"))
-  output$csvInfo<-renderUI(div(HTML(csvInfo$msg ), class="infotext"))
+  output$csvMessage <- renderUI( div(HTML(csvInfo$wng ), class="message") )
+  output$csvInfo    <- renderUI( div(HTML(csvInfo$msg ), class="infotext"))
   
   ### Upload the csv and make it spatial.
   observe({
-    csvWr$msg<-""
+    csvInfo$wng<-""
     csvInfo$msg<-""
     if(is.null(input$csvFile)) return()
     inFileR$fileCSV <- input$csvFile  
     inFileR$newCSV <- TRUE
     
     # if( "condition while loading"){
-      #   csvWr$msg<-"WARNING MESSAGE csvWr"
+      #   csvInfo$wng<-"WARNING MESSAGE csvWr"
       #   return()
       # }
   })
@@ -74,21 +75,21 @@ shinyServer(function(input, output, session) {
       # 
       # getcsv <- list.files(dir, pattern="*.csv", full.names=TRUE)
 
-      tryCatch({
-        PBDin <- fread(file=input$csvFile$datapath, #getcsv, 
+    tryCatch({
+      PBDin <- fread(file=input$csvFile$datapath, #getcsv, 
                         stringsAsFactors = FALSE, encoding = ifelse(input$csvUTF,"UTF-8","unknown"), 
                         header = input$csvHeader, sep = input$csvSep, 
                         quote = input$csvQuote, na.strings = "", data.table = FALSE)
-        inFileR$newCSV <- FALSE
-       }, error = function(e) e, warning = function(w) w, 
-      finally = {
-        if (exists("PBDin")) {
-          if (class(PBDin)=="data.frame" && length(colnames(PBDin)) > 1) {
-            inFileR$okCSV<-TRUE
-          }  
-        } else {
-          inFileR$okCSV<-FALSE
-        }
+      inFileR$newCSV <- FALSE
+    }, error = function(e) e, warning = function(w) w, 
+    finally = {
+      if (exists("PBDin")) {
+        if (class(PBDin)=="data.frame" && length(colnames(PBDin)) > 1) {
+          inFileR$okCSV<-TRUE
+        }  
+      } else {
+        inFileR$okCSV<-FALSE
+      }
     })
       
       if(inFileR$okCSV){
@@ -101,28 +102,27 @@ shinyServer(function(input, output, session) {
         
         colnames(PBDin) <- tolower(colnames(PBDin))
         PBDcolnames <- colnames(PBDin)
-        csvWr$msg <- ""
+        csvInfo$wng <- ""
         csvInfo$msg <- paste0("The input file consist of ", length(PBDcolnames), 
                             " columns and ", nrow(PBDin), " observations.")
 
         ## Check columns
         updateSelectInput(session, inputId = "csvSpp", choices = PBDcolnames, 
-                          selected = ifelse("scientificname" %in% PBDcolnames, "scientificname", PBDcolnames[1]) )
+                          selected = switch("scientificname" %in% PBDcolnames, "scientificname", NULL) )
         updateSelectInput(session, inputId = "csvLat", choices = PBDcolnames, 
-                          selected = ifelse("decimallatitude" %in% PBDcolnames, "decimallatitude", PBDcolnames[1]) )
+                          selected = switch("decimallatitude" %in% PBDcolnames, "decimallatitude", NULL) )
         updateSelectInput(session, inputId = "csvLon", choices = PBDcolnames, 
-                          selected = ifelse("decimallongitude" %in% PBDcolnames, "decimallongitude", PBDcolnames[1]) )
+                          selected = switch("decimallongitude" %in% PBDcolnames, "decimallongitude", NULL) )
         
-        # presenceCol=NULL,
+        # presenceCol=NULL
         wColT <- which(stdTimeCol %in% PBDcolnames) 
-        timeCol.selected<-if(length(wColT)>0) stdTimeCol[wColT] else PBDcolnames[1]
         updatePickerInput(session, inputId = "timeCols", choices = PBDcolnames, 
-                          selected = timeCol.selected )
+                            selected = if (length(wColT)>0) stdTimeCol[wColT] else NULL)  
         
         wColV <- which(stdVisitCol %in% PBDcolnames)
         ### If year, month, day is included in time, then it will also be use in visit
-        wColV <- wColV[-match(timeCol.selected, stdVisitCol)] 
-        visitCol.selected<-if(length(wColV)>0) stdVisitCol[wColV] else PBDcolnames[1]
+        wColV <- wColV[-match(stdTimeCol[wColT], stdVisitCol)] 
+        visitCol.selected <- if (length(wColV)>0) stdVisitCol[wColV] else NULL
         updatePickerInput(session, inputId = "visitCols", choices = PBDcolnames, 
                           selected = visitCol.selected )
   
@@ -130,11 +130,8 @@ shinyServer(function(input, output, session) {
         #columns for time
         #if (length(input$timeCols) %in% c(1,3))
         # columns for visits
-        # valid CRS
         
         PBD$data <- PBDin
-        
-        enable("organiseGo")  
       } else {
         disable("csvSpp")
         disable("csvTaxonEnable")
@@ -143,12 +140,60 @@ shinyServer(function(input, output, session) {
         disable("timeCols")
         disable("visitCols")
         csvInfo$msg <- ""
-        csvWr$msg <- "The input file is not valid. Check reading parameters."
+        csvInfo$wng <- "The input file is not valid. <br /> Check reading parameters."
       }
       
     }
   })
   
+  #### Search and update CRS
+  # observeEvent(input$csvCRS, {
+  observe({
+    input$csvCRS
+    req(PBD$data)
+    if(input$csvCRS == "") {
+      epsgInfo$msg<-""
+      epsgInfo$wng<-""
+      epsgInfo$code<-NULL
+      epsgInfo$proj4<-NULL
+      
+    }
+    if(input$csvCRS != ""){ 
+      epsgInfo$msg<-""
+      epsgInfo$wng<-""
+      epsgInfo$code<-NULL
+      epsgInfo$proj4<-NULL
+      disable("organiseGo")
+      
+      searchWeb<-gsub("\ ", "%20", input$csvCRS)
+      getEPSG <- GET(urlEPGS, path=paste0("/?q=", searchWeb, "&format=json"))
+  
+      if(getEPSG$status_code == 200) {
+        contEPSG <- content(getEPSG, encoding = "UTF-8")
+        if (contEPSG$number_result==0){
+          epsgInfo$wng <- "nothing found"
+        } else {
+          if (contEPSG$number_result==1){
+            epsgInfo$code <- contEPSG$results[[1]]$code
+            epsgInfo$proj4 <- contEPSG$results[[1]]$proj4
+            epsgInfo$msg<- paste0( contEPSG$results[[1]]$name, 
+                                   "<br /> EPSG: ",  epsgInfo$code, 
+                                   "<br /> Proj4: ", epsgInfo$proj4)
+          } else { 
+            epsgInfo$wng<-"refine your search, there are more than one hit"
+          }  
+        }
+      } else {epsgInfo$wng<-"bad request"}
+    }
+    
+    
+  })
+  output$epsgInfo<-renderUI( tagList(
+                                div(HTML(epsgInfo$msg), class="infotext"),
+                                div(HTML(epsgInfo$wng), class="message")
+                              )
+                            )
+
   ### update taxonrank
   output$taxonRankUI <- renderUI({
     req(PBD$data)
@@ -173,50 +218,72 @@ shinyServer(function(input, output, session) {
     taxons <- unique(PBD$data[,input$csvTaxon])
     wTax <- which(stdTaxonRank %in% taxons)
     updatePickerInput(session, "taxonRankVal", label = "Taxon rank to keep", choices = taxons,
-                    selected = ifelse(length(wTax) > 0, stdTaxonRank[wTax], taxons[1]))
+                    selected = switch(length(wTax) > 0, stdTaxonRank[wTax], NULL))
   })
  
+  
+  observe({
+    disable("organiseGo")
+    req(PBD$data)
+    req(input$timeCols)
+    req(input$visitCols)
+    req(epsgInfo$code)
+    enable("organiseGo")
+  })
+  
   ## organise it and make it spatial and plot it
   observeEvent(input$organiseGo, {
     req(PBD$data)
-    PBD$data <- PBD$data[,c(input$csvSpp, input$csvLat, input$csvLon,
-                      input$timeCols, input$visitCols, input$csvTaxon)]
-
-    timeCol.selected <- if(length(input$timeCols) == 3) c("Year"="year", "Month"="month", "Day"="day") else input$timeCols
-    visitCol.selected <- c("year","month","day",input$visitCol) ### IF check box
+    req(epsgInfo$code)
+    tryCatch({
+      PBD$data <- PBD$data[,c(input$csvSpp, input$csvLat, input$csvLon,
+                        input$timeCols, input$visitCols, input$csvTaxon)]
+  
+      timeCol.selected <- if(length(input$timeCols) == 3) c("Year"="year", "Month"="month", "Day"="day") else input$timeCols
+      visitCol.selected <- c("year","month","day", input$visitCol) ### IF check box
     
-    PBD$organised <- organizeBirds(PBD$data, 
-          sppCol = input$csvSpp, 
-          timeCol = timeCol.selected,
-          visitsIdentifier = visitCol.selected, 
-          presenceCol = NULL,
-          xyCols = c(input$csvLon, input$csvLat), dataCRS = paste0("+init=epsg:",input$csvCRS),
-          taxonRankCol = switch(input$csvTaxonEnable, input$csvTaxon, NULL),
-          taxonRank = switch(input$csvTaxonEnable, input$taxonRankVal, stdTaxonRank),
-          simplifySppName = input$simplifySpp)
-
-    boundsStudy <- as.matrix(PBD$organised$spdf@bbox)
-    lng2shift <- boundsStudy[3]
+      PBD$organised <- organizeBirds(PBD$data, 
+                                     sppCol = input$csvSpp, 
+                                     timeCol = timeCol.selected,
+                                     visitsIdentifier = visitCol.selected, 
+                                     presenceCol = NULL,
+                                     xyCols = c(input$csvLon, input$csvLat), dataCRS = paste0("+init=epsg:", epsgInfo$code), ## alt: epsgInfo$proj4
+                                     taxonRankCol = switch(input$csvTaxonEnable, input$csvTaxon, NULL),
+                                     taxonRank = switch(input$csvTaxonEnable, input$taxonRankVal, stdTaxonRank),
+                                     simplifySppName = input$simplifySpp)
+      
+    }, error = function(e) e, warning = function(w) w, 
+    finally = {
+      if (!is.null (PBD$organised$spdf)){
+        boundsStudy <- as.matrix(PBD$organised$spdf@bbox)
+        lng2shift <- boundsStudy[3]
+        
+        n <- 200
+        wPlot <- if (nrow(PBD$data) > n) sample(nrow(PBD$data), n) else c(1:nrow(PBD$data))
+        PBDpoints <- PBD$organised$spdf[wPlot,]
+        # PBDpointsGJ <- geojson_json( PBDpoints, geometry = "points" )
+        
+        proxy <- leafletProxy(mapId="map")
+        proxy %>% 
+          fitBounds(lng1=boundsStudy[1], lat1=boundsStudy[2], lng2=lng2shift, lat2=boundsStudy[4]) %>% 
+          addCircleMarkers(data = PBDpoints, group = "PBD", 
+                           color = "black", stroke = FALSE, fillOpacity = 0.5, radius = 5,
+                           label = ~as.character(scientificName)
+          ) %>% 
+          addLegend(position = "bottomleft", colors = "black", 
+                    group = "PBD", labels = "Random subset of PBD",
+                    title = "", opacity = 0.5)
+        
+        inFileR$newCSV <- FALSE
+        enable("downloadData")        
+      } else {
+        cat("make a nice error message here")
+      }
+      
+    })
     
-    n <- 200
-    wPlot <- if (nrow(PBD$data) > n) sample(nrow(PBD$data), n) else c(1:nrow(PBD$data))
-    PBDpoints <- PBD$organised$spdf[wPlot,]
-    PBDpointsGJ <- geojson_json( PBDpoints, geometry = "points" )
 
-    proxy <- leafletProxy(mapId="map")
-    proxy %>% 
-      fitBounds(lng1=boundsStudy[1], lat1=boundsStudy[2], lng2=lng2shift, lat2=boundsStudy[4]) %>% 
-      addCircleMarkers(data = PBDpoints, group = "PBD", 
-        color = "black", stroke = FALSE, fillOpacity = 0.5, radius = 5,
-        label = ~as.character(scientificName)
-      ) %>% 
-      addLegend(position = "bottomleft", colors = "black", 
-                group = "PBD", labels = "Random subset of PBD",
-                title = "", opacity = 0.5)
 
-    inFileR$newCSV <- FALSE
-
-    enable("downloadData")
   
   })
   
@@ -396,7 +463,7 @@ shinyServer(function(input, output, session) {
       
       boundsStudy<-grid@bbox 
       lng2shift<-boundsStudy[3]
-      gridGJS<-geojson_json( grid, geometry = "polygon" )
+      # gridGJS<-geojson_json( grid, geometry = "polygon" )
       
       gridR$new<-FALSE
       enable("downloadData")
@@ -408,7 +475,8 @@ shinyServer(function(input, output, session) {
         clearGroup("Study Area")    %>% 
         clearGroup("GridIgn") %>% 
         hideGroup("Study AreaPol") %>% 
-        addGeoJSON(gridGJS, group = "Grid", layerId= "grid", weight = 2, col = "black", fillOpacity = 0) %>% 
+        # addGeoJSON(gridGJS, group = "Grid", layerId= "grid", weight = 2, col = "black", fillOpacity = 0) %>% 
+        addPolygons(data = grid, group = "Grid", weight = 2, col = "black", fillOpacity = 0) %>% 
         addPolygons(data = SpP, group = "Study Area", weight = 2, col = "#ff0066", fillOpacity = 0)  
     }
   })
@@ -421,8 +489,7 @@ shinyServer(function(input, output, session) {
     drawnPoly$data<-NULL
     StudyArea$data<-NULL
     gridR$data<-NULL
-    IgnTable$data<-NULL
-    
+
   proxy<-leafletProxy(mapId="map")
     proxy %>% 
       setView(0,0,2) %>% 
