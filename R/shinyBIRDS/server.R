@@ -176,7 +176,7 @@ shinyServer(function(input, output, session) {
                     selected = ifelse(length(wTax) > 0, stdTaxonRank[wTax], taxons[1]))
   })
  
-  ## organise it and make it spatial
+  ## organise it and make it spatial and plot it
   observeEvent(input$organiseGo, {
     req(PBD$data)
     PBD$data <- PBD$data[,c(input$csvSpp, input$csvLat, input$csvLon,
@@ -195,35 +195,26 @@ shinyServer(function(input, output, session) {
           taxonRank = switch(input$csvTaxonEnable, input$taxonRankVal, stdTaxonRank),
           simplifySppName = input$simplifySpp)
 
-    if (is.null(PBD$organised)) return()
-    
-    bboxMat <- as.matrix(PBD$organised$spdf@bbox)
-    polygonSA <- matrix(c(bboxMat[1,1], bboxMat[2,1],
-                        bboxMat[1,1], bboxMat[2,2],
-                        bboxMat[1,2], bboxMat[2,2],
-                        bboxMat[1,2], bboxMat[2,1],
-                        bboxMat[1,1], bboxMat[2,1]), ncol = 2, nrow = 5, byrow = TRUE)
-    
-    SpP <- SpatialPolygons(list(
-      Polygons(list(Polygon(polygonSA)), 1)
-    ))
-    proj4string(SpP) <- CRS("+init=epsg:4326")
-    StudyArea$data <- SpP
-  
-    boundsStudy <- bboxMat
+    boundsStudy <- as.matrix(PBD$organised$spdf@bbox)
     lng2shift <- boundsStudy[3]
-      
-    PBDpoints <- PBD$organised$spdf
+    
+    n <- 200
+    wPlot <- if (nrow(PBD$data) > n) sample(nrow(PBD$data), n) else c(1:nrow(PBD$data))
+    PBDpoints <- PBD$organised$spdf[wPlot,]
     PBDpointsGJ <- geojson_json( PBDpoints, geometry = "points" )
-      
+
     proxy <- leafletProxy(mapId="map")
     proxy %>% 
-        fitBounds(lng1=boundsStudy[1], lat1=boundsStudy[2], lng2=lng2shift, lat2=boundsStudy[4]) %>% 
-        # addGeoJSON(PBDpointsGJ, group = "PBD", layerId= "PBDGJ", weight = 2, col = "black", fillOpacity = 0) %>% 
-        # addMarkers(data=PBDpoints, group = "PBD", layerId= "PBD") %>% 
-        addPolygons(data = SpP, group = "Study Area", weight = 2, col = "#ff0066", fillOpacity = 0)  
-      
-      inFileR$newCSV <- FALSE
+      fitBounds(lng1=boundsStudy[1], lat1=boundsStudy[2], lng2=lng2shift, lat2=boundsStudy[4]) %>% 
+      addCircleMarkers(data = PBDpoints, group = "PBD", 
+        color = "black", stroke = FALSE, fillOpacity = 0.5, radius = 5,
+        label = ~as.character(scientificName)
+      ) %>% 
+      addLegend(position = "bottomleft", colors = "black", 
+                group = "PBD", labels = "Random subset of PBD",
+                title = "", opacity = 0.5)
+
+    inFileR$newCSV <- FALSE
 
     enable("downloadData")
   
@@ -234,9 +225,7 @@ shinyServer(function(input, output, session) {
   output$gridMethodUI <- renderUI({
       if(input$gridMethod == 1){
         load_ui_content("ui/grid_shp.R")
-      } else if(input$gridMethod == 2){
-        load_ui_content("ui/grid_extent.R")
-      } else if(input$gridMethod == 3) load_ui_content("ui/grid_draw.R")
+      } else if(input$gridMethod == 2) load_ui_content("ui/grid_draw.R")
   })
 
   #Observe the draw input
@@ -249,12 +238,37 @@ shinyServer(function(input, output, session) {
     drawnPoly$data<-matrix(unlist(list(input$map_draw_new_feature)[[1]]$geometry$coordinates), nrow=nr,ncol=2, byrow=TRUE)
   })
   
+  #Observe the extent 
+  observeEvent(input$goExtent, {
+    if (is.null(PBD$organised)) return()
+    
+    bboxMat <- as.matrix(PBD$organised$spdf@bbox)
+    polygonSA <- matrix(c(bboxMat[1,1], bboxMat[2,1],
+                          bboxMat[1,1], bboxMat[2,2],
+                          bboxMat[1,2], bboxMat[2,2],
+                          bboxMat[1,2], bboxMat[2,1],
+                          bboxMat[1,1], bboxMat[2,1]), ncol = 2, nrow = 5, byrow = TRUE)
+    
+    drawnPoly$data <- polygonSA
+    
+    SpP <- SpatialPolygons(list(
+      Polygons(list(Polygon(polygonSA)), 1)
+    ))
+    proj4string(SpP) <- CRS("+init=epsg:4326")
+
+    proxy <- leafletProxy(mapId="map")
+    proxy %>% 
+      showGroup("Study AreaPol") %>% 
+      addPolygons(data = SpP, group = "Study AreaPol", weight = 2, col = "#ff0066", fillOpacity = 0)  
+    
+  })
+  
   ## observe the grid cell and study area polygone
   WrPol<-reactive({
     if (is.null(drawnPoly$data)) return()
     if (is.na(input$gridSize)) return()
-    dif<-diff(range(drawnPoly$data[,1]))
-    cs<-(input$gridSize/111)
+    dif <- diff(range(drawnPoly$data[,1]))
+    cs <- (input$gridSize/111)
     #get the difference in longitude/or is it latitude? to make the condition
     if( cs >= dif ) {
       disable("goGrid")
@@ -265,11 +279,10 @@ shinyServer(function(input, output, session) {
       return("")
       }
   })
-  # observe({print(WrPol())})
   output$MessageWrPol<-renderUI( div(HTML( WrPol() ), class="message") )
   
  
-  #Make grid 
+  ##### Make grid 
   observeEvent(input$goGrid, {
     gridR$data<-NULL
 
@@ -279,7 +292,7 @@ shinyServer(function(input, output, session) {
       StudyBuff<-gBuffer(SpP, width = ifelse(input$buff==TRUE, gridSizeDg, 0))
       
       proj4string(SpP)<-CRS("+init=epsg:4326")
-      StudyArea$data<- SpP
+      StudyArea$data <- SpP
       
       if(input$hexGrid == TRUE){
         points <- spsample(StudyBuff, type = "hexagonal", offset = c(0, 0), cellsize = gridSizeDg)
@@ -351,13 +364,9 @@ shinyServer(function(input, output, session) {
       # if (!is.null(IgnVals$data)){
       #   gridR$data<-NULL
       # }
-      shapeTrans<-spTransform(shape, CRSobj = CRS("+init=epsg:4326"))
+      gridR$data <- spTransform(shape, CRSobj = CRS("+init=epsg:4326"))
       
-      # geojson_json( shapeTrans, geometry = "polygon" )
-      # print(shapeTrans@bbox)
-      gridR$data <- shapeTrans
-      
-      bboxMat<- as.matrix(shapeTrans@bbox)
+      bboxMat<- as.matrix(gridR$data@bbox)
       polygonSA<-matrix(c(bboxMat[1,1], bboxMat[2,1],
                           bboxMat[1,1], bboxMat[2,2],
                           bboxMat[1,2], bboxMat[2,2],
@@ -386,40 +395,31 @@ shinyServer(function(input, output, session) {
       ncells<-length(grid)
       
       boundsStudy<-grid@bbox 
-      # lng2shift<-boundsStudy[3]+(boundsStudy[3]-boundsStudy[1])/2
       lng2shift<-boundsStudy[3]
       gridGJS<-geojson_json( grid, geometry = "polygon" )
       
-      
-      pathMap<-paste0("/v2/map/occurrence/density/{z}/{x}/{y}@2x.png?",
-                      "&taxonKey=",ifelse(input$taxKeyNum == "", input$taxKey, input$taxKeyNum[1]),
-                      "&bin=hex&hexPerTile=50&style=green2.poly") #classic-noborder.poly
+      gridR$new<-FALSE
+      enable("downloadData")
+      enable("clearButton")
       
       proxy<-leafletProxy(mapId="map")
       proxy %>% 
         fitBounds(lng1=boundsStudy[1], lat1=boundsStudy[2], lng2=lng2shift, lat2=boundsStudy[4]) %>% 
         clearGroup("Study Area")    %>% 
-        # clearGroup("GBIF Density") %>%
-        hideGroup("GBIF Density") %>% 
         clearGroup("GridIgn") %>% 
         hideGroup("Study AreaPol") %>% 
-        # addTiles(urlTemplate = paste0(url,pathMap), group="GBIF Density") %>% 
         addGeoJSON(gridGJS, group = "Grid", layerId= "grid", weight = 2, col = "black", fillOpacity = 0) %>% 
         addPolygons(data = SpP, group = "Study Area", weight = 2, col = "#ff0066", fillOpacity = 0)  
-    
-      gridR$new<-FALSE
-      enable("downloadData")
     }
   })
   
 ####
-  
+##clear all data
   observeEvent(input$clearButton, {
     removeUI(selector = "#PBDsummary")
     
     drawnPoly$data<-NULL
     StudyArea$data<-NULL
-##clear all data
     gridR$data<-NULL
     IgnTable$data<-NULL
     
@@ -429,7 +429,7 @@ shinyServer(function(input, output, session) {
       clearGroup("Study AreaPol") %>% 
       clearGroup("Study Area") %>% 
       clearGroup("Grid") %>% 
-      clearGroup("GridIgn") %>% 
+      clearGroup("PBD") %>% 
       clearControls() 
   })
   

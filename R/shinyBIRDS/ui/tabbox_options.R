@@ -63,9 +63,8 @@ tagList(
       ## radio buttons with optios
       prettyRadioButtons("gridMethod", label = "Make your grid by: ", 
                          choiceNames = c("loading a .shp file", 
-                                         "using the data extent", 
                                          "drawing your polygon"),
-                         choiceValues = list(1,2,3)),
+                         choiceValues = list(1,2)),
       uiOutput("gridMethodUI"),
       
       htmlOutput("MessageWrPol", inline=FALSE),
