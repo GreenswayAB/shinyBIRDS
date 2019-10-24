@@ -1,6 +1,7 @@
 body<-dashboardBody(
   useShinyjs(),
   # useShinyalert(),
+  theme = shinytheme("united"),
   tags$head(
     tags$link(rel="shortcut icon", href="img/favicon.ico"),
     
@@ -13,9 +14,7 @@ body<-dashboardBody(
     tabItem(tabName = "Explorer", 
             fluidRow(
               load_ui_content("ui/tabbox_options.R"),# end of TABbox
-              
               load_ui_content("ui/tabbox_outputs.R")# end of TABbox and column
-              
             ),
             absolutePanel(fixed = TRUE, top = "50%", left = "50%", width = '100px',
                           conditionalPanel(condition="$('html').hasClass('shiny-busy')",

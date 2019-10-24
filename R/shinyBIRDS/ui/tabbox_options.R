@@ -1,5 +1,6 @@
 tagList(
-  tabBox(id = "options", width = 3, #height = "50vmin",
+  tabBox(id = "options", width = 3,# height = 200, 
+         # collapsible = TRUE, maximizable = FALSE,
     tabPanel(tagList(shiny::icon("table"),"PBD"), 
       h4("Upload the observations", class="panel-title"),
       fileInput("csvFile", label = h5(tags$p("Choose a .csv file with the PBD", tags$span("Max file size 300 MB."), class="bubble")),

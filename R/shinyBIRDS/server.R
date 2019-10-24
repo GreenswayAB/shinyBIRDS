@@ -68,13 +68,8 @@ shinyServer(function(input, output, session) {
     if(is.null(inFileR$newCSV)) return()
     if(inFileR$newCSV){
       inFileR$okCSV <- FALSE
-      # rm(PBDin)
-      # inFile <- inFileR$fileCSV
-      # dir <- dirname(inFile[1,4])
-      # file.rename(inFile[1,4], paste0(dir,"/",inFile[1,1]))
-      # 
-      # getcsv <- list.files(dir, pattern="*.csv", full.names=TRUE)
-
+ 
+##### TODO is too slow to upload a file, maybe add possibility to get from url
     tryCatch({
       PBDin <- fread(file=input$csvFile$datapath, #getcsv, 
                         stringsAsFactors = FALSE, encoding = ifelse(input$csvUTF,"UTF-8","unknown"), 
@@ -151,20 +146,12 @@ shinyServer(function(input, output, session) {
   observe({
     input$csvCRS
     req(PBD$data)
-    if(input$csvCRS == "") {
-      epsgInfo$msg<-""
-      epsgInfo$wng<-""
-      epsgInfo$code<-NULL
-      epsgInfo$proj4<-NULL
-      
-    }
+    epsgInfo$msg<-""
+    epsgInfo$wng<-""
+    epsgInfo$code<-NULL
+    epsgInfo$proj4<-NULL
+    
     if(input$csvCRS != ""){ 
-      epsgInfo$msg<-""
-      epsgInfo$wng<-""
-      epsgInfo$code<-NULL
-      epsgInfo$proj4<-NULL
-      disable("organiseGo")
-      
       searchWeb<-gsub("\ ", "%20", input$csvCRS)
       getEPSG <- GET(urlEPGS, path=paste0("/?q=", searchWeb, "&format=json"))
   
@@ -185,8 +172,6 @@ shinyServer(function(input, output, session) {
         }
       } else {epsgInfo$wng<-"bad request"}
     }
-    
-    
   })
   output$epsgInfo<-renderUI( tagList(
                                 div(HTML(epsgInfo$msg), class="infotext"),
@@ -261,8 +246,7 @@ shinyServer(function(input, output, session) {
         n <- 200
         wPlot <- if (nrow(PBD$data) > n) sample(nrow(PBD$data), n) else c(1:nrow(PBD$data))
         PBDpoints <- PBD$organised$spdf[wPlot,]
-        # PBDpointsGJ <- geojson_json( PBDpoints, geometry = "points" )
-        
+
         proxy <- leafletProxy(mapId="map")
         proxy %>% 
           fitBounds(lng1=boundsStudy[1], lat1=boundsStudy[2], lng2=lng2shift, lat2=boundsStudy[4]) %>% 
@@ -423,7 +407,6 @@ shinyServer(function(input, output, session) {
         isCW<-lwgeom::st_is_polygon_cw(sf::st_as_sfc(shape)) ## IS Clockwise... shouldnot...
   
         if(any(isCW)){
-          # print("trg")
           shapeWr$msg<-"One or more polygons loaded are not counter clockwise. \nThe search may return erroneous results."
         }else{shapeWr$msg<-""}
         
@@ -463,8 +446,7 @@ shinyServer(function(input, output, session) {
       
       boundsStudy<-grid@bbox 
       lng2shift<-boundsStudy[3]
-      # gridGJS<-geojson_json( grid, geometry = "polygon" )
-      
+
       gridR$new<-FALSE
       enable("downloadData")
       enable("clearButton")
