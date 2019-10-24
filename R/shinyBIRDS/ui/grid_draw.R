@@ -5,14 +5,15 @@ tagList(
     column(width=6,
            br(),
            numericInput(inputId = "gridSize",
-                        label = h5(tags$p("Grid Cell Width (Km)",tags$span("The polygon must be wider than grid cells"), class="bubble")),
+                        label = h5(tags$p("Grid cell width (Km)",tags$span("The polygon must be wider than grid cells"), class="bubble")),
                         value=1000, min = 1, max = 500, width = 250)
     ),
     column(width=6, 
-           checkboxInput("buff", "Buffer", value = FALSE),
-           checkboxInput("hexGrid", "Hexagonal Grid", value = TRUE),
+           checkboxInput("buff", "Inclusive", value = FALSE),
+           checkboxInput("hexGrid", "Hexagonal grid", value = TRUE),
            actionButton("goExtent", HTML("&nbsp;Get extent"), width = "90", icon=icon("expand"), class="btn-info btn-sm"),
-           actionButton("goGrid", HTML("&nbsp;&nbsp;Grid"), width = "90", icon=icon("th"), class="btn-success btn-sm")
+           actionButton("goGrid", HTML("&nbsp;Make grid"), width = "90", icon=icon("th"), class="btn-success btn-sm")
     )
-  )# end fluid row
+  ),# end fluid row
+  htmlOutput("MessageWrPol", inline=FALSE)
 )

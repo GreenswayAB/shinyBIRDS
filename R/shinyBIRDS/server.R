@@ -69,7 +69,7 @@ shinyServer(function(input, output, session) {
     if(inFileR$newCSV){
       inFileR$okCSV <- FALSE
  
-##### TODO is too slow to upload a file, maybe add possibility to get from url
+##### TODO is too slow to upload a file to internet, maybe add possibility to get from url
     tryCatch({
       PBDin <- fread(file=input$csvFile$datapath, #getcsv, 
                         stringsAsFactors = FALSE, encoding = ifelse(input$csvUTF,"UTF-8","unknown"), 
@@ -158,7 +158,7 @@ shinyServer(function(input, output, session) {
       if(getEPSG$status_code == 200) {
         contEPSG <- content(getEPSG, encoding = "UTF-8")
         if (contEPSG$number_result==0){
-          epsgInfo$wng <- "nothing found"
+          epsgInfo$wng <- "Nothing found"
         } else {
           if (contEPSG$number_result==1){
             epsgInfo$code <- contEPSG$results[[1]]$code
@@ -167,13 +167,14 @@ shinyServer(function(input, output, session) {
                                    "<br /> EPSG: ",  epsgInfo$code, 
                                    "<br /> Proj4: ", epsgInfo$proj4)
           } else { 
-            epsgInfo$wng<-"refine your search, there are more than one hit"
+            epsgInfo$wng<-"Refine your search, there are more than one hit"
           }  
         }
-      } else {epsgInfo$wng<-"bad request"}
+      } else {epsgInfo$wng<-"Bad request"}
     }
   })
-  output$epsgInfo<-renderUI( tagList(
+  output$epsgInfoUI<-renderUI( tagList(
+                                br(),
                                 div(HTML(epsgInfo$msg), class="infotext"),
                                 div(HTML(epsgInfo$wng), class="message")
                               )
@@ -265,10 +266,6 @@ shinyServer(function(input, output, session) {
       }
       
     })
-    
-
-
-  
   })
   
   ######### GRID
@@ -292,6 +289,7 @@ shinyServer(function(input, output, session) {
   #Observe the extent 
   observeEvent(input$goExtent, {
     if (is.null(PBD$organised)) return()
+    gridR$data<-NULL
     
     bboxMat <- as.matrix(PBD$organised$spdf@bbox)
     polygonSA <- matrix(c(bboxMat[1,1], bboxMat[2,1],
@@ -336,6 +334,7 @@ shinyServer(function(input, output, session) {
   ##### Make grid 
   observeEvent(input$goGrid, {
     gridR$data<-NULL
+    StudyArea$data <- NULL
 
     if (!is.null(drawnPoly$data)) {
       SpP<-SpatialPolygons(list(Polygons(list(Polygon( drawnPoly$data )), "s1")))
@@ -404,11 +403,11 @@ shinyServer(function(input, output, session) {
       
       shape<-readOGR(dsn=getshp)
 
-        isCW<-lwgeom::st_is_polygon_cw(sf::st_as_sfc(shape)) ## IS Clockwise... shouldnot...
-  
-        if(any(isCW)){
-          shapeWr$msg<-"One or more polygons loaded are not counter clockwise. \nThe search may return erroneous results."
-        }else{shapeWr$msg<-""}
+        # isCW<-lwgeom::st_is_polygon_cw(sf::st_as_sfc(shape)) ## IS Clockwise... shouldnot...
+        # 
+        # if(any(isCW)){
+        #   shapeWr$msg<-"One or more polygons loaded are not counter clockwise. \nThe search may return erroneous results."
+        # }else{shapeWr$msg<-""}
         
       # # gsub("Valid Geometry", TRUE, isValidPol)
       # if (!is.null(IgnVals$data)){
@@ -455,7 +454,7 @@ shinyServer(function(input, output, session) {
       proxy %>% 
         fitBounds(lng1=boundsStudy[1], lat1=boundsStudy[2], lng2=lng2shift, lat2=boundsStudy[4]) %>% 
         clearGroup("Study Area")    %>% 
-        clearGroup("GridIgn") %>% 
+        clearGroup("Grid") %>% 
         hideGroup("Study AreaPol") %>% 
         # addGeoJSON(gridGJS, group = "Grid", layerId= "grid", weight = 2, col = "black", fillOpacity = 0) %>% 
         addPolygons(data = grid, group = "Grid", weight = 2, col = "black", fillOpacity = 0) %>% 
