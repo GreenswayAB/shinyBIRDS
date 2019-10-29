@@ -1,20 +1,22 @@
 shinyServer(function(input, output, session) {
-  drawnPoly<-reactiveValues(data=NULL)
-  StudyArea<-reactiveValues(data=NULL)
-  inFileR<-reactiveValues(fileCSV=NULL, newCSV=NULL, okCSV=NULL,
-                          fileSHP=NULL, newSHP=NULL )
-  gridR<-reactiveValues(data=NULL, new=NULL)
-  shapeWr<-reactiveValues(msg=NULL)
-  # csvWr<-reactiveValues(msg=NULL)
-  csvInfo<-reactiveValues(msg=NULL, wng=NULL)
-  epsgInfo<-reactiveValues(msg=NULL, wng=NULL, code=NULL, proj4=NULL)
+  drawnPoly <- reactiveValues(data=NULL)
+  StudyArea <- reactiveValues(data=NULL)
+  inFileR <- reactiveValues(fileCSV=NULL, newCSV=NULL, okCSV=NULL,
+                            fileSHP=NULL, newSHP=NULL )
+  gridR <- reactiveValues(data=NULL, new=NULL)
+  shapeWr <- reactiveValues(msg=NULL)
+  csvInfo <- reactiveValues(msg=NULL, wng=NULL)
+  epsgInfo <- reactiveValues(msg=NULL, wng=NULL, code=NULL, proj4=NULL)
   
-  PBD<-reactiveValues(data=NULL, spatial=NULL)
+  PBD <- reactiveValues(data=NULL, organised=NULL, visits = NULL, summary = NULL)
+  data_stat <- reactiveValues(data = NULL, name = "visitsData")
+  cleancoord <- reactiveValues(x=NULL, logs=NULL)
 
   disable("downloadData")
   disable("clearButton")
   disable("Proj")
   disable("organiseGo")
+  disable("expVisits")
   disable("csvSpp")
   disable("csvTaxonEnable")
   disable("csvLat")
@@ -127,6 +129,24 @@ shinyServer(function(input, output, session) {
         # columns for visits
         
         PBD$data <- PBDin
+        ## And start over
+        PBD$organised <- NULL
+        PBD$visits <- NULL
+        PBD$summary <- NULL
+        data_stat$data<-NULL
+        drawnPoly$data<-NULL
+        StudyArea$data<-NULL
+        gridR$data<-NULL
+        
+        proxy<-leafletProxy(mapId="map")
+        proxy %>% 
+          setView(0,0,2) %>% 
+          clearGroup("Study AreaPol") %>% 
+          clearGroup("Study Area") %>% 
+          clearGroup("Grid") %>% 
+          clearGroup("PBD") %>% 
+          clearControls() 
+        
       } else {
         disable("csvSpp")
         disable("csvTaxonEnable")
@@ -180,12 +200,24 @@ shinyServer(function(input, output, session) {
                               )
                             )
 
+  #### Clean coordinates
+  ### Check how the function works, it removes everything
+  observeEvent(input$cleanCoord, {
+    req(PBD$data)
+    cleanPBD <- cleanCoordinates(PBD$data, lon = input$csvLon, lat = input$csvLat, species = input$csvSpp) 
+    # print(cleanPBD)
+    PBD$data <- cleanPBD$x
+    cleancoord$logs <- cleanPBD$logs
+  })
+  
+  output$CleanCoordInfo<-renderUI( div(HTML(cleancoord$logs), class="infotext")  )
+  
+  
   ### update taxonrank
   output$taxonRankUI <- renderUI({
     req(PBD$data)
     if (input$csvTaxonEnable) {
-      PBDin <- PBD$data
-      PBDcolnames <- colnames(PBDin)
+      PBDcolnames <- colnames(PBD$data)
       tagList(
         selectInput("csvTaxon", label = "Taxon rank column", choices = PBDcolnames, 
                     selected = ifelse("taxonrank" %in% PBDcolnames, "taxonrank", PBDcolnames[1]) ),
@@ -200,7 +232,6 @@ shinyServer(function(input, output, session) {
   
   observe({
     req(input$csvTaxon)
-    PBDin <- PBD$data
     taxons <- unique(PBD$data[,input$csvTaxon])
     wTax <- which(stdTaxonRank %in% taxons)
     updatePickerInput(session, "taxonRankVal", label = "Taxon rank to keep", choices = taxons,
@@ -222,30 +253,29 @@ shinyServer(function(input, output, session) {
     req(PBD$data)
     req(epsgInfo$code)
     tryCatch({
-      PBD$data <- PBD$data[,c(input$csvSpp, input$csvLat, input$csvLon,
+      PBDdata <- PBD$data[,c(input$csvSpp, input$csvLat, input$csvLon,
                         input$timeCols, input$visitCols, input$csvTaxon)]
-  
-      timeCol.selected <- if(length(input$timeCols) == 3) c("Year"="year", "Month"="month", "Day"="day") else input$timeCols
-      visitCol.selected <- c("year","month","day", input$visitCol) ### IF check box
-    
-      PBD$organised <- organizeBirds(PBD$data, 
+      timeCol.selected <- if(length(input$timeCols) == 3) stdTimeCol else input$timeCols
+      visitCol.selected <- c(stdTimeCol, input$visitCols) ### TODO IF check box
+
+      PBD$organised <- organizeBirds(PBDdata, 
                                      sppCol = input$csvSpp, 
                                      timeCol = timeCol.selected,
                                      visitsIdentifier = visitCol.selected, 
                                      presenceCol = NULL,
-                                     xyCols = c(input$csvLon, input$csvLat), dataCRS = paste0("+init=epsg:", epsgInfo$code), ## alt: epsgInfo$proj4
+                                     xyCols = c(input$csvLon, input$csvLat), 
+                                     dataCRS = paste0("+init=epsg:", epsgInfo$code), ## alt: epsgInfo$proj4
                                      taxonRankCol = switch(input$csvTaxonEnable, input$csvTaxon, NULL),
                                      taxonRank = switch(input$csvTaxonEnable, input$taxonRankVal, stdTaxonRank),
                                      simplifySppName = input$simplifySpp)
-      
     }, error = function(e) e, warning = function(w) w, 
     finally = {
       if (!is.null (PBD$organised$spdf)){
         boundsStudy <- as.matrix(PBD$organised$spdf@bbox)
         lng2shift <- boundsStudy[3]
         
-        n <- 200
-        wPlot <- if (nrow(PBD$data) > n) sample(nrow(PBD$data), n) else c(1:nrow(PBD$data))
+        n <- 500
+        wPlot <- if (nrow(PBDdata) > n) sample(nrow(PBDdata), n) else c(1:nrow(PBDdata))
         PBDpoints <- PBD$organised$spdf[wPlot,]
 
         proxy <- leafletProxy(mapId="map")
@@ -253,8 +283,7 @@ shinyServer(function(input, output, session) {
           fitBounds(lng1=boundsStudy[1], lat1=boundsStudy[2], lng2=lng2shift, lat2=boundsStudy[4]) %>% 
           addCircleMarkers(data = PBDpoints, group = "PBD", 
                            color = "black", stroke = FALSE, fillOpacity = 0.5, radius = 5,
-                           label = ~as.character(scientificName)
-          ) %>% 
+                           label = ~as.character(scientificName)) %>% 
           addLegend(position = "bottomleft", colors = "black", 
                     group = "PBD", labels = "Random subset of PBD",
                     title = "", opacity = 0.5)
@@ -266,6 +295,46 @@ shinyServer(function(input, output, session) {
       }
       
     })
+  })
+  
+  observe({
+    disable("expVisits")
+    req(PBD$organised)
+    enable("expVisits")
+  })
+  
+  ##Explore the visits, before summarysing
+  observeEvent(input$expVisits, {
+    req(PBD$organised)
+    PBDorg<-PBD$organised
+    PBD$visits <- exploreVisits(x=PBD$organised, visitCol=attr(PBD$organised, "visitCol"), sppCol="scientificName")
+    PBD$visits$day <- as.numeric(PBD$visits$day)
+    PBD$visits$month <- as.numeric(PBD$visits$month)
+    PBD$visits$year <- as.numeric(PBD$visits$year)
+    # PBD$visits$effortDiam <- PBD$visits$effortDiam/1000
+    # PBD$visits$medianDist <- PBD$visits$medianDist/1000
+    data_stat$data <- PBD$visits
+    # colnames(data_stat$data)<-c("Projekt Skapare", "Projekt", "Datum Projekt", "Objekt", "Inventerare", "Start Enkät", "Stop Enkät", "Status")
+  
+  })
+  
+  observe({
+    req(data_stat$data)
+    req(PBD$visits)
+    callModule(module = esquisserServer, id = "visitsEsquisse", data = data_stat)  
+    
+    #plot circles
+    proxy <- leafletProxy(mapId="map")
+    proxy %>% 
+      addCircles(data = PBD$visits, lng = ~centroidX, lat = ~centroidY,
+                 group = "PBD", color = "red", stroke = TRUE, 
+                 weight = 5, fillOpacity = 0.1, 
+                 radius = ~medianDist, #~effortDiam/2, #
+                 label = ~visitUID) %>% 
+      clearControls() %>% 
+      addLegend(position = "bottomleft", colors = c("red","black"), 
+                group = "PBD", labels = c("Visit", "Random subset of PBD"),
+                title = "", opacity = 0.5)
   })
   
   ######### GRID
@@ -400,19 +469,7 @@ shinyServer(function(input, output, session) {
         return()
       }
       shapeWr$msg<-""
-      
       shape<-readOGR(dsn=getshp)
-
-        # isCW<-lwgeom::st_is_polygon_cw(sf::st_as_sfc(shape)) ## IS Clockwise... shouldnot...
-        # 
-        # if(any(isCW)){
-        #   shapeWr$msg<-"One or more polygons loaded are not counter clockwise. \nThe search may return erroneous results."
-        # }else{shapeWr$msg<-""}
-        
-      # # gsub("Valid Geometry", TRUE, isValidPol)
-      # if (!is.null(IgnVals$data)){
-      #   gridR$data<-NULL
-      # }
       gridR$data <- spTransform(shape, CRSobj = CRS("+init=epsg:4326"))
       
       bboxMat<- as.matrix(gridR$data@bbox)
@@ -473,40 +530,59 @@ shinyServer(function(input, output, session) {
 
   proxy<-leafletProxy(mapId="map")
     proxy %>% 
-      setView(0,0,2) %>% 
+      # setView(0,0,2) %>% 
       clearGroup("Study AreaPol") %>% 
       clearGroup("Study Area") %>% 
-      clearGroup("Grid") %>% 
-      clearGroup("PBD") %>% 
-      clearControls() 
+      clearGroup("Grid")
   })
   
-  ########################################### DATA TAB #############################
-    output$TablePBD <- DT::renderDataTable({
-      if (is.null(PBD$data)) return()
-      
-      table<-PBD$data
-      table[,3]<-round(table[,3],1)
-      table<-as.data.frame(table, row.names = c(1:nrow(table)))
-      table<-table[,c(2,1,3,4,5,6)]
-      colnames(table)<-c("No. Obs.", "Spp. Richness", "Obs. Index", "I. Obs. Raw","I. Obs. Ind.","I. Comb.")
-      
-      datatable(table, class = 'cell-border stripe',
-                caption = HTML("The table below shows the data for each cell in the grid, numbered from bottom-left to top-right. 
-                               <br /> <i>No. Obs.</i>: number of observations, <i>Spp. Richness</i>: observed species richness, <i>Obs. Index</i>: Observation index (mean number of observations per species observed),  
-                                <i>I. Obs. Raw</i>: ignorance scores based on raw number of observations, <i>I. Obs Ind</i>: ignorance scores based on observation index, <i>I. Comb.</i>: ignorance scores combining raw observations and observation index.
-                               <br />Select a row to see it in the figure."), 
-                autoHideNavigation = TRUE,
-                options = list(
-                  dom = 'tp',
-                  order = list(list(1, 'desc')),
-                  pageLength = 15,
-                  scrollX=TRUE)
-                  #lengthMenu = c(10, 25, 50, 100))
-                )
-    }, server = TRUE) #end render DataTable
-  # })
   
+  ########################################### DATA TAB #############################
+  output$TablePBD <- DT::renderDataTable({
+    if (is.null(PBD$data)) return()
+    
+    table<-PBD$data
+    # table[,3]<-round(table[,3],1)
+    table<-as.data.frame(table, row.names = c(1:nrow(table)))
+    # table<-table[,c(2,1,3,4,5,6)]
+    # colnames(table)<-c("No. Obs.", "Spp. Richness", "Obs. Index", "I. Obs. Raw","I. Obs. Ind.","I. Comb.")
+    
+    datatable(table, class = 'cell-border stripe',
+              caption = HTML("The table below shows the data for each observation."), 
+              rownames = FALSE,
+              autoHideNavigation = TRUE,
+              options = list(
+                dom = 'tp',
+                order = list(list(1, 'desc')),
+                pageLength = 15,
+                scrollX=TRUE)
+                #lengthMenu = c(10, 25, 50, 100))
+              )
+  }, server = TRUE) #end render DataTable
+  
+  output$TablePBD <- DT::renderDataTable({
+    if (is.null(PBD$organised$spdf$data)) return()
+    
+    # table<-PBD$organised$spdf$data
+    table<-obsData(PBD$organised)
+    # table[,3]<-round(table[,3],1)
+    table<-as.data.frame(table, row.names = c(1:nrow(table)))
+    # table<-table[,c(2,1,3,4,5,6)]
+    # colnames(table)<-c("No. Obs.", "Spp. Richness", "Obs. Index", "I. Obs. Raw","I. Obs. Ind.","I. Comb.")
+    
+    datatable(table, class = 'cell-border stripe',
+              caption = HTML("The table below shows the data for each observation."), 
+              autoHideNavigation = TRUE,
+              rownames = FALSE,
+              options = list(
+                dom = 'tp',
+                order = list(list(1, 'desc')),
+                pageLength = 15,
+                scrollX=TRUE)
+              #lengthMenu = c(10, 25, 50, 100))
+    )
+  }, server = TRUE) #end render DataTable
+
   output$plotSpp<-renderPlot({ ### Plot spp
     if(is.null(preSearch$spp)) return()
     # ...

@@ -36,7 +36,7 @@ h4, .h4, h5, .h5, h6, .h6 {
     margin-bottom: 5px;
 }
 
-.box-success {
+.box.box-success {
     border-top-color: #6aa039;
 }
 

@@ -9,30 +9,33 @@ tagList(
             fluidRow(
               tabBox(id = "data-typess", width = 12,
               tabPanel(tagList(icon("binoculars"),"PBD"),
-                  fluidRow(  
-                      DT::dataTableOutput("TablePBD", width = "90%")
-                    )
+                  # fluidRow(  
+                DT::dataTableOutput("TablePBD", width = "90%")
+                    # )
               ),
               tabPanel(tagList(icon("sitemap"),"Organised"),
+                DT::dataTableOutput("TablePBDorg", width = "90%")
+              ),
+              tabPanel(tagList(icon("search"),"Explore Visits"),
                       ## explore visits
-                      shinydashboard::box(title = NULL, width = 12, height = "900px", collapsible = FALSE, solidHeader = TRUE,
+                      shinydashboard::box(title = NULL, width = 12, height = "900px", 
+                                          collapsible = FALSE, solidHeader = TRUE,
                                           div(style = "height: 800px; width:auto", # needs to be in fixed height container
                                               esquisserUI(
-                                                id = "statsPanel",
+                                                id = "visitsEsquisse",
                                                 header = FALSE, # dont display gadget title
                                                 choose_data = FALSE # dont display button to change data
                                               )
                                           )
                       )
-                      ## and map?
-                        
               ),
               tabPanel(tagList(icon("chart-line"),"Summarised"),
                        
               ),
               tabPanel(tagList(icon("file-export"),"For export"),
                        selectInput(inputId = "Proj",
-                                   label = h5(tags$p("Coordinate Reference Systems", tags$span("Projection system of the layers. Source EPSG.org"), class="bubble")),
+                                   label = h5(tags$p("Coordinate Reference Systems", 
+                                                     tags$span("Projection system of the layers. Source EPSG.org"), class="bubble")),
                                    choices = epsg.choices, #structure(EPSG.code, names=EPSG.name), 
                                    multiple = FALSE, selected = 4326, width = "100%"),
                        downloadButton("downloadData", "Download", class="btn-success btn-sm")

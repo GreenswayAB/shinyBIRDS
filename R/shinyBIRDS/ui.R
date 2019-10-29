@@ -16,7 +16,7 @@ body<-dashboardBody(
               load_ui_content("ui/tabbox_options.R"),# end of TABbox
               load_ui_content("ui/tabbox_outputs.R")# end of TABbox and column
             ),
-            absolutePanel(fixed = TRUE, top = "50%", left = "50%", width = '100px',
+            absolutePanel(fixed = TRUE, top = "50%", left = "50%", width = '195px',
                           conditionalPanel(condition="$('html').hasClass('shiny-busy')",
                                            tags$img(src="./img/loader-hex.gif")
                           )

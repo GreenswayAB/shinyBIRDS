@@ -12,7 +12,7 @@ library(shinydashboard)
 
 library(leaflet)
 library(leaflet.extras)
-# library(dplyr)
+library(dplyr)
 library(DT)
 library(data.table)
 
@@ -29,6 +29,7 @@ require(geosphere)
 library(RColorBrewer)
 # library(plot3D)
 library(esquisse)
+library(CoordinateCleaner) #rnaturalearthdata
 
 library(httr)
 library(jsonlite)
@@ -41,6 +42,8 @@ options(stringsAsFactors = FALSE)
 # library(foreach)
 
 options(shiny.maxRequestSize = 300*1024^2)
+
+v <- numeric_version("0.0.1")
 
 w <- simpleWarning("WARNING")
 e <- simpleError("ERROR")
