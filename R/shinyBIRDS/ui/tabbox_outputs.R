@@ -14,26 +14,26 @@ tagList(
                     # )
               ),
               tabPanel(tagList(icon("sitemap"),"Organised"),
-                DT::dataTableOutput("TablePBDorg", width = "90%")
+                DT::dataTableOutput("TablePBDOrg", width = "90%")
               ),
               tabPanel(tagList(icon("search"),"Explore Visits"),
-                      ## explore visits
-                      shinydashboard::box(title = NULL, width = 12, height = "900px", 
-                                          collapsible = FALSE, solidHeader = TRUE,
-                                          div(style = "height: 800px; width:auto", # needs to be in fixed height container
-                                              esquisserUI(
-                                                id = "visitsEsquisse",
-                                                header = FALSE, # dont display gadget title
-                                                choose_data = FALSE # dont display button to change data
-                                              )
-                                          )
-                      )
+                ## explore visits
+                shinydashboard::box(title = NULL, width = 12, height = "900px", 
+                                    collapsible = FALSE, solidHeader = TRUE,
+                                    div(style = "height: 800px; width:auto", # needs to be in fixed height container
+                                        esquisserUI(
+                                          id = "visitsEsquisse",
+                                          header = FALSE, # dont display gadget title
+                                          choose_data = FALSE # dont display button to change data
+                                        )
+                                    )
+                )
               ),
               tabPanel(tagList(icon("chart-line"),"Summarised"),
-                       
+                uiOutput("summaryUI")
               ),
               tabPanel(tagList(icon("file-export"),"For export"),
-                       selectInput(inputId = "Proj",
+                       selectInput(inputId = "dnlCRS",
                                    label = h5(tags$p("Coordinate Reference Systems", 
                                                      tags$span("Projection system of the layers. Source EPSG.org"), class="bubble")),
                                    choices = epsg.choices, #structure(EPSG.code, names=EPSG.name), 

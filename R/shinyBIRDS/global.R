@@ -71,6 +71,12 @@ epsg.choices<-c("WGS84" = "4326",
                 "SWEREF99TM" = "3006") 
 
 
-BoRCode<-c("HUMAN_OBSERVATION", "OBSERVATION", "MACHINE_OBSERVATION","LITERATURE", "LIVING_SPECIMEN", "PRESERVED_SPECIMEN", "FOSSIL_SPECIMEN",  "MATERIAL_SAMPLE", "UNKNOWN")
-BoR<-c("Human Observation", "Observation", "Machine Observation", "Literature",  "Living Specimen", "Preserved Specimen", "Fossil Specimen", "Material Sample",  "Unknown")
+TemResCode<-c("", "yearly", "month","monthly", "daily")
+TemRes<-c("None", "Yearly", "Month","Monthly", "Daily")
+
+VarCode<-c("nObs", "nVis", "nSpp", "avgSll", "nYears", "nDays", "nCells")
+Variable<-c("n. Observations", "n. Visits", "n. Species", "avg. Species List Length", "n. Years", "n. Days", "n. Gridcells")
+
+MethCode<-c("sum", "median", "mean")
+Method<-c("Sum", "Median", "Mean")
 

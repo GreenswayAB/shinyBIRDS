@@ -7,6 +7,7 @@ shinyServer(function(input, output, session) {
   shapeWr <- reactiveValues(msg=NULL)
   csvInfo <- reactiveValues(msg=NULL, wng=NULL)
   epsgInfo <- reactiveValues(msg=NULL, wng=NULL, code=NULL, proj4=NULL)
+  validExport <- reactiveValues(state=FALSE, class=NULL, msg=NULL)
   
   PBD <- reactiveValues(data=NULL, organised=NULL, visits = NULL, summary = NULL)
   data_stat <- reactiveValues(data = NULL, name = "visitsData")
@@ -270,12 +271,13 @@ shinyServer(function(input, output, session) {
                                      simplifySppName = input$simplifySpp)
     }, error = function(e) e, warning = function(w) w, 
     finally = {
-      if (!is.null (PBD$organised$spdf)){
+      if (!is.null (PBD$organised)){
         boundsStudy <- as.matrix(PBD$organised$spdf@bbox)
         lng2shift <- boundsStudy[3]
         
+        nObs <- nrow(obsData(PBD$organised))
         n <- 500
-        wPlot <- if (nrow(PBDdata) > n) sample(nrow(PBDdata), n) else c(1:nrow(PBDdata))
+        wPlot <- if (nObs > n) sample(nObs, n) else c(1:nObs)
         PBDpoints <- PBD$organised$spdf[wPlot,]
 
         proxy <- leafletProxy(mapId="map")
@@ -291,7 +293,7 @@ shinyServer(function(input, output, session) {
         inFileR$newCSV <- FALSE
         enable("downloadData")        
       } else {
-        cat("make a nice error message here")
+        cat("There is no SpatialPoints Data Frame (make a nice error message here)")
       }
       
     })
@@ -537,6 +539,54 @@ shinyServer(function(input, output, session) {
   })
   
   
+  observeEvent(input$summaryGo,{
+    req(PBD$organised)
+    PBD$summary <- summariseBirds(PBD$organised, gridR$data, spillOver = input$spillOver)
+  })
+  
+  
+  observe({
+    req(PBD$summary)
+    ## TODO PBD$summary doesnt need to be a real summary, just an empty one for faster messages
+    tryCatch({
+      exptmp <- exportBirds(PBD$summary, 
+                    dimension = input$expDimension, 
+                    timeRes = switch(input$expTemRes != "", input$expTemRes, NULL), 
+                    variable = input$expVariable, 
+                    method = input$expMethod)  
+      
+      # validExport$state <- TRUE
+      # validExport$class <- class(exptmp)
+      # validExport$msg <- NULL
+      
+    }, 
+    error = function(err){ 
+        validExport$state <- FALSE
+        validExport$class <- NULL
+        validExport$msg <- err$message
+        # return(err$message)
+    })
+    print(validExport$state)
+  })
+  
+  output$exportMsgUI <- renderUI( tagList(
+      br(),
+      div(HTML(validExport$msg), class="message")
+    )
+  )
+  
+  observeEvent(input$exportGo,{
+    req(PBD$summary)
+    if(validExport$state){
+      PBD$export <- exportBirds(PBD$summary, 
+                                dimension = input$expDimension, 
+                                timeRes = switch(input$expTemRes != "", input$expTemRes, NULL), 
+                                variable = input$expVariable, 
+                                method = input$expMethod)  
+    }
+    
+  })
+  
   ########################################### DATA TAB #############################
   output$TablePBD <- DT::renderDataTable({
     if (is.null(PBD$data)) return()
@@ -560,16 +610,12 @@ shinyServer(function(input, output, session) {
               )
   }, server = TRUE) #end render DataTable
   
-  output$TablePBD <- DT::renderDataTable({
-    if (is.null(PBD$organised$spdf$data)) return()
+  output$TablePBDOrg <- DT::renderDataTable({
+    req(PBD$organised)
     
-    # table<-PBD$organised$spdf$data
     table<-obsData(PBD$organised)
-    # table[,3]<-round(table[,3],1)
     table<-as.data.frame(table, row.names = c(1:nrow(table)))
-    # table<-table[,c(2,1,3,4,5,6)]
-    # colnames(table)<-c("No. Obs.", "Spp. Richness", "Obs. Index", "I. Obs. Raw","I. Obs. Ind.","I. Comb.")
-    
+
     datatable(table, class = 'cell-border stripe',
               caption = HTML("The table below shows the data for each observation."), 
               autoHideNavigation = TRUE,
@@ -582,6 +628,15 @@ shinyServer(function(input, output, session) {
               #lengthMenu = c(10, 25, 50, 100))
     )
   }, server = TRUE) #end render DataTable
+  
+  output$summaryUI <- renderUI({
+    
+    req(PBD$summary)
+    h3("summary")
+    # str(PBD$summary)
+    ### Make it a function
+    
+  }) #end render Summary UI
 
   output$plotSpp<-renderPlot({ ### Plot spp
     if(is.null(preSearch$spp)) return()
@@ -620,19 +675,10 @@ shinyServer(function(input, output, session) {
       grid <- gridR$data
       
       ncells<-length(grid)
-      # if (is.null(SppVals$data)){
-      #   table<-data.frame("NoObs"=rep(0,ncells), row.names = paste0("ID",seq(ncells)))
-      # } else{
-      #   table<-cbind(SppVals$data,round(IgnTable$data,2))
-      #   table[,3]<-round(table[,3],1)
-      #   table<-as.data.frame(table, row.names = paste0("ID",seq(ncells)) )
-      #   table<-table[,c(2,1,3,4,5,6)]
-      #   colnames(table)<-c("NoObs", "ObsSppRich", "ObsIndex", "IgnRaw","IgnObsInd","IgnCombined")  
-      # }
-      ## SpatialPolygon to SpatialPolygonDataFrame
+     
       gridDF <- SpatialPolygonsDataFrame(grid, data = table, match.ID = FALSE)
       
-      epsgstring<-paste0("+init=epsg:",input$Proj)
+      epsgstring<-paste0("+init=epsg:",input$dnlCRS)
       ## Transform
       SpPDFTrans<-spTransform(SpPDF, CRS( epsgstring ))
       gridDFTrans<-spTransform(gridDF, CRS( epsgstring ))

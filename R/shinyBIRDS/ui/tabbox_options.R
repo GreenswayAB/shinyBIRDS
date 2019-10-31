@@ -86,35 +86,57 @@ tagList(
   
       ######## Grid
       tabPanel(tagList(shiny::icon("th"),"Grid"),          
-        ## radio buttons with optios
-        prettyRadioButtons("gridMethod", label = "Make your grid by: ", 
-                           choiceNames = c("loading a .shp file", 
-                                           "drawing your polygon"),
-                           choiceValues = list(1,2)),
         fluidRow(
-          column(6,
-                 uiOutput("gridMethodUI")
-                 )
-        ),
-        br(),
-        actionButton("clearButton", HTML("&nbsp;&nbsp;Clear"), 
-                     width = "75", icon = icon("trash"), class="btn-warning btn-sm")
+          column(4,
+               ## radio buttons with optios
+              prettyRadioButtons("gridMethod", label = "Make your grid by: ", 
+                                 choiceNames = c("loading a .shp file", 
+                                                 "drawing your polygon"),
+                                 choiceValues = list(1,2)),
+              fluidRow(
+                column(6,
+                       uiOutput("gridMethodUI")
+                )
+              ),
+              br(),
+              actionButton("clearButton", HTML("&nbsp;Clear grid"), 
+                           width = "100", icon = icon("trash"), class="btn-warning btn-sm")
+          ),
+          column(4,
+                 h4("Summarise"),
+                 # materialSwitch("searchYearRng", "Filter years", value = TRUE, status = "primary", right=TRUE),
+                 checkboxInput("spillOver", 
+                               label = h5(tags$p("Spill visits over neighbour cells", 
+                                                 tags$span("a long explanation here..."), ## TODO
+                                                 class="bubble")), TRUE),
+                 actionButton("summaryGo", HTML("&nbsp;Summary"), 
+                              width = "100", icon = icon("chart-bar"), class="btn-success btn-sm")
+          )
+        )
       ), #    end of tab Grid Options
       
       ### Summarise
-      tabPanel(tagList(shiny::icon("chart-bar"),"Summarise"),
-               br(),
-               h5("Years"),
-               materialSwitch("searchYearRng", "Filter years", value = TRUE, status = "primary", right=TRUE),
-               sliderInput(inputId ="yearRng", label = "", value = c(2010,2020), min = 1900, max = 2020, step = 1, sep = ""),
-               selectInput(inputId = "SppFilter",
-                           label = h5(tags$p("Species", tags$span("Choose if you want to select individual species"), class="bubble")),          
-                           choices = c(structure(BoRCode, names=BoR)), ## to be replaced with dynamic spp list
-                           selectize = FALSE, multiple = TRUE, width = "100%", size = 15),
-               # selectizeInput(inputId = "country",
-               #                label = h5(tags$p("Country", tags$span("Country of observation"), class="bubble")),          
-               #                choices = c("All"="", structure(CountriesCode, names=Countries)), 
-               #                multiple = TRUE, width = "100%"),
+      tabPanel(tagList(shiny::icon("box"),"Export"),
+               h4("Export parameters"),
+               selectInput(inputId = "expDimension",
+                           label = "Dimension",          
+                           choices = c("Spatial", "Temporal"),
+                           selectize = FALSE, multiple = FALSE, width = "200"),
+               selectInput(inputId = "expTemRes",
+                           label = "Temporal Resolution",          
+                           choices = c(structure(TemResCode, names=TemRes)),
+                           selectize = FALSE, multiple = FALSE, width = "200"),
+               selectInput(inputId = "expVariable",
+                           label = "Variable",          
+                           choices = c(structure(VarCode, names=Variable)),
+                           selectize = FALSE, multiple = FALSE, width = "200"),
+               selectInput(inputId = "expMethod",
+                           label = "Summary method",          
+                           choices = c(structure(MethCode, names=Method)),
+                           selectize = FALSE, multiple = FALSE, width = "200"),
+               htmlOutput("exportMsgUI", inline = FALSE),
+               actionButton("exportGo", HTML("&nbsp;Export"), 
+                            width = "100", icon = icon("box"), class="btn-success btn-sm")
       )#    end of tab Summarise Options    
     )
   )
