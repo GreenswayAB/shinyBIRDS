@@ -94,7 +94,7 @@ tagList(
                                                  "drawing your polygon"),
                                  choiceValues = list(1,2)),
               fluidRow(
-                column(6,
+                column(12,
                        uiOutput("gridMethodUI")
                 )
               ),

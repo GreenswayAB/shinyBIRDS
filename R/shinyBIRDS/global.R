@@ -72,7 +72,7 @@ epsg.choices<-c("WGS84" = "4326",
 
 
 TemResCode<-c("", "yearly", "month","monthly", "daily")
-TemRes<-c("None", "Yearly", "Month","Monthly", "Daily")
+TemRes<-c("NULL", "Yearly", "Month","Monthly", "Daily")
 
 VarCode<-c("nObs", "nVis", "nSpp", "avgSll", "nYears", "nDays", "nCells")
 Variable<-c("n. Observations", "n. Visits", "n. Species", "avg. Species List Length", "n. Years", "n. Days", "n. Gridcells")

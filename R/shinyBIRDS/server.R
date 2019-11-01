@@ -7,7 +7,7 @@ shinyServer(function(input, output, session) {
   shapeWr <- reactiveValues(msg=NULL)
   csvInfo <- reactiveValues(msg=NULL, wng=NULL)
   epsgInfo <- reactiveValues(msg=NULL, wng=NULL, code=NULL, proj4=NULL)
-  validExport <- reactiveValues(state=FALSE, class=NULL, msg=NULL)
+  validExport <- reactiveValues(state=FALSE, msg=NULL)
   
   PBD <- reactiveValues(data=NULL, organised=NULL, visits = NULL, summary = NULL)
   data_stat <- reactiveValues(data = NULL, name = "visitsData")
@@ -15,9 +15,11 @@ shinyServer(function(input, output, session) {
 
   disable("downloadData")
   disable("clearButton")
-  disable("Proj")
-  disable("organiseGo")
-  disable("expVisits")
+  disable("dnlCRS")
+  # disable("organiseGo")
+  # disable("expVisits")
+  # # disable("sumaryGo")
+  # disable("exportGo")
   disable("csvSpp")
   disable("csvTaxonEnable")
   disable("csvLat")
@@ -291,7 +293,9 @@ shinyServer(function(input, output, session) {
                     title = "", opacity = 0.5)
         
         inFileR$newCSV <- FALSE
-        enable("downloadData")        
+        enable("downloadData")  
+        # enable("expVisits")
+        # enable("summaryGo")
       } else {
         cat("There is no SpatialPoints Data Frame (make a nice error message here)")
       }
@@ -301,8 +305,10 @@ shinyServer(function(input, output, session) {
   
   observe({
     disable("expVisits")
+    disable("summaryGo")
     req(PBD$organised)
     enable("expVisits")
+    enable("summaryGo")
   })
   
   ##Explore the visits, before summarysing
@@ -524,7 +530,7 @@ shinyServer(function(input, output, session) {
 ####
 ##clear all data
   observeEvent(input$clearButton, {
-    removeUI(selector = "#PBDsummary")
+    # removeUI(selector = "#PBDsummary")
     
     drawnPoly$data<-NULL
     StudyArea$data<-NULL
@@ -546,34 +552,49 @@ shinyServer(function(input, output, session) {
   
   
   observe({
-    req(PBD$summary)
+    req(simpleSB) ## from BIRDS
     ## TODO PBD$summary doesnt need to be a real summary, just an empty one for faster messages
-    tryCatch({
-      exptmp <- exportBirds(PBD$summary, 
+    errorExp<-tryCatch({
+      tmp<-exportBirds(simpleSB, 
                     dimension = input$expDimension, 
                     timeRes = switch(input$expTemRes != "", input$expTemRes, NULL), 
                     variable = input$expVariable, 
                     method = input$expMethod)  
-      
-      # validExport$state <- TRUE
-      # validExport$class <- class(exptmp)
-      # validExport$msg <- NULL
-      
+      msg<-""
     }, 
     error = function(err){ 
-        validExport$state <- FALSE
-        validExport$class <- NULL
-        validExport$msg <- err$message
-        # return(err$message)
+        msg <- err$message
+        return(msg)
     })
-    print(validExport$state)
+    
+    if(errorExp==""){
+      state <- TRUE
+      msg <- NULL
+    } else {
+      state <- FALSE
+      msg <- errorExp
+    }
+    
+    validExport$state<-state
+    validExport$msg<-msg
   })
-  
+
   output$exportMsgUI <- renderUI( tagList(
       br(),
-      div(HTML(validExport$msg), class="message")
+      div(HTML(validExport$msg), class="message"),
+      br()
     )
   )
+  
+  observe({
+    disable("exportGo")
+    req(PBD$summary)
+    if(validExport$state){
+      enable("exportGo")} 
+    else {
+      disable("exportGo")
+    }
+  })
   
   observeEvent(input$exportGo,{
     req(PBD$summary)
