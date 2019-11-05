@@ -85,7 +85,7 @@ tagList(
       ),
   
       ######## Grid
-      tabPanel(tagList(shiny::icon("th"),"Grid"),          
+      tabPanel(tagList(shiny::icon("th"),"Grid and Summary"),          
         fluidRow(
           column(4,
                ## radio buttons with optios
@@ -117,14 +117,16 @@ tagList(
       
       ### Summarise
       tabPanel(tagList(shiny::icon("box"),"Export"),
+         fluidRow(
+           column(4,
                h4("Export parameters"),
                selectInput(inputId = "expDimension",
                            label = "Dimension",          
-                           choices = c("Spatial", "Temporal"),
+                           choices = c(structure(DimeCode, names=Dimension)),
                            selectize = FALSE, multiple = FALSE, width = "200"),
-               selectInput(inputId = "expTemRes",
+               selectInput(inputId = "expTimeRes",
                            label = "Temporal Resolution",          
-                           choices = c(structure(TemResCode, names=TemRes)),
+                           choices = c(structure(TimeResCode, names=TimeRes)),
                            selectize = FALSE, multiple = FALSE, width = "200"),
                selectInput(inputId = "expVariable",
                            label = "Variable",          
@@ -135,8 +137,19 @@ tagList(
                            choices = c(structure(MethCode, names=Method)),
                            selectize = FALSE, multiple = FALSE, width = "200"),
                htmlOutput("exportMsgUI", inline = FALSE),
-               actionButton("exportGo", HTML("&nbsp;Export"), 
-                            width = "100", icon = icon("box"), class="btn-success btn-sm")
+               actionButton("exportAdd", HTML("&nbsp; Add definition"), 
+                            width = "150", icon = icon("box-open"), class="btn-success btn-sm")
+           ),
+           column(4,
+                  h4("Export definitions"),
+                  DT::dataTableOutput("exportDefs", width = "90%"),
+                  br(),
+                  actionButton("exportClear", HTML("&nbsp;Clear all"), 
+                               width = "100", icon = icon("trash-alt"), class="btn-warning btn-sm"),
+                  actionButton("exportGo", HTML("&nbsp;Export"), 
+                               width = "100", icon = icon("box"), class="btn-success btn-sm")
+            )
+         )
       )#    end of tab Summarise Options    
     )
   )

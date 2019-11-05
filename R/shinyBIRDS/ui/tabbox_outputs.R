@@ -1,13 +1,12 @@
 tagList(
   tabBox(id = "outputs", width = 12,
         tabPanel(tagList(shiny::icon("globe"),"Map"), 
-                  leafletOutput("map", height = "83.3vh") #750 #"76.5vh" height = as.character(WindowH)
-                  # uiOutput("mapvar")
-                  
+                  leafletOutput("map", height = "83.3vh")
+
          ),
-        tabPanel(tagList(shiny::icon("table"),"Data"),
-            fluidRow(
-              tabBox(id = "data-typess", width = 12,
+        # tabPanel(tagList(shiny::icon("table"),"Data"),
+        #     fluidRow(
+        #       tabBox(id = "data-typess", width = 12,
               tabPanel(tagList(icon("binoculars"),"PBD"),
                   # fluidRow(  
                 DT::dataTableOutput("TablePBD", width = "90%")
@@ -30,19 +29,22 @@ tagList(
                 )
               ),
               tabPanel(tagList(icon("chart-line"),"Summarised"),
-                uiOutput("summaryUI")
+                htmlOutput("summaryUI")
               ),
               tabPanel(tagList(icon("file-export"),"For export"),
+                       uiOutput("exportOpt"),
+                       plotOutput("exportPlot"),
+                       br(),
                        selectInput(inputId = "dnlCRS",
                                    label = h5(tags$p("Coordinate Reference Systems", 
                                                      tags$span("Projection system of the layers. Source EPSG.org"), class="bubble")),
                                    choices = epsg.choices, #structure(EPSG.code, names=EPSG.name), 
-                                   multiple = FALSE, selected = 4326, width = "100%"),
+                                   multiple = FALSE, selected = 4326, width = 100),
                        downloadButton("downloadData", "Download", class="btn-success btn-sm")
               )
-            ), # end of tabbox
-            br() ) # end of fluidbox
-         ) # end tabPanel Data
+         #    ), # end of tabbox
+         #    br() ) # end of fluidbox
+         # ) # end tabPanel Data
   
   ) # end tabBox
 )

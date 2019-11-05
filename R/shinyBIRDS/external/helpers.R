@@ -8,10 +8,10 @@ substrRight <- function(x, n){
   substr(x, nchar(x)-n+1, nchar(x))
 }
 
-# add an asterisk to an input label
-labelMandatory <- function(label) {
-  tagList(
-    label,
-    span("*", class = "mandatory_star")
-  )
-}
+# # add an asterisk to an input label
+# labelMandatory <- function(label) {
+#   tagList(
+#     label,
+#     span("*", class = "mandatory_star")
+#   )
+# }

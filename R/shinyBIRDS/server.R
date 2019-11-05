@@ -9,10 +9,17 @@ shinyServer(function(input, output, session) {
   epsgInfo <- reactiveValues(msg=NULL, wng=NULL, code=NULL, proj4=NULL)
   validExport <- reactiveValues(state=FALSE, msg=NULL)
   
-  PBD <- reactiveValues(data=NULL, organised=NULL, visits = NULL, summary = NULL)
+  PBD <- reactiveValues(data=NULL, organised=NULL, visits = NULL, summary = NULL, exportDef = NULL, export = NULL)
   data_stat <- reactiveValues(data = NULL, name = "visitsData")
   cleancoord <- reactiveValues(x=NULL, logs=NULL)
 
+
+  disable("csvSpp")
+  disable("csvTaxonEnable")
+  disable("csvLat")
+  disable("csvLon")
+  disable("timeCols")
+  disable("visitCols")
   disable("downloadData")
   disable("clearButton")
   disable("dnlCRS")
@@ -20,12 +27,6 @@ shinyServer(function(input, output, session) {
   # disable("expVisits")
   # # disable("sumaryGo")
   # disable("exportGo")
-  disable("csvSpp")
-  disable("csvTaxonEnable")
-  disable("csvLat")
-  disable("csvLon")
-  disable("timeCols")
-  disable("visitCols")
   
   # Create the map
   output$map <- renderLeaflet({
@@ -46,7 +47,7 @@ shinyServer(function(input, output, session) {
     addLayersControl(#baseGroups = c("Google Satellite", "OSM (Hot)","Open Topo", "ESRI Street"),
                     overlayGroups = c("PBD","Study Area", "Grid"), 
                     options = layersControlOptions(collapsed=FALSE,  position = "bottomright")) #%>% 
-    # addLegend(position = "bottomleft", colors =  
+    # leaflet::addLegend(position = "bottomleft", colors =  
     #           labels = "", 
     #           title = "No. Observations  <br /> <small>Data from GBIF.org</small>", opacity = 1)
   }) ## end render map
@@ -56,9 +57,11 @@ shinyServer(function(input, output, session) {
   
   ### Upload the csv and make it spatial.
   observe({
+    if(is.null(input$csvFile)) return()
+    
     csvInfo$wng<-""
     csvInfo$msg<-""
-    if(is.null(input$csvFile)) return()
+    
     inFileR$fileCSV <- input$csvFile  
     inFileR$newCSV <- TRUE
     
@@ -136,6 +139,8 @@ shinyServer(function(input, output, session) {
         PBD$organised <- NULL
         PBD$visits <- NULL
         PBD$summary <- NULL
+        PBD$exportDef <- NULL
+        PBD$export <- NULL
         data_stat$data<-NULL
         drawnPoly$data<-NULL
         StudyArea$data<-NULL
@@ -216,7 +221,7 @@ shinyServer(function(input, output, session) {
   output$CleanCoordInfo<-renderUI( div(HTML(cleancoord$logs), class="infotext")  )
   
   
-  ### update taxonrank
+  ### Update taxonrank
   output$taxonRankUI <- renderUI({
     req(PBD$data)
     if (input$csvTaxonEnable) {
@@ -241,7 +246,7 @@ shinyServer(function(input, output, session) {
                     selected = switch(length(wTax) > 0, stdTaxonRank[wTax], NULL))
   })
  
-  
+  #### Organise
   observe({
     disable("organiseGo")
     req(PBD$data)
@@ -288,7 +293,8 @@ shinyServer(function(input, output, session) {
           addCircleMarkers(data = PBDpoints, group = "PBD", 
                            color = "black", stroke = FALSE, fillOpacity = 0.5, radius = 5,
                            label = ~as.character(scientificName)) %>% 
-          addLegend(position = "bottomleft", colors = "black", 
+          clearControls() %>% 
+          leaflet::addLegend(position = "bottomleft", colors = "black", 
                     group = "PBD", labels = "Random subset of PBD",
                     title = "", opacity = 0.5)
         
@@ -311,7 +317,7 @@ shinyServer(function(input, output, session) {
     enable("summaryGo")
   })
   
-  ##Explore the visits, before summarysing
+  ## Explore the visits, before summarysing
   observeEvent(input$expVisits, {
     req(PBD$organised)
     PBDorg<-PBD$organised
@@ -340,8 +346,8 @@ shinyServer(function(input, output, session) {
                  radius = ~medianDist, #~effortDiam/2, #
                  label = ~visitUID) %>% 
       clearControls() %>% 
-      addLegend(position = "bottomleft", colors = c("red","black"), 
-                group = "PBD", labels = c("Visit", "Random subset of PBD"),
+      leaflet::addLegend(position = "bottomleft", colors = c("red","black"), 
+                group = "PBD", labels = c("Visits extent", "Random subset of PBD"),
                 title = "", opacity = 0.5)
   })
   
@@ -528,36 +534,33 @@ shinyServer(function(input, output, session) {
   })
   
 ####
-##clear all data
+##clear all grid data
   observeEvent(input$clearButton, {
-    # removeUI(selector = "#PBDsummary")
-    
     drawnPoly$data<-NULL
     StudyArea$data<-NULL
     gridR$data<-NULL
 
-  proxy<-leafletProxy(mapId="map")
-    proxy %>% 
-      # setView(0,0,2) %>% 
-      clearGroup("Study AreaPol") %>% 
-      clearGroup("Study Area") %>% 
-      clearGroup("Grid")
+    proxy<-leafletProxy(mapId="map")
+      proxy %>% 
+        # setView(0,0,2) %>% 
+        clearGroup("Study AreaPol") %>% 
+        clearGroup("Study Area") %>% 
+        clearGroup("Grid")
   })
   
-  
+  #### Summarise
   observeEvent(input$summaryGo,{
     req(PBD$organised)
     PBD$summary <- summariseBirds(PBD$organised, gridR$data, spillOver = input$spillOver)
   })
   
-  
+  ### Dynamically make comments on the export combination
   observe({
     req(simpleSB) ## from BIRDS
-    ## TODO PBD$summary doesnt need to be a real summary, just an empty one for faster messages
     errorExp<-tryCatch({
       tmp<-exportBirds(simpleSB, 
                     dimension = input$expDimension, 
-                    timeRes = switch(input$expTemRes != "", input$expTemRes, NULL), 
+                    timeRes = switch(input$expTimeRes != "", input$expTimeRes, NULL), 
                     variable = input$expVariable, 
                     method = input$expMethod)  
       msg<-""
@@ -586,24 +589,98 @@ shinyServer(function(input, output, session) {
     )
   )
   
+  ### Add export definition to a list
+  observe({
+    disable("exportAdd")
+    if(validExport$state){
+      enable("exportAdd")} 
+    else {
+      disable("exportAdd")
+    }
+  })
+  
+  observeEvent(input$exportAdd,{
+      if(is.null(PBD$exportDef)){
+        PBD$exportDef <- data.frame("dimension" = input$expDimension, 
+                                    "timeRes" = input$expTimeRes, 
+                                    "variable" = input$expVariable, 
+                                    "method" = input$expMethod)    
+      } else {
+        PBD$exportDef <- rbind(PBD$exportDef,
+                               c(input$expDimension, 
+                                  input$expTimeRes, 
+                                  input$expVariable, 
+                                  input$expMethod)
+                              )
+      }
+    # }
+  })
+  
+  observe({
+    disable("exportClear")
+    if(!is.null(PBD$exportDef)){
+      enable("exportClear")} 
+    else {
+      disable("exportClear")
+    }
+  })
+  
+  observeEvent(input$exportClear,{
+    PBD$exportDef <- NULL
+    PBD$export <- NULL
+  })
+  
+  
+  output$exportDefs <- DT::renderDataTable({
+    if(is.null(PBD$exportDef)) return()
+    table <- PBD$exportDef
+    colnames(table) <- c("Dimension", "Time resolution", "Variable", "Method")
+    
+    datatable(table, class = 'cell-border stripe',
+              # caption = HTML("The table below shows the data for each observation."), 
+              rownames = FALSE,
+              autoHideNavigation = TRUE,
+              options = list(
+                dom = 't',
+                pageLength = 15,
+                scrollX=FALSE)
+    )
+  })
+  
   observe({
     disable("exportGo")
     req(PBD$summary)
-    if(validExport$state){
+    req(PBD$exportDef)
+    if(!is.null(PBD$exportDef)){
       enable("exportGo")} 
     else {
       disable("exportGo")
     }
   })
   
+  
   observeEvent(input$exportGo,{
     req(PBD$summary)
-    if(validExport$state){
+    req(PBD$exportDef)
+    
+    PBD$export <- NULL
+    
+    if(nrow(PBD$exportDef)==1){
       PBD$export <- exportBirds(PBD$summary, 
-                                dimension = input$expDimension, 
-                                timeRes = switch(input$expTemRes != "", input$expTemRes, NULL), 
-                                variable = input$expVariable, 
-                                method = input$expMethod)  
+                                dimension = PBD$exportDef$dimension, 
+                                timeRes = switch(PBD$exportDef$timeRes != "", PBD$exportDef$timeRes, NULL), 
+                                variable = PBD$exportDef$variable, 
+                                method = PBD$exportDef$method)  
+    } else {
+      PBD$export <- vector(mode = "list", length = nrow(PBD$exportDef))
+      for(i in 1:nrow(PBD$exportDef)){
+        PBD$export[[i]] <- exportBirds(PBD$summary, 
+                                  dimension = PBD$exportDef$dimension[i], 
+                                  timeRes = switch(PBD$exportDef$timeRes[i]  != "", PBD$exportDef$timeRes[i], NULL), 
+                                  variable = PBD$exportDef$variable[i], 
+                                  method = PBD$exportDef$method[i])    
+      }
+      
     }
     
   })
@@ -611,23 +688,19 @@ shinyServer(function(input, output, session) {
   ########################################### DATA TAB #############################
   output$TablePBD <- DT::renderDataTable({
     if (is.null(PBD$data)) return()
+    # req(PBD$data)
     
     table<-PBD$data
-    # table[,3]<-round(table[,3],1)
     table<-as.data.frame(table, row.names = c(1:nrow(table)))
-    # table<-table[,c(2,1,3,4,5,6)]
-    # colnames(table)<-c("No. Obs.", "Spp. Richness", "Obs. Index", "I. Obs. Raw","I. Obs. Ind.","I. Comb.")
-    
+
     datatable(table, class = 'cell-border stripe',
               caption = HTML("The table below shows the data for each observation."), 
               rownames = FALSE,
               autoHideNavigation = TRUE,
               options = list(
                 dom = 'tp',
-                order = list(list(1, 'desc')),
-                pageLength = 15,
+                pageLength = 5,
                 scrollX=TRUE)
-                #lengthMenu = c(10, 25, 50, 100))
               )
   }, server = TRUE) #end render DataTable
   
@@ -638,12 +711,11 @@ shinyServer(function(input, output, session) {
     table<-as.data.frame(table, row.names = c(1:nrow(table)))
 
     datatable(table, class = 'cell-border stripe',
-              caption = HTML("The table below shows the data for each observation."), 
+              caption = HTML("The table below shows the data organised by visits."), 
               autoHideNavigation = TRUE,
               rownames = FALSE,
               options = list(
                 dom = 'tp',
-                order = list(list(1, 'desc')),
                 pageLength = 15,
                 scrollX=TRUE)
               #lengthMenu = c(10, 25, 50, 100))
@@ -651,34 +723,105 @@ shinyServer(function(input, output, session) {
   }, server = TRUE) #end render DataTable
   
   output$summaryUI <- renderUI({
-    
     req(PBD$summary)
-    h3("summary")
-    # str(PBD$summary)
-    ### Make it a function
-    
+    x <- PBD$summary
+    attrX <- attributes(x)
+    nGrid <- nrow(x$spatial@data)
+    nDays <- nrow(x$temporal)
+    years <- unique(year(index(x$temporal)))
+    vars <- c("number of observations", "number of visits", "number of species observed",
+              "average species list length among visits", "number of days")
+    tagList(
+      h3("Summary"),
+      p("The spatial element is a SpatialPolygonsDataFrame with ", strong(nGrid), " gridcells/polygons."),
+      p("The temporal element is a xts time series with ", strong(nDays), 
+                 " daily observations over the years", strong(paste(years, collapse = ", ")), "." ),
+      p(HTML("The spatioTemporal element is an array summarising the variables<sup>*</sup>
+                 over "), strong(nGrid), " polygons, ", strong(length(years)), 
+                 " years, and 12 months (+ a yearly summary)." ),
+      p(HTML("<sup>*</sup>The variables are: "), strong(paste(vars, collapse = ", ")), "."),
+      p("There is also a spatioTemporalVisits array element that list all the
+          unique visitUID for each polygon, year, and month."),
+      p("The overlayd element is a list with a organised data frames for
+          each polygon. Note that if spill over = TRUE, there might be
+          observations duplicated among the polygons."),
+      p(strong("Attributes for the summary")),
+      p(HTML(paste0("visitCol = ", attrX$visitCol), 
+        paste0("<br />spillOver = ", attrX$spillOver), 
+        paste0("<br />spatial = ", attrX$spatial)))
+    )
+
   }) #end render Summary UI
 
-  output$plotSpp<-renderPlot({ ### Plot spp
-    if(is.null(preSearch$spp)) return()
-    # ...
-  })
-  
-  output$plotTime<-renderPlot({ ### Plot spp
-    if(is.null(preSearch$time)) return()
-    # ...
-  })
-  
-  output$plotData <- renderPlot({
-    #...
-    
+  ### Export options
+  output$exportOpt<-renderUI({ ### Plot spp
+    req(PBD$exportDef)
+    req(PBD$export)
+    if(nrow(PBD$exportDef)>1){
+      selectInput("exportOptions", "Choose the definition", 
+                  choices = structure(1:nrow(PBD$exportDef), 
+                                      names=apply(PBD$exportDef, 1, paste, collapse = ", "))
+                  )
+    }
   }) # end observe plot
+  
+  #### TODO CACHE THESE PLOTS
+  output$exportPlot<-renderPlot({ 
+  # output$exportPlot<-renderCachedPlot({ 
+    req(PBD$export)
+    # export <<- PBD$export
+    # exportDef <<- PBD$exportDef
+    
+    if(nrow(PBD$exportDef)==1){
+      exportDef <- PBD$exportDef
+      export <- PBD$export
+    } else {
+      req(input$exportOptions)
+      choice <- as.numeric(input$exportOptions)
+      exportDef <- PBD$exportDef[choice,]
+      export <- PBD$export[[choice]]
+    }
+    if(exportDef$dimension=="temporal"){
+      plot(export, 
+           main= exportDef$variable)
+    } else {
+      bbox<-export@bbox
+      bbox[,1]<-floor(bbox[,1])
+      bbox[,2]<-ceiling(bbox[,2])
+      wrld <- map("world", xlim = c(-179,179), ylim = c(-89, 89), 
+                  interior = FALSE, fill = TRUE, plot = FALSE) 
+      # wrld_p <- pruneMap(wrld, xlim = bbox[1,], ylim=bbox[2,]) 
+      wrld_p <- wrld
+      llCRS <- CRS("+proj=longlat +ellps=WGS84") 
+      wrld_sp <- map2SpatialLines(wrld_p, proj4string = llCRS) 
+      wrld_sp <- map2SpatialPolygons(wrld_p, proj4string = llCRS, IDs = sapply(strsplit(wrld_p$names, ":"), "[", 1L)) 
+
+## TODO this is a mean of al temporal components. How do I do it otherwise? dynamic?
+      colData<-round(if(ncol(export@data)==1) export@data[,1] else rowMeans(export@data, na.rm = TRUE), 0)
+      
+      pal <- colorNumeric(c("red","white", "blue"), 
+                        range(colData, na.rm = TRUE), na.color = "transparent")
+      palReal <- pal(colData)
+      alpha <- "50"
+      palGrid <- ifelse(palReal != "transparent", paste0(palReal, alpha), palReal)
+      seqPal <- seq(min(colData, na.rm = TRUE), max(colData, na.rm = TRUE), length.out = 5)
+      
+      par(mar=c(3,3,1,1))
+      plot(export, col=NA, border=NA, axes = TRUE)
+      plot(wrld_sp, col = "grey60", add=TRUE) 
+      plot(export, col=palGrid, 
+           border=NA, add=TRUE)
+      # title(exportDef$variable) 
+      legend("bottomleft", legend = seqPal, fill = pal(seqPal), border = NA,
+             title = exportDef$variable, bty = "n") 
+      
+    }
+  # }, cacheKeyExpr = list(input$exportOptions, PBD$export)) # end observe plot
+  })
   
   
   ########### Download
   ## Download the data
-  output$downloadMessage<-renderUI(div(HTML("Downloads will be available in PRO Version"), class="message"))
-  
   output$downloadData <- downloadHandler(
     filename = paste0("SppObsData.tar"),
     # filename = paste0("SppObsData.zip"),

@@ -1,7 +1,4 @@
 # Extra functions
-funM<-function(x, y, ...){
-  return(max(c(x,y), na.rm=T))
-}
 
 IgnComb <- function(x,y,o05,o05spp, ...) {
   IgnOI <- o05spp/(o05spp + x)

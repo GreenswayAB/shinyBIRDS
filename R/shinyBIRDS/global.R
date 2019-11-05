@@ -16,6 +16,8 @@ library(dplyr)
 library(DT)
 library(data.table)
 
+library(maps) 
+library(maptools) 
 library(rgdal)
 library(rgeos)
 library(raster)
@@ -34,6 +36,7 @@ library(CoordinateCleaner) #rnaturalearthdata
 library(httr)
 library(jsonlite)
 library(lubridate)
+library(xts)
 library(stringr)
 options(stringsAsFactors = FALSE)
 
@@ -70,9 +73,11 @@ epsg.choices<-c("WGS84" = "4326",
                 "Equal Area US" = "2163",
                 "SWEREF99TM" = "3006") 
 
+DimeCode<-c("spatial", "temporal")
+Dimension<-c("Spatial", "Temporal")
 
-TemResCode<-c("", "yearly", "month","monthly", "daily")
-TemRes<-c("NULL", "Yearly", "Month","Monthly", "Daily")
+TimeResCode<-c("", "yearly", "month","monthly", "daily")
+TimeRes<-c("NULL", "Yearly", "Month","Monthly", "Daily")
 
 VarCode<-c("nObs", "nVis", "nSpp", "avgSll", "nYears", "nDays", "nCells")
 Variable<-c("n. Observations", "n. Visits", "n. Species", "avg. Species List Length", "n. Years", "n. Days", "n. Gridcells")
