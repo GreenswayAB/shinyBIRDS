@@ -371,6 +371,9 @@ shinyServer(function(input, output, session) {
   
   #Observe the extent 
   observeEvent(input$goExtent, {
+    
+### TODO use  OB2Polygon(df, shape = "bBox") for more shapes
+    
     if (is.null(PBD$organised)) return()
     gridR$data<-NULL
     
