@@ -54,7 +54,7 @@ sidebar<-dashboardSidebar(width = 150,
                           collapsed = TRUE,
                           sidebarMenu(id="tabs",
                                       menuItem("Explorer",  icon = icon("search"), tabName = "Explorer"), 
-                                      menuItem("About", icon = icon("info"), tabName = "ReadMe"),
+                                      menuItem("About", icon = icon("info"), tabName = "About"),
                                       menuItem("Help", icon = icon("question"), tabName = "Help")
                           ),
                           
