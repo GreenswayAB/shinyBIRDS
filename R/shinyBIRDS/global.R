@@ -60,6 +60,8 @@ dir.create(td, showWarnings = FALSE)
 stdVisitCol <- c("locality", "day", "month", "year", "recordedby")
 stdTimeCol <- c("year", "month", "day")
 stdTaxonRank <- c("SPECIES","SUBSPECIES","VARIETY")
+coordLatOpt <- c("decimallatitude", "y", "coordinatey")
+coordLonOpt <- c("decimallongitude", "x", "coordinatex")
 
 urlGBIF <- "http://api.gbif.org"
 urlEPGS <- "http://epsg.io"

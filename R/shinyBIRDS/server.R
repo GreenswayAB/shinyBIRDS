@@ -7,6 +7,7 @@ shinyServer(function(input, output, session) {
   shapeWr <- reactiveValues(msg=NULL)
   csvInfo <- reactiveValues(msg=NULL, wng=NULL)
   epsgInfo <- reactiveValues(msg=NULL, wng=NULL, code=NULL, proj4=NULL)
+  orgInfo <- reactiveValues(msg=NULL)
   validExport <- reactiveValues(state=FALSE, msg=NULL)
   
   PBD <- reactiveValues(data=NULL, organised=NULL, visits = NULL, summary = NULL, exportDef = NULL, export = NULL)
@@ -28,34 +29,11 @@ shinyServer(function(input, output, session) {
   # # disable("sumaryGo")
   # disable("exportGo")
   
-  # Create the map
-  output$map <- renderLeaflet({
-    leaflet() %>%
-    addTiles(options = tileOptions(minZoom=1, continuousWorld = FALSE)) %>% 
-    # addTiles(urlTemplate = "https://mts1.google.com/vt/lyrs=s&hl=en&src=app&x={x}&y={y}&z={z}&s=G",
-    #          attribution = "Google Maps", group = "Google Satellite") %>% 
-    # addProviderTiles(providers$OpenStreetMap.HOT, group = "OSM (Hot)") %>%
-    # addProviderTiles(providers$OpenTopoMap, group = "Open Topo") %>%
-    # addProviderTiles(providers$Esri.WorldStreetMap, group = "ESRI Street") %>%  
-    setView(lng = 0, lat = 0, zoom = 2) %>% 
-    setMaxBounds(lng1 = -220, lat1 = 80, lng2 = 220, lat2 = -80) %>% 
-    addDrawToolbar(targetGroup = "Study AreaPol", 
-                     polylineOptions = FALSE, circleOptions = FALSE, markerOptions = FALSE, circleMarkerOptions = FALSE,
-                     editOptions = drawShapeOptions(stroke = TRUE, color = "#ff0066", weight = 1, opacity = 1,
-                                                   fill = TRUE, fillColor = "#ff0066", fillOpacity = 0.2),
-                     singleFeature = TRUE) %>% 
-    addLayersControl(#baseGroups = c("Google Satellite", "OSM (Hot)","Open Topo", "ESRI Street"),
-                    overlayGroups = c("PBD","Study Area", "Grid"), 
-                    options = layersControlOptions(collapsed=FALSE,  position = "bottomright")) #%>% 
-    # leaflet::addLegend(position = "bottomleft", colors =  
-    #           labels = "", 
-    #           title = "No. Observations  <br /> <small>Data from GBIF.org</small>", opacity = 1)
-  }) ## end render map
- 
+  ### Upload the csv and make it spatial.
+  
   output$csvMessage <- renderUI( div(HTML(csvInfo$wng ), class="message") )
   output$csvInfo    <- renderUI( div(HTML(csvInfo$msg ), class="infotext"))
   
-  ### Upload the csv and make it spatial.
   observe({
     if(is.null(input$csvFile)) return()
     
@@ -83,79 +61,83 @@ shinyServer(function(input, output, session) {
                         stringsAsFactors = FALSE, encoding = ifelse(input$csvUTF,"UTF-8","unknown"), 
                         header = input$csvHeader, sep = input$csvSep, 
                         quote = input$csvQuote, na.strings = "", data.table = FALSE)
-      inFileR$newCSV <- FALSE
     }, error = function(e) e, warning = function(w) w, 
     finally = {
       if (exists("PBDin")) {
         if (class(PBDin)=="data.frame" && length(colnames(PBDin)) > 1) {
           inFileR$okCSV<-TRUE
+          inFileR$newCSV <- FALSE
         }  
       } else {
         inFileR$okCSV<-FALSE
       }
     })
       
-      if(inFileR$okCSV){
-        enable("csvSpp")
-        enable("csvTaxonEnable")
-        enable("csvLat")
-        enable("csvLon")
-        enable("timeCols")
-        enable("visitCols")
-        
-        colnames(PBDin) <- tolower(colnames(PBDin))
-        PBDcolnames <- colnames(PBDin)
-        csvInfo$wng <- ""
-        csvInfo$msg <- paste0("The input file consist of ", length(PBDcolnames), 
-                            " columns and ", nrow(PBDin), " observations.")
+    if(inFileR$okCSV){
+      enable("csvSpp")
+      enable("csvTaxonEnable")
+      enable("csvLat")
+      enable("csvLon")
+      enable("timeCols")
+      enable("visitCols")
+      
+      colnames(PBDin) <- tolower(colnames(PBDin))
+      PBDcolnames <- colnames(PBDin)
+      csvInfo$wng <- ""
+      csvInfo$msg <- paste0("The input file consist of ", length(PBDcolnames), 
+                          " columns and ", nrow(PBDin), " observations.")
 
-        ## Check columns
-        updateSelectInput(session, inputId = "csvSpp", choices = PBDcolnames, 
-                          selected = switch("scientificname" %in% PBDcolnames, "scientificname", NULL) )
-        updateSelectInput(session, inputId = "csvLat", choices = PBDcolnames, 
-                          selected = switch("decimallatitude" %in% PBDcolnames, "decimallatitude", NULL) )
-        updateSelectInput(session, inputId = "csvLon", choices = PBDcolnames, 
-                          selected = switch("decimallongitude" %in% PBDcolnames, "decimallongitude", NULL) )
+      
+      ## Check columns
+      wColSpp <- switch("scientificname" %in% PBDcolnames, "scientificname", NULL)
+      wColLat <- switch(any(coordLatOpt %in% PBDcolnames), coordLatOpt[which(coordLatOpt %in% PBDcolnames)[1]], NULL)
+      wColLon <- switch(any(coordLonOpt %in% PBDcolnames), coordLonOpt[which(coordLonOpt %in% PBDcolnames)[1]], NULL)
+      updateSelectInput(session, inputId = "csvSpp", choices = PBDcolnames, 
+                        selected = wColSpp)
+      updateSelectInput(session, inputId = "csvLat", choices = PBDcolnames, 
+                        selected = wColLat )
+      updateSelectInput(session, inputId = "csvLon", choices = PBDcolnames, 
+                        selected = wColLon )
+      
+      # presenceCol=NULL
+      wColT <- which(stdTimeCol %in% PBDcolnames) 
+      updatePickerInput(session, inputId = "timeCols", choices = PBDcolnames, 
+                          selected = if (length(wColT)>0) stdTimeCol[wColT] else NULL)  
+      
+      wColV <- which(stdVisitCol %in% PBDcolnames)
+      ### If year, month, day is included in time, then it will also be use in visit
+      wColV <- wColV[-match(stdTimeCol[wColT], stdVisitCol)] 
+      visitCol.selected <- if (length(wColV)>0) stdVisitCol[wColV] else NULL
+      updatePickerInput(session, inputId = "visitCols", choices = PBDcolnames, 
+                        selected = visitCol.selected )
+
+#### TODO check input conditions
+      #columns for time
+      #if (length(input$timeCols) %in% c(1,3))
+      # columns for visits
+      
+      PBD$data <- PBDin
+      ## And start over
+      PBD$organised <- NULL
+      PBD$visits <- NULL
+      PBD$summary <- NULL
+      PBD$exportDef <- NULL
+      PBD$export <- NULL
+      data_stat$data<-NULL
+      drawnPoly$data<-NULL
+      StudyArea$data<-NULL
+      # gridR$data<-NULL ## the grid can stay
+      
+      proxy<-leafletProxy(mapId="map")
+      proxy %>% 
+        setView(0,0,2) %>% 
+        clearGroup("Study AreaPol") %>% 
+        clearGroup("Study Area") %>% 
+        # clearGroup("Grid") %>% 
+        clearGroup("PBD") %>% 
+        clearControls() 
         
-        # presenceCol=NULL
-        wColT <- which(stdTimeCol %in% PBDcolnames) 
-        updatePickerInput(session, inputId = "timeCols", choices = PBDcolnames, 
-                            selected = if (length(wColT)>0) stdTimeCol[wColT] else NULL)  
-        
-        wColV <- which(stdVisitCol %in% PBDcolnames)
-        ### If year, month, day is included in time, then it will also be use in visit
-        wColV <- wColV[-match(stdTimeCol[wColT], stdVisitCol)] 
-        visitCol.selected <- if (length(wColV)>0) stdVisitCol[wColV] else NULL
-        updatePickerInput(session, inputId = "visitCols", choices = PBDcolnames, 
-                          selected = visitCol.selected )
-  
-  #### TODO check input conditions
-        #columns for time
-        #if (length(input$timeCols) %in% c(1,3))
-        # columns for visits
-        
-        PBD$data <- PBDin
-        ## And start over
-        PBD$organised <- NULL
-        PBD$visits <- NULL
-        PBD$summary <- NULL
-        PBD$exportDef <- NULL
-        PBD$export <- NULL
-        data_stat$data<-NULL
-        drawnPoly$data<-NULL
-        StudyArea$data<-NULL
-        gridR$data<-NULL
-        
-        proxy<-leafletProxy(mapId="map")
-        proxy %>% 
-          setView(0,0,2) %>% 
-          clearGroup("Study AreaPol") %>% 
-          clearGroup("Study Area") %>% 
-          clearGroup("Grid") %>% 
-          clearGroup("PBD") %>% 
-          clearControls() 
-        
-      } else {
+      } else { ### File not OK
         disable("csvSpp")
         disable("csvTaxonEnable")
         disable("csvLat")
@@ -184,7 +166,7 @@ shinyServer(function(input, output, session) {
       getEPSG <- GET(urlEPGS, path=paste0("/?q=", searchWeb, "&format=json"))
   
       if(getEPSG$status_code == 200) {
-        contEPSG <- content(getEPSG, encoding = "UTF-8")
+        contEPSG <<- content(getEPSG, encoding = "UTF-8")
         if (contEPSG$number_result==0){
           epsgInfo$wng <- "Nothing found"
         } else {
@@ -195,12 +177,17 @@ shinyServer(function(input, output, session) {
                                    "<br /> EPSG: ",  epsgInfo$code, 
                                    "<br /> Proj4: ", epsgInfo$proj4)
           } else { 
-            epsgInfo$wng<-"Refine your search, there are more than one hit"
+            epsgList <- paste(unlist(
+                              lapply(contEPSG$results, function(x) paste0(x$name," : ", x$code))),
+                              collapse = ",<br/>")
+            epsgInfo$wng<-paste0("Refine your search, there are ", contEPSG$number_result, " potential matchs.<br/>
+                                 Candidates are: <br/>", epsgList)
           }  
         }
       } else {epsgInfo$wng<-"Bad request"}
     }
   })
+  
   output$epsgInfoUI<-renderUI( tagList(
                                 br(),
                                 div(HTML(epsgInfo$msg), class="infotext"),
@@ -246,6 +233,28 @@ shinyServer(function(input, output, session) {
                     selected = switch(length(wTax) > 0, stdTaxonRank[wTax], NULL))
   })
  
+  
+  ###### Create the map
+  output$map <- renderLeaflet({
+    leaflet() %>%
+      addTiles(options = tileOptions(minZoom=1, continuousWorld = FALSE)) %>% 
+      # addTiles(urlTemplate = "https://mts1.google.com/vt/lyrs=s&hl=en&src=app&x={x}&y={y}&z={z}&s=G",
+      #          attribution = "Google Maps", group = "Google Satellite") %>% 
+      # addProviderTiles(providers$OpenStreetMap.HOT, group = "OSM (Hot)") %>%
+      # addProviderTiles(providers$OpenTopoMap, group = "Open Topo") %>%
+      # addProviderTiles(providers$Esri.WorldStreetMap, group = "ESRI Street") %>%  
+      setView(lng = 0, lat = 0, zoom = 2) %>% 
+      setMaxBounds(lng1 = -220, lat1 = 80, lng2 = 220, lat2 = -80) %>% 
+      addDrawToolbar(targetGroup = "Study AreaPol", 
+                     polylineOptions = FALSE, circleOptions = FALSE, markerOptions = FALSE, circleMarkerOptions = FALSE,
+                     editOptions = drawShapeOptions(stroke = TRUE, color = "#ff0066", weight = 1, opacity = 1,
+                                                    fill = TRUE, fillColor = "#ff0066", fillOpacity = 0.2),
+                     singleFeature = TRUE) %>% 
+      addLayersControl(#baseGroups = c("Google Satellite", "OSM (Hot)","Open Topo", "ESRI Street"),
+        overlayGroups = c("PBD","Study Area", "Grid"), 
+        options = layersControlOptions(collapsed=FALSE,  position = "bottomright")) #%>% 
+  }) ## end render map
+  
   #### Organise
   observe({
     disable("organiseGo")
@@ -256,15 +265,18 @@ shinyServer(function(input, output, session) {
     enable("organiseGo")
   })
   
-  ## organise it and make it spatial and plot it
+  ## organise it and make it spatial and plot it in the map
   observeEvent(input$organiseGo, {
     req(PBD$data)
     req(epsgInfo$code)
+    # PBD$organised <- NULL
+    
     tryCatch({
       PBDdata <- PBD$data[,c(input$csvSpp, input$csvLat, input$csvLon,
                         input$timeCols, input$visitCols, input$csvTaxon)]
       timeCol.selected <- if(length(input$timeCols) == 3) stdTimeCol else input$timeCols
-      visitCol.selected <- c(stdTimeCol, input$visitCols) ### TODO IF check box
+      visitCol.selected <- c(stdTimeCol, input$visitCols)
+  ### TODO IF check box
 
       PBD$organised <- organizeBirds(PBDdata, 
                                      sppCol = input$csvSpp, 
@@ -289,6 +301,7 @@ shinyServer(function(input, output, session) {
 
         proxy <- leafletProxy(mapId="map")
         proxy %>% 
+          clearGroup("PBD") %>% 
           fitBounds(lng1=boundsStudy[1], lat1=boundsStudy[2], lng2=lng2shift, lat2=boundsStudy[4]) %>% 
           addCircleMarkers(data = PBDpoints, group = "PBD", 
                            color = "black", stroke = FALSE, fillOpacity = 0.5, radius = 5,
@@ -299,15 +312,23 @@ shinyServer(function(input, output, session) {
                     title = "", opacity = 0.5)
         
         inFileR$newCSV <- FALSE
+        orgInfo$msg <- ""
         enable("downloadData")  
         # enable("expVisits")
         # enable("summaryGo")
       } else {
-        cat("There is no SpatialPoints Data Frame (make a nice error message here)")
+        orgInfo$msg <- "There is no SpatialPoints Data Frame. <br/>Maybe coordinate columns or CRS is wrong?"
       }
       
     })
   })
+  
+  output$orgInfoUI<-renderUI( 
+    tagList(
+        br(),
+        div(HTML(orgInfo$msg), class="message")
+    )
+  )
   
   observe({
     disable("expVisits")
