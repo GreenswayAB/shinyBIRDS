@@ -1,7 +1,8 @@
 body<-dashboardBody(
   useShinyjs(),
   # useShinyalert(),
-  theme = shinytheme("united"),
+  # theme = shinytheme("united"),
+  shinythemes::themeSelector(),  # <--- Add this somewhere in the UI
   tags$head(
     tags$link(rel="shortcut icon", href="img/favicon.ico"),
     
