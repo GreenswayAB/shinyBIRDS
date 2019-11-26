@@ -817,7 +817,7 @@ shinyServer(function(input, output, session) {
       # wrld_p <- pruneMap(wrld, xlim = bbox[1,], ylim=bbox[2,]) 
       wrld_p <- wrld
       llCRS <- CRS("+proj=longlat +ellps=WGS84") 
-      wrld_sp <- map2SpatialLines(wrld_p, proj4string = llCRS) 
+      # wrld_sp <- map2SpatialLines(wrld_p, proj4string = llCRS) 
       wrld_sp <- map2SpatialPolygons(wrld_p, proj4string = llCRS, IDs = sapply(strsplit(wrld_p$names, ":"), "[", 1L)) 
 
 ## TODO this is a mean of al temporal components. How do I do it otherwise? dynamic?
