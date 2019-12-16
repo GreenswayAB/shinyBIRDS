@@ -85,7 +85,7 @@ tagList(
         )
       ),
   
-      ######## Grid
+      ######## Grid and Summarise
       tabPanel(tagList(shiny::icon("th"),"Grid and Summary"),          
         fluidRow(
           column(4,
@@ -103,20 +103,25 @@ tagList(
               actionButton("clearButton", HTML("&nbsp;Clear grid"), 
                            width = "100", icon = icon("trash"), class="btn-warning btn-sm")
           ),
-          column(4,
+          column(2,
                  h4("Summarise"),
                  # materialSwitch("searchYearRng", "Filter years", value = TRUE, status = "primary", right=TRUE),
-                 checkboxInput("spillOver", 
-                               label = h5(tags$p("Spill visits over neighbour cells", 
-                                                 tags$span("a long explanation here..."), ## TODO
-                                                 class="bubble")), TRUE),
+                 # checkboxInput("spillOver", 
+                 #               label = h5(tags$p("Spill visits over neighbour cells", 
+                 #                                 tags$span("a long explanation here..."), ## TODO
+                 #                                 class="bubble")), TRUE),
+                 pickerInput("spillOver", label = h5(tags$p("Spill visits over neighbour cells", 
+                                                            tags$span("See Birds vignetes for an explanation on how spill over works. Else, just leave 'unique'."),
+                                                            class="bubble")),
+                             choices = c("Not", "Unique", "Duplicate"), selected = "Unique",
+                             multiple = FALSE,  options = list(`actions-box` = TRUE)),
                  actionButton("summaryGo", HTML("&nbsp;Summary"), 
                               width = "100", icon = icon("chart-bar"), class="btn-success btn-sm")
           )
         )
       ), #    end of tab Grid Options
       
-      ### Summarise
+      ### Export
       tabPanel(tagList(shiny::icon("box"),"Export"),
          fluidRow(
            column(4,

@@ -277,8 +277,7 @@ shinyServer(function(input, output, session) {
       PBDdata <- PBD$data[,c(input$csvSpp, input$csvLat, input$csvLon,
                         input$timeCols, input$visitCols, input$csvTaxon)]
       timeCol.selected <- if(length(input$timeCols) == 3) stdTimeCol else input$timeCols
-      # visitCol.selected <- c(stdTimeCol, input$visitCols)
-print(PBDdata)
+
       PBD$organised <- organizeBirds(PBDdata, 
                                      sppCol = input$csvSpp, 
                                      idCols = input$visitCols,
@@ -291,8 +290,7 @@ print(PBDdata)
                                      taxonRankCol = switch(input$csvTaxonEnable, input$csvTaxon, NULL),
                                      taxonRank = switch(input$csvTaxonEnable, input$taxonRankVal, stdTaxonRank),
                                      simplifySppName = input$simplifySpp)
-  print(PBD$organised)
-      
+
     }, error = function(e) e, warning = function(w) w, 
     finally = {
       if (!is.null (PBD$organised)){
@@ -378,6 +376,7 @@ print(PBDdata)
   })
   
   ######### GRID
+  ######### MAKE THE GRID
   ## observe grid method
   output$gridMethodUI <- renderUI({
       if(input$gridMethod == 1){
@@ -578,9 +577,14 @@ print(PBDdata)
   })
   
   #### Summarise
+  # observe({print(input$spillOver)})
+  
   observeEvent(input$summaryGo,{
     req(PBD$organised)
-    PBD$summary <- summariseBirds(PBD$organised, gridR$data, spillOver = input$spillOver)
+    PBD$summary <- summariseBirds(PBD$organised, gridR$data, 
+                                  spillOver = switch(input$spillOver != "Not", 
+                                                     tolower(input$spillOver), 
+                                                     NULL))
   })
   
   ### Dynamically make comments on the export combination
