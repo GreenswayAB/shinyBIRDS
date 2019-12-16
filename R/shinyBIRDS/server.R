@@ -29,6 +29,28 @@ shinyServer(function(input, output, session) {
   # # disable("sumaryGo")
   # disable("exportGo")
   
+  
+  ###### Create the map
+  output$map <- renderLeaflet({
+    leaflet() %>%
+      addTiles(options = tileOptions(minZoom=1, continuousWorld = FALSE)) %>% 
+      # addTiles(urlTemplate = "https://mts1.google.com/vt/lyrs=s&hl=en&src=app&x={x}&y={y}&z={z}&s=G",
+      #          attribution = "Google Maps", group = "Google Satellite") %>% 
+      # addProviderTiles(providers$OpenStreetMap.HOT, group = "OSM (Hot)") %>%
+      # addProviderTiles(providers$OpenTopoMap, group = "Open Topo") %>%
+      # addProviderTiles(providers$Esri.WorldStreetMap, group = "ESRI Street") %>%  
+      setView(lng = 0, lat = 0, zoom = 2) %>% 
+      setMaxBounds(lng1 = -220, lat1 = 80, lng2 = 220, lat2 = -80) %>% 
+      addDrawToolbar(targetGroup = "Study AreaPol", 
+                     polylineOptions = FALSE, circleOptions = FALSE, markerOptions = FALSE, circleMarkerOptions = FALSE,
+                     editOptions = drawShapeOptions(stroke = TRUE, color = "#ff0066", weight = 1, opacity = 1,
+                                                    fill = TRUE, fillColor = "#ff0066", fillOpacity = 0.2),
+                     singleFeature = TRUE) %>% 
+      addLayersControl(#baseGroups = c("Google Satellite", "OSM (Hot)","Open Topo", "ESRI Street"),
+        overlayGroups = c("PBD","Study Area", "Grid"), 
+        options = layersControlOptions(collapsed=FALSE,  position = "bottomright")) #%>% 
+  }) ## end render map
+  
   ### Upload the csv and make it spatial.
   
   output$csvMessage <- renderUI( div(HTML(csvInfo$wng ), class="message") )
@@ -130,7 +152,7 @@ shinyServer(function(input, output, session) {
       
       proxy<-leafletProxy(mapId="map")
       proxy %>% 
-        setView(0,0,2) %>% 
+        # setView(0,0,2) %>% 
         clearGroup("Study AreaPol") %>% 
         clearGroup("Study Area") %>% 
         # clearGroup("Grid") %>% 
@@ -234,28 +256,8 @@ shinyServer(function(input, output, session) {
   })
  
   
-  ###### Create the map
-  output$map <- renderLeaflet({
-    leaflet() %>%
-      addTiles(options = tileOptions(minZoom=1, continuousWorld = FALSE)) %>% 
-      # addTiles(urlTemplate = "https://mts1.google.com/vt/lyrs=s&hl=en&src=app&x={x}&y={y}&z={z}&s=G",
-      #          attribution = "Google Maps", group = "Google Satellite") %>% 
-      # addProviderTiles(providers$OpenStreetMap.HOT, group = "OSM (Hot)") %>%
-      # addProviderTiles(providers$OpenTopoMap, group = "Open Topo") %>%
-      # addProviderTiles(providers$Esri.WorldStreetMap, group = "ESRI Street") %>%  
-      setView(lng = 0, lat = 0, zoom = 2) %>% 
-      setMaxBounds(lng1 = -220, lat1 = 80, lng2 = 220, lat2 = -80) %>% 
-      addDrawToolbar(targetGroup = "Study AreaPol", 
-                     polylineOptions = FALSE, circleOptions = FALSE, markerOptions = FALSE, circleMarkerOptions = FALSE,
-                     editOptions = drawShapeOptions(stroke = TRUE, color = "#ff0066", weight = 1, opacity = 1,
-                                                    fill = TRUE, fillColor = "#ff0066", fillOpacity = 0.2),
-                     singleFeature = TRUE) %>% 
-      addLayersControl(#baseGroups = c("Google Satellite", "OSM (Hot)","Open Topo", "ESRI Street"),
-        overlayGroups = c("PBD","Study Area", "Grid"), 
-        options = layersControlOptions(collapsed=FALSE,  position = "bottomright")) #%>% 
-  }) ## end render map
-  
-  #### Organise
+  ############
+  ############ Organise
   observe({
     disable("organiseGo")
     req(PBD$data)
@@ -275,19 +277,22 @@ shinyServer(function(input, output, session) {
       PBDdata <- PBD$data[,c(input$csvSpp, input$csvLat, input$csvLon,
                         input$timeCols, input$visitCols, input$csvTaxon)]
       timeCol.selected <- if(length(input$timeCols) == 3) stdTimeCol else input$timeCols
-      visitCol.selected <- c(stdTimeCol, input$visitCols)
-  ### TODO IF check box
-
+      # visitCol.selected <- c(stdTimeCol, input$visitCols)
+print(PBDdata)
       PBD$organised <- organizeBirds(PBDdata, 
                                      sppCol = input$csvSpp, 
-                                     timeCol = timeCol.selected,
-                                     visitsIdentifier = visitCol.selected, 
-                                     presenceCol = NULL,
+                                     idCols = input$visitCols,
+                                     timeCols = timeCol.selected,
+                                     timeInVisits = "day", ### TODO THis should be variable and optional
+                                     grid = NULL, ### TODO THis should be variable and optional
+                                     presenceCol = NULL, ### TODO THis should be variable and optional
                                      xyCols = c(input$csvLon, input$csvLat), 
                                      dataCRS = paste0("+init=epsg:", epsgInfo$code), ## alt: epsgInfo$proj4
                                      taxonRankCol = switch(input$csvTaxonEnable, input$csvTaxon, NULL),
                                      taxonRank = switch(input$csvTaxonEnable, input$taxonRankVal, stdTaxonRank),
                                      simplifySppName = input$simplifySpp)
+  print(PBD$organised)
+      
     }, error = function(e) e, warning = function(w) w, 
     finally = {
       if (!is.null (PBD$organised)){
