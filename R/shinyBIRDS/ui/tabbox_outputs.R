@@ -16,16 +16,18 @@ tagList(
                 DT::dataTableOutput("TablePBDOrg", width = "90%")
               ),
               tabPanel(tagList(icon("search"),"Explore Visits"),
-                ## explore visits
-                shinydashboard::box(title = NULL, width = 12, height = "900px", 
-                                    collapsible = FALSE, solidHeader = TRUE,
-                                    div(style = "height: 800px; width:auto", # needs to be in fixed height container
-                                        esquisserUI(
-                                          id = "visitsEsquisse",
-                                          header = FALSE, # dont display gadget title
-                                          choose_data = FALSE # dont display button to change data
-                                        )
-                                    )
+                fluidRow(
+                  ## explore visits
+                  # shinydashboard::box(title = NULL, width = 12, #height = "900px", 
+                  #                     collapsible = FALSE, solidHeader = TRUE,
+                                      # div(style = "height: 800px; width:auto", # needs to be in fixed height container
+                                          esquisserUI(
+                                            id = "visitsEsquisse",
+                                            header = FALSE, # dont display gadget title
+                                            choose_data = FALSE # dont display button to change data
+                                          )
+                                      # )
+                  # )
                 )
               ),
               tabPanel(tagList(icon("chart-line"),"Summarised"),

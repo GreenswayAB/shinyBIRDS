@@ -15,21 +15,26 @@ input[type="number"] {
   overflow: hidden;
   padding: 0;
 }*/
-div.col-sm-6 {
+.col-sm-6 {
 	padding-right: 1px;
 }
-div.box-body {
+/*div.box-body {
 	padding: 1px;
-}
+}*/
 
 h1, h2, h3, h4 { 
   font-weight: 400;
   margin: 1px 1px 1px 1px;
-  padding: 1px 0px 0px 0px;
+  padding: 1px 0 0 0;
 }
-h4, .h4, h5, .h5, h6, .h6 {
-    margin-top: 0px;
-    margin-bottom: 0px;
+h5, .h5, h6, .h6 {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.row {
+    margin-right: -5px;
+    margin-left: -5px;
 }
 
 .form-group {
@@ -70,11 +75,11 @@ h4, .h4, h5, .h5, h6, .h6 {
    bottom: 0;
    background-color: #6aa039;
    color: white;
-   text-align: rigth;
+   text-align: right;
 }
 
 .selectize-control {
-    margin-bottom: 0px;
+    margin-bottom: 0;
 }
 
 /* If not using map tiles, show a white background */
@@ -107,7 +112,7 @@ p.bubble:hover span {
     display: block;
     z-index: 100;
     background: #ECF0F5;
-    left: 0px;
+    left: 0;
     margin: 10px;
     width: auto;
 	min-width: 150px;
