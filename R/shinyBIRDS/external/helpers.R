@@ -41,3 +41,20 @@ removeObsUI<-function(x=NULL, ev=NULL){
                         easyClose = FALSE, fade = TRUE, size = "l") 
   )
 }
+
+obsIndexUI<-function(x=NULL, ev=NULL){
+  showModal(modalDialog(title = "Add observation index",
+                        fluidRow(
+                          column(6,
+                                 p("Here we add some buttons and other fun things to click on")),
+                          column(6,includeHTML("ui/observationIndex.html"))
+                        ),
+                        br(),
+                        br(),
+                        footer = tagList(
+                          actionBttn("cancelObsIndexUI", NULL, icon = icon("times"), style = "material-circle", color = "danger", size = "xs"),
+                          actionBttn("okObsIndexUI", NULL, icon = icon("check"), style = "material-circle", color = "success", size = "xs")
+                        ), 
+                        easyClose = FALSE, fade = TRUE, size = "l") 
+  )
+}

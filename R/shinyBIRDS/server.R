@@ -25,6 +25,7 @@ shinyServer(function(input, output, session) {
   disable("clearButton")
   disable("dnlCRS")
   disable("removeObs")
+  #disable("getObsIndex") Commented for testing
   # disable("organiseGo")
   # disable("expVisits")
   # # disable("sumaryGo")
@@ -900,6 +901,7 @@ shinyServer(function(input, output, session) {
   
   ############### MODAL ##############
   
+  ### removeObs()
   observeEvent(PBD$visits, {
     
     if(is.null(PBD$visits)){
@@ -916,16 +918,7 @@ shinyServer(function(input, output, session) {
   
   observeEvent(input$okRemoveObsUI, {
     
-    print(paste("percentOrMinCrit =", input$percentOrMinCrit))
-    print(paste("criteria =", input$criteria))
-    print(paste("percent =", input$percent))
-    print(paste("stepChunk =", input$stepChunk))
-    print(paste("minCrit =", input$minCrit))
-
-    
     if(input$percentOrMinCrit == 1){
-      
-      print("Removing by percent")
       
       OB <- BIRDS::removeObs(PBD$organised, PBD$visits,
                              criteria = input$criteria,
@@ -933,8 +926,6 @@ shinyServer(function(input, output, session) {
                              stepChunk = input$stepChunk)
       PBD$organised <- OB
     }else{
-      
-      print("Removing by minCrit")
       
       OB <- BIRDS::removeObs(PBD$organised, PBD$visits,
                              criteria = input$criteria,
@@ -949,12 +940,39 @@ shinyServer(function(input, output, session) {
   
     removeModal()
     
-    
-    
   })
   
   observeEvent(input$cancelRemoveObsUI, {
     removeModal()
   })
+  
+  
+  ### obsIndex()
+  
+  ##Commented for testing
+  # observeEvent(PBD$summary, {
+  #   
+  #   if(is.null(PBD$visits)){
+  #     disable("getObsIndex")
+  #   }else{
+  #     enable("getObsIndex")
+  #   }
+  #   
+  # })
+  
+  observeEvent(input$getObsIndex, {
+    obsIndexUI()
+  })
+  
+  observeEvent(input$okObsIndexUI, {
+    print("ok!")
+    removeModal()
+  })
+  
+  observeEvent(input$cancelObsIndexUI, {
+    print("cancel!")
+    removeModal()
+  })
+
   
 }) # end server function

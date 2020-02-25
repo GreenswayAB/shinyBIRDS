@@ -147,6 +147,9 @@ tagList(
                            selectize = FALSE, multiple = FALSE, width = "200"),
                htmlOutput("exportMsgUI", inline = FALSE),
                actionButton("exportAdd", HTML("&nbsp; Add definition"), 
+                            width = "150", icon = icon("box-open"), class="btn-success btn-sm"),
+               p(""),
+               actionButton("getObsIndex", "Add observation index", 
                             width = "150", icon = icon("box-open"), class="btn-success btn-sm")
            ),
            column(4,
