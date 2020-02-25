@@ -24,6 +24,7 @@ shinyServer(function(input, output, session) {
   disable("downloadData")
   disable("clearButton")
   disable("dnlCRS")
+  disable("removeObs")
   # disable("organiseGo")
   # disable("expVisits")
   # # disable("sumaryGo")
@@ -896,4 +897,64 @@ shinyServer(function(input, output, session) {
     },
     contentType = "application/zip"
   )
+  
+  ############### MODAL ##############
+  
+  observeEvent(PBD$visits, {
+    
+    if(is.null(PBD$visits)){
+      disable("removeObs")
+    }else{
+      enable("removeObs")
+    }
+    
+  })
+  
+  observeEvent(input$removeObs, {
+    removeObsUI()
+  })
+  
+  observeEvent(input$okRemoveObsUI, {
+    
+    print(paste("percentOrMinCrit =", input$percentOrMinCrit))
+    print(paste("criteria =", input$criteria))
+    print(paste("percent =", input$percent))
+    print(paste("stepChunk =", input$stepChunk))
+    print(paste("minCrit =", input$minCrit))
+
+    
+    if(input$percentOrMinCrit == 1){
+      
+      print("Removing by percent")
+      
+      OB <- BIRDS::removeObs(PBD$organised, PBD$visits,
+                             criteria = input$criteria,
+                             percent = input$percent,
+                             stepChunk = input$stepChunk)
+      PBD$organised <- OB
+    }else{
+      
+      print("Removing by minCrit")
+      
+      OB <- BIRDS::removeObs(PBD$organised, PBD$visits,
+                             criteria = input$criteria,
+                             minCrit = input$minCrit)
+      PBD$organised <- OB
+      
+    }
+    
+    disable("removeObs")
+    
+    PBD$visits <- NULL
+  
+    removeModal()
+    
+    
+    
+  })
+  
+  observeEvent(input$cancelRemoveObsUI, {
+    removeModal()
+  })
+  
 }) # end server function

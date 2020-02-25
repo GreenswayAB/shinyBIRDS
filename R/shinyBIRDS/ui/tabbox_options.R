@@ -80,6 +80,9 @@ tagList(
                               icon = icon("sitemap"), class="btn-success btn-sm"),
                  actionButton("expVisits", HTML("&nbsp;Explore Visits"), width = "100", 
                               icon = icon("search"), class="btn-info btn-sm"),
+                 p(""),
+                 actionButton("removeObs", "Remove observations", width = "203", 
+                              icon = icon("filter"), class="btn-warning btn-sm"),
                  htmlOutput("orgInfoUI", inline = FALSE)
           )
         )
