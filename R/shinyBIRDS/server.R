@@ -25,7 +25,9 @@ shinyServer(function(input, output, session) {
   disable("clearButton")
   disable("dnlCRS")
   disable("removeObs")
-  #disable("getObsIndex") Commented for testing
+  #disable("getObsIndex")
+  disable("getComMatrix")
+  disable("getIgnorance")
   # disable("organiseGo")
   # disable("expVisits")
   # # disable("sumaryGo")
@@ -902,6 +904,7 @@ shinyServer(function(input, output, session) {
   ############### MODAL ##############
   
   ### removeObs()
+  #Enable or disable the button based on condition
   observeEvent(PBD$visits, {
     
     if(is.null(PBD$visits)){
@@ -912,25 +915,42 @@ shinyServer(function(input, output, session) {
     
   })
   
+  #When button clicked - show modal
   observeEvent(input$removeObs, {
     removeObsUI()
   })
   
+  #When ok button klicked in modal
   observeEvent(input$okRemoveObsUI, {
     
     if(input$percentOrMinCrit == 1){
       
-      OB <- BIRDS::removeObs(PBD$organised, PBD$visits,
-                             criteria = input$criteria,
-                             percent = input$percent,
-                             stepChunk = input$stepChunk)
-      PBD$organised <- OB
+      OB <- tryCatch(BIRDS::removeObs(PBD$organised, PBD$visits,
+                                      criteria = input$criteria,
+                                      percent = input$percent,
+                                      stepChunk = input$stepChunk), 
+                     error = function(e){
+                       shinyalert::shinyalert(title = "An error occured", text = e$message, type = "error")
+                       return(NULL)
+                     })
+      
+      if(! is.null(OB)){
+        PBD$organised <- OB
+      }
+      
     }else{
       
-      OB <- BIRDS::removeObs(PBD$organised, PBD$visits,
-                             criteria = input$criteria,
-                             minCrit = input$minCrit)
-      PBD$organised <- OB
+      OB <- tryCatch(BIRDS::removeObs(PBD$organised, PBD$visits,
+                                      criteria = input$criteria,
+                                      minCrit = input$minCrit), 
+                     error = function(e){
+                       shinyalert::shinyalert(title = "An error occured", text = e$message, type = "error")
+                       return(NULL)
+                     })
+      
+      if(! is.null(OB)){
+        PBD$organised <- OB
+      }
       
     }
     
@@ -942,6 +962,7 @@ shinyServer(function(input, output, session) {
     
   })
   
+  #When cancel button klicked in modal
   observeEvent(input$cancelRemoveObsUI, {
     removeModal()
   })
@@ -949,30 +970,141 @@ shinyServer(function(input, output, session) {
   
   ### obsIndex()
   
-  ##Commented for testing
-  # observeEvent(PBD$summary, {
-  #   
-  #   if(is.null(PBD$visits)){
-  #     disable("getObsIndex")
-  #   }else{
-  #     enable("getObsIndex")
-  #   }
-  #   
-  # })
+  #Enable or disable the button based on condition
+  observeEvent(PBD$summary, {
+
+    if(is.null(PBD$visits)){
+      disable("getObsIndex")
+      disable("getComMatrix")
+      disable("getIgnorance")
+    }else{
+      enable("getObsIndex")
+      enable("getComMatrix")
+      enable("getIgnorance")
+    }
+
+  })
   
+  #When button clicked - show modal
   observeEvent(input$getObsIndex, {
-    obsIndexUI()
+    
+    obsIndexUI(unique(PBD$organised$spdf$scientificName))
   })
   
+  #When ok button klicked in modal
   observeEvent(input$okObsIndexUI, {
-    print("ok!")
+    # print(input$oiDimension)
+    # print(input$oiTimeRes)
+    # print(input$oiFocalSp)
+    # print(input$oiBools)
+    # 
+    bools <- c("visits", "fs.rm", "norm") %in% input$oiBools
+
+    # print(bools)
+    
+    oi <- tryCatch(obsIndex(x = PBD$summary,
+                            dimension = input$oiDimension,
+                            timeRes = input$oiTimeRes,
+                            focalSp = input$oiFocalSp,
+                            visits = bools[1],
+                            fs.rm = bools[2],
+                            norm = bools[3]), 
+                   error = function(e){
+                     shinyalert::shinyalert(title = "An error occured", text = e$message, type = "error")
+                     return(NULL)
+                   }
+    )
+    
+    str(oi)
+    
+    if(! is.null(oi)){
+      #Do something
+    }
+    
     removeModal()
+    
+    
   })
   
+  #When cancel button klicked in modal
   observeEvent(input$cancelObsIndexUI, {
-    print("cancel!")
     removeModal()
   })
 
+  ##community matrix
+  
+  #When button clicked - show modal
+  observeEvent(input$getComMatrix, {
+    comMatrixUI()
+  })
+  
+  #When ok button klicked in modal
+  observeEvent(input$okComMatrixUI, {
+    # print(input$cmSampleU)
+    
+    cm <- tryCatch(communityMatrix(PBD$summary, input$cmSampleU), 
+                   error = function(e){
+                     shinyalert::shinyalert(title = "An error occured", text = e$message, type = "error")
+                     return(NULL)
+                   })
+    
+    str(cm)
+    
+    if(! is.null(cm)){
+      #Do something
+    }
+
+    removeModal()
+  })
+  
+  #When cancel button klicked in modal
+  observeEvent(input$cancelComMatrixUI, {
+    removeModal()
+  })
+  
+  ##expose ignorance
+  
+  #When button clicked - show modal
+  observeEvent(input$getIgnorance, {
+    ignoranceUI()
+  })
+  
+  #When ok button klicked in modal
+  observeEvent(input$okIgnoranceUI, {
+    # print(input$isSampleU)
+    # print(input$isUseNspp)
+    # print(input$isH)
+    
+    if(input$okIgnoranceUI == "Observations"){
+      nObs <- nSpp<-PBD$summary$spatial$nObs
+    }else{
+      nObs <- nSpp<-PBD$summary$spatial$nVis
+    }
+    
+    nSpp<-NULL
+    
+    if(input$isUseNspp && input$isSampleU == "Observations"){
+      nSpp<-PBD$summary$spatial$nSpp
+    }
+    
+    ig <- tryCatch(exposeIgnorance(nObs = nObs, nSpp = nSpp, input$isH), 
+                   error = function(e){
+                     shinyalert::shinyalert(title = "An error occured", text = e$message, type = "error")
+                     return(NULL)
+                   })
+    
+    str(ig)
+    
+    if(! is.null(ig)){
+      #Do something
+    }
+    
+    removeModal()
+  })
+  
+  #When cancel button klicked in modal
+  observeEvent(input$cancelIgnoranceUI, {
+    removeModal()
+  })
   
 }) # end server function

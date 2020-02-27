@@ -1,6 +1,6 @@
 body<-dashboardBody(
   useShinyjs(),
-  # useShinyalert(),
+  useShinyalert(),
   # theme = shinytheme("united"),
   # shinythemes::themeSelector(), 
   tags$head(

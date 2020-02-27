@@ -4,7 +4,7 @@
 library(BIRDS)
 library(shiny)
 library(shinyjs)
-# library(shinyalert)
+library(shinyalert)
 library(shinythemes)
 library(shinyWidgets)
 library(shinydashboard)

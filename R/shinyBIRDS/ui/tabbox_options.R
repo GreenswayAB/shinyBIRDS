@@ -150,7 +150,13 @@ tagList(
                             width = "150", icon = icon("box-open"), class="btn-success btn-sm"),
                p(""),
                actionButton("getObsIndex", "Add observation index", 
-                            width = "150", icon = icon("box-open"), class="btn-success btn-sm")
+                            width = "150", icon = icon("indent"), class="btn-success btn-sm"),
+               p(""),
+               actionButton("getComMatrix", "Add community matrix", 
+                            width = "150", icon = icon("indent"), class="btn-success btn-sm"),
+               p(""),
+               actionButton("getIgnorance", "Add ignorance score", 
+                            width = "150", icon = icon("indent"), class="btn-success btn-sm")
            ),
            column(4,
                   h4("Export definitions"),
