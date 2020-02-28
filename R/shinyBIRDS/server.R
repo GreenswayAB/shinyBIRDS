@@ -25,7 +25,7 @@ shinyServer(function(input, output, session) {
   disable("clearButton")
   disable("dnlCRS")
   disable("removeObs")
-  #disable("getObsIndex")
+  disable("getObsIndex")
   disable("getComMatrix")
   disable("getIgnorance")
   # disable("organiseGo")
