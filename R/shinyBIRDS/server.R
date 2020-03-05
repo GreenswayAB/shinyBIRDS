@@ -320,7 +320,8 @@ shinyServer(function(input, output, session) {
         
         inFileR$newCSV <- FALSE
         orgInfo$msg <- ""
-        enable("downloadData")  
+        enable("downloadData") 
+        updateTabsetPanel(session, "pbd_output",selected = "org")
         # enable("expVisits")
         # enable("summaryGo")
       } else {
@@ -348,6 +349,7 @@ shinyServer(function(input, output, session) {
   ## Explore the visits, before summarysing
   observeEvent(input$expVisits, {
     req(PBD$organised)
+    updateTabsetPanel(session, "pbd_output",selected = "expVis")
     PBDorg<-PBD$organised
     PBD$visits <- exploreVisits(x=PBD$organised, visitCol=attr(PBD$organised, "visitCol"), sppCol="scientificName")
     PBD$visits$day <- as.numeric(PBD$visits$day)
@@ -400,7 +402,7 @@ shinyServer(function(input, output, session) {
   
   #Observe the extent 
   observeEvent(input$goExtent, {
-    
+    updateTabsetPanel(session, "navBar",selected = "map")
 ### TODO use  OB2Polygon(df, shape = "bBox") for more shapes
     
     if (is.null(PBD$organised)) return()
@@ -478,7 +480,9 @@ shinyServer(function(input, output, session) {
       }
       gridR$new<-TRUE
       reset("shapeFile")
+      
     }
+    updateTabsetPanel(session, "navBar",selected = "map")
   })
   
   ### Upload the shape and make it a grid.
@@ -494,8 +498,9 @@ shinyServer(function(input, output, session) {
       shapeWr$msg<-"Select all files related to the .shp"
       return()
     }
-    # }
+    
   })
+  
   output$shapeMessage<-renderUI(div(HTML( shapeWr$msg ), class="message"))
   
   observe({  
@@ -534,6 +539,7 @@ shinyServer(function(input, output, session) {
       gridR$new<-TRUE
       inFileR$newSHP<-FALSE      
     }
+    
   })
   
   
@@ -562,6 +568,8 @@ shinyServer(function(input, output, session) {
         # addGeoJSON(gridGJS, group = "Grid", layerId= "grid", weight = 2, col = "black", fillOpacity = 0) %>% 
         addPolygons(data = grid, group = "Grid", weight = 2, col = "black", fillOpacity = 0) %>% 
         addPolygons(data = SpP, group = "Study Area", weight = 2, col = "#ff0066", fillOpacity = 0)  
+      
+      updateTabsetPanel(session, "navBar",selected = "map")
     }
   })
   
@@ -585,6 +593,7 @@ shinyServer(function(input, output, session) {
   
   observeEvent(input$summaryGo,{
     req(PBD$organised)
+    #TODO prevent Warning: Error in overlayBirds.OrganizedBirds: Observations don't overlap any grid cell
     PBD$summary <- summariseBirds(PBD$organised, gridR$data, 
                                   spillOver = switch(input$spillOver != "Not", 
                                                      tolower(input$spillOver), 
@@ -736,7 +745,7 @@ shinyServer(function(input, output, session) {
               autoHideNavigation = TRUE,
               options = list(
                 dom = 'tp',
-                pageLength = 5,
+                pageLength = 15,
                 scrollX=TRUE)
               )
   }, server = TRUE) #end render DataTable

@@ -1,0 +1,56 @@
+##### tabpanel Export
+tagList(
+   fluidRow(
+     column(4,
+            h4("Export parameters"),
+            selectInput(inputId = "expDimension",
+                        label = "Dimension",          
+                        choices = c(structure(DimeCode, names=Dimension)),
+                        selectize = FALSE, multiple = FALSE, width = "200"),
+            selectInput(inputId = "expTimeRes",
+                        label = "Temporal Resolution",          
+                        choices = c(structure(TimeResCode, names=TimeRes)),
+                        selectize = FALSE, multiple = FALSE, width = "200"),
+            selectInput(inputId = "expVariable",
+                        label = "Variable",          
+                        choices = c(structure(VarCode, names=Variable)),
+                        selectize = FALSE, multiple = FALSE, width = "200"),
+            selectInput(inputId = "expMethod",
+                        label = "Summary method",          
+                        choices = c(structure(MethCode, names=Method)),
+                        selectize = FALSE, multiple = FALSE, width = "200"),
+            htmlOutput("exportMsgUI", inline = FALSE),
+            actionButton("exportAdd", HTML("&nbsp; Add definition"), 
+                         width = "150", icon = icon("box-open"), class="btn-success btn-sm"),
+            p(""),
+            actionButton("getObsIndex", "Add observation index", 
+                         width = "150", icon = icon("indent"), class="btn-success btn-sm"),
+            p(""),
+            actionButton("getComMatrix", "Add community matrix", 
+                         width = "150", icon = icon("indent"), class="btn-success btn-sm"),
+            p(""),
+            actionButton("getIgnorance", "Add ignorance score", 
+                         width = "150", icon = icon("indent"), class="btn-success btn-sm")
+     ),
+     column(4,
+            h4("Export definitions"),
+            DT::dataTableOutput("exportDefs", width = "90%"),
+            br(),
+            actionButton("exportClear", HTML("&nbsp;Clear all"), 
+                         width = "100", icon = icon("trash-alt"), class="btn-warning btn-sm"),
+            actionButton("exportGo", HTML("&nbsp;Export"), 
+                         width = "100", icon = icon("box"), class="btn-success btn-sm")
+     )
+   ),
+  fluidRow(
+   uiOutput("exportOpt"),
+   plotOutput("exportPlot"),
+   br(),
+   selectInput(inputId = "dnlCRS",
+               label = h5(tags$p("Coordinate Reference Systems", 
+                                 tags$span("Projection system of the layers. Source EPSG.org"), class="bubble")),
+               choices = epsg.choices, #structure(EPSG.code, names=EPSG.name), 
+               multiple = FALSE, selected = 4326, width = 100),
+   downloadButton("downloadData", "Download", class="btn-success btn-sm")
+  )
+)
