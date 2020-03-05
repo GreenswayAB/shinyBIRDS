@@ -28,7 +28,7 @@ navbarPage(title="shinyBIRDS", id="navBar",
                   ))
   ),
   tabPanel(title = "Map", icon = icon("globe"), value = "map",
-    leafletOutput("map", height = "84vh"),
+    leafletOutput("map", height = "90vh"),
     absolutePanel(fixed = TRUE, top = "50%", left = "50%", width = '195px',
                  conditionalPanel(condition="$('html').hasClass('shiny-busy')",
                                   tags$img(src="./img/loader-hex.gif")
@@ -83,7 +83,7 @@ navbarPage(title="shinyBIRDS", id="navBar",
     tags$link(rel="shortcut icon", href="img/favicon.ico"),
     includeCSS("www/styles.css"),
     tags$style(".container-drag-source, .box-dad {font-size: 18px;}"),
-    tags$style(".tab-content {padding-top: 70px;}"),
+    tags$style(".tab-content {padding-top: 45px;}"),
     tags$link(rel="stylesheet", href="https://use.fontawesome.com/releases/v5.1.0/css/all.css", integrity="sha384-lKuwvrZot6UHsBSfcMvOkWwlCMgc0TaWr+30HWe3a4ltaBwTZhyTEggF5tJv8tbt", crossorigin="anonymous")
   ),
   footer = tags$footer( 

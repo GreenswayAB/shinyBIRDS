@@ -52,7 +52,8 @@ shinyServer(function(input, output, session) {
                      singleFeature = TRUE) %>% 
       addLayersControl(#baseGroups = c("Google Satellite", "OSM (Hot)","Open Topo", "ESRI Street"),
         overlayGroups = c("PBD","Study Area", "Grid"), 
-        options = layersControlOptions(collapsed=FALSE,  position = "bottomright")) #%>% 
+        options = layersControlOptions(collapsed=FALSE,  position = "bottomright")) %>% 
+    addScaleBar(position = "bottomleft", options = scaleBarOptions(imperial=FALSE, maxWidth = 200))
   }) ## end render map
   
   ### Upload the csv and make it spatial.
@@ -312,18 +313,19 @@ shinyServer(function(input, output, session) {
         nObs <- nrow(obsData(PBD$organised))
         n <- 500
         wPlot <- if (nObs > n) sample(nObs, n) else c(1:nObs)
+        labelTxt <- if (nObs > n) "PBD: random subset of 500 obs." else "PBD: all observations"
         PBDpoints <- PBD$organised$spdf[wPlot,]
 
         proxy <- leafletProxy(mapId="map")
         proxy %>% 
           clearGroup("PBD") %>% 
+          clearControls() %>% 
           fitBounds(lng1=boundsStudy[1], lat1=boundsStudy[2], lng2=lng2shift, lat2=boundsStudy[4]) %>% 
           addCircleMarkers(data = PBDpoints, group = "PBD", 
                            color = "black", stroke = FALSE, fillOpacity = 0.5, radius = 5,
                            label = ~as.character(scientificName)) %>% 
-          clearControls() %>% 
           leaflet::addLegend(position = "bottomleft", colors = "black", 
-                    group = "PBD", labels = "Random subset of PBD",
+                    group = "PBD", labels = labelTxt,
                     title = "", opacity = 0.5)
         
         inFileR$newCSV <- FALSE
@@ -378,15 +380,15 @@ shinyServer(function(input, output, session) {
     #plot circles
     proxy <- leafletProxy(mapId="map")
     proxy %>% 
+      # clearControls() %>% 
       addCircles(data = PBD$visits, lng = ~centroidX, lat = ~centroidY,
                  group = "PBD", color = "red", stroke = TRUE, 
                  weight = 5, fillOpacity = 0.1, 
                  radius = ~medianDist, #~effortDiam/2, #
                  label = ~visitUID) %>% 
-      clearControls() %>% 
-      leaflet::addLegend(position = "bottomleft", colors = c("red","black"), 
-                group = "PBD", labels = c("Visits extent", "Random subset of PBD"),
-                title = "", opacity = 0.5)
+    leaflet::addLegend(position = "bottomleft", colors = "red", 
+                       group = "PBD", labels = "Visits extent",
+                       title = "", opacity = 0.5)
   })
   
   ######### GRID
@@ -593,7 +595,8 @@ shinyServer(function(input, output, session) {
         # setView(0,0,2) %>% 
         clearGroup("Study AreaPol") %>% 
         clearGroup("Study Area") %>% 
-        clearGroup("Grid")
+        clearGroup("Grid") %>% 
+        clearControls()
   })
   
   #### Summarise

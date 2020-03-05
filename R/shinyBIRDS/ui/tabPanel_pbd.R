@@ -50,7 +50,7 @@ tagList(
            fluidRow(
              column(4,
                     # selectInput("csvCRS", label = "Coordinate Reference System (CRS)", choices = epsg.choices),    
-                    textInput("csvCRS", label = h5(tags$p(strong("CRS"), 
+                    textInput("csvCRS", label = h5(tags$p("CRS", 
                                                           tags$span("Coordinate Reference System"), class="bubble")), 
                               value = 4326, placeholder = "Search for a EPSG number of CRS name")
              ),
