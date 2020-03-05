@@ -1,0 +1,193 @@
+input[type="number"] {
+  max-width: 80%;
+}
+.main-header .logo {
+  font-family: 'Fira Sans', sans-serif;
+  font-weight: bold;
+  font-size: 17px;
+}
+
+/* Main navbar colour*/
+.navbar-default {
+  background-color: #45B14D;
+  border-color: #ffffff;
+}
+
+.navbar-default .navbar-nav > li > a {
+  color: black;
+}
+
+/* Hoover colour for navbar buttons*/
+.navbar-default .navbar-nav > li > a:hover,
+.navbar-default .navbar-nav > li > a:focus {
+  color: #ffffff;
+  background-color: #303135;
+}
+
+/* Navbar active button colour*/
+.navbar-default .navbar-nav > .active > a,
+.navbar-default .navbar-nav > .active > a:hover,
+.navbar-default .navbar-nav > .active > a:focus {
+  color: #ffffff;
+  background-color: #97989A;
+}
+
+
+/* Navbar dropdown menu button colour*/
+.navbar-default .navbar-nav > .open > a,
+.navbar-default .navbar-nav > .open > a:hover,
+.navbar-default .navbar-nav > .open > a:focus {
+  background-color: #303135;
+  color: #ffffff;
+}
+
+.navbar-default .navbar-brand,
+.navbar-default .navbar-brand:hover, 
+.navbar-default .navbar-brand:focus {
+    color: black;
+    background-color: transparent;
+}
+
+.nav-tabs>li>a,
+.nav-tabs>li>a:focus {
+    color: #777777;
+    background-color: #DDDDDD;
+    border: 1px solid #dddddd;
+    border-bottom-color: transparent;
+    cursor: default;
+}
+
+.nav-tabs>li>a:hover {
+    color: #ffffff;
+    background-color: #303135;
+    border: 1px solid #dddddd;
+    border-bottom-color: transparent;
+    cursor: default;
+}
+
+.nav-tabs>li.active>a,
+.nav-tabs>li.active>a:hover,
+.nav-tabs>li.active>a:focus {
+    color: black;
+    background-color: #fcfcfc;
+    border: 1px solid #dddddd;
+    border-bottom-color: transparent;
+    cursor: default;
+}
+
+.nav-tabs-custom .nav-tabs li.active:hover a, 
+.nav-tabs-custom .nav-tabs li.active a {
+     background-color: transparent;
+     border-color: transparent;
+}
+
+.nav-tabs-custom .nav-tabs li.active {
+     border-top-color: #45B14D;
+}
+/* Colour for elements in dropdown menu*/
+.dropdown-menu > li > a:hover,
+.dropdown-menu > li > a:focus {
+  color: #ffffff;
+  background-color: #303135;
+}
+
+a {
+    color: #444444;
+    text-decoration: none;
+}
+
+.col-sm-6 {
+	padding-right: 1px;
+}
+/*div.box-body {
+	padding: 1px;
+}*/
+
+h1, h2, h3, h4 { 
+  font-weight: 400;
+  margin: 1px 1px 1px 1px;
+  padding: 1px 0 0 0;
+}
+h5, .h5, h6, .h6 {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.row {
+    margin-right: -5px;
+    margin-left: -5px;
+}
+
+.form-group {
+    margin-bottom: 5px;
+}
+
+.box.box-success {
+    border-top-color: #45B14D;
+}
+
+
+
+.btn-success {
+	background-color: #45B14D;
+	border-color: #45B14D;
+}
+.legend {
+    line-height: 19px;
+}
+.footer {
+   left: 0;
+   bottom: 0;
+   background-color: #45B14D;
+   color: white;
+   text-align: right;
+}
+
+.selectize-control {
+    margin-bottom: 0;
+}
+
+/* If not using map tiles, show a white background */
+.leaflet-container {
+  background-color: white !important;
+}
+
+.progress-bar {
+    background-color: #45B14D;
+}
+
+p.bubble {
+    border-bottom: 1px dotted;
+}
+p.bubble:hover {
+    cursor: help;
+    position: relative
+}
+p.bubble span {
+    display: none
+}
+p.bubble:hover span {
+    border: #c0c0c0 1px dotted;
+    padding: 5px 20px 5px 5px;
+    display: block;
+    z-index: 100;
+    background: #ECF0F5;
+    left: 0;
+    margin: 10px;
+    width: auto;
+	min-width: 150px;
+    position: absolute;
+    top: 10px;
+}
+
+/* Allows pop-up modal to not be greyed out*/
+.modal-backdrop {
+z-index: 1000;
+}
+
+.message {
+	color: red;
+}
+.infotext {
+	color: #0066ff;
+}
