@@ -84,6 +84,7 @@ input[type="number"] {
 .nav-tabs-custom .nav-tabs li.active {
      border-top-color: #45B14D;
 }
+
 /* Colour for elements in dropdown menu*/
 .dropdown-menu > li > a:hover,
 .dropdown-menu > li > a:focus {
@@ -125,8 +126,6 @@ h5, .h5, h6, .h6 {
 .box.box-success {
     border-top-color: #45B14D;
 }
-
-
 
 .btn-success {
 	background-color: #45B14D;
