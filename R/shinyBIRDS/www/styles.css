@@ -9,7 +9,7 @@ input[type="number"] {
 
 /* Main navbar colour*/
 .navbar-default {
-  background-color: #45B14D;
+  background-color: #469408;
   border-color: #ffffff;
 }
 
@@ -82,7 +82,7 @@ input[type="number"] {
 }
 
 .nav-tabs-custom .nav-tabs li.active {
-     border-top-color: #45B14D;
+     border-top-color: #469408;
 }
 
 /* Colour for elements in dropdown menu*/
@@ -123,14 +123,7 @@ h5, .h5, h6, .h6 {
     margin-bottom: 5px;
 }
 
-.box.box-success {
-    border-top-color: #45B14D;
-}
 
-.btn-success {
-	background-color: #45B14D;
-	border-color: #45B14D;
-}
 .legend {
     line-height: 19px;
 }
@@ -152,7 +145,7 @@ h5, .h5, h6, .h6 {
 }
 
 .progress-bar {
-    background-color: #45B14D;
+    background-color: #469408;
 }
 
 p.bubble {
@@ -177,6 +170,33 @@ p.bubble:hover span {
 	min-width: 150px;
     position: absolute;
     top: 10px;
+}
+
+.bttn-success {
+	background: #469408 !important;
+	color: #fff !important;
+}
+
+.bttn-danger {
+	background: #d90030 !important;
+	color: #fff !important;
+}
+
+.btn-success {
+    color: #ffffff;
+    background-color: #469408;
+    border-color: #469408;
+}
+.btn-success:hover {
+    color: #ffffff;
+    background-color: #3a7906;
+    border-color: #3a7906;
+}
+
+.btn-success.disabled
+.btn-success.disabled:hover {
+    background-color: #40bf40;
+    border-color: #40bf40;
 }
 
 /* Allows pop-up modal to not be greyed out*/

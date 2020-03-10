@@ -83,7 +83,7 @@ navbarPage(title="shinyBIRDS", id="navBar",
     tags$link(rel="shortcut icon", href="img/favicon.ico"),
     includeCSS("www/styles.css"),
     tags$style(".container-drag-source, .box-dad {font-size: 18px;}"),
-    tags$style(".tab-content {padding-top: 45px;}"),
+    tags$style(".tab-content {padding-top: 70px;}"),
     tags$link(rel="stylesheet", href="https://use.fontawesome.com/releases/v5.1.0/css/all.css", integrity="sha384-lKuwvrZot6UHsBSfcMvOkWwlCMgc0TaWr+30HWe3a4ltaBwTZhyTEggF5tJv8tbt", crossorigin="anonymous")
   ),
   footer = tags$footer( 
@@ -94,7 +94,7 @@ navbarPage(title="shinyBIRDS", id="navBar",
                                           background-color: #222D32;z-index: 1000;"),
   inverse = FALSE,
   # shinythemes::themeSelector(),
-  theme = shinytheme("simplex")
+  theme = shinytheme("cosmo")
 ) #end navbarPage
 
 
