@@ -22,6 +22,7 @@ input[type="number"] {
 .navbar-default .navbar-nav > li > a:focus {
   color: #ffffff;
   background-color: #303135;
+  border-bottom: 4px solid #00b6f1;
 }
 
 /* Navbar active button colour*/
@@ -48,7 +49,7 @@ input[type="number"] {
     background-color: transparent;
 }
 
-.nav-tabs>li>a,
+/*.nav-tabs>li>a,
 .nav-tabs>li>a:focus {
     color: #777777;
     background-color: #DDDDDD;
@@ -83,7 +84,8 @@ input[type="number"] {
 
 .nav-tabs-custom .nav-tabs li.active {
      border-top-color: #469408;
-}
+}*/
+
 
 /* Colour for elements in dropdown menu*/
 .dropdown-menu > li > a:hover,
