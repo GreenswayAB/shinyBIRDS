@@ -27,20 +27,26 @@ navbarPage(title="shinyBIRDS", id="navBar",
                   ))
   ),
   tabPanel(title = "Map", icon = icon("globe"), value = "map",
-    leafletOutput("map", height = "90vh"),
-    absolutePanel(fixed = TRUE, top = "50%", left = "50%", width = '195px',
+    fluidRow(
+      column(8,
+            leafletOutput("map", height = "91vh") #"90vh")
+      ),
+      column(4,
+            load_ui_content("ui/menu_map_grid.R")  
+      )
+    ),
                  conditionalPanel(condition="$('html').hasClass('shiny-busy')",
                                   tags$img(src="./img/loader-hex.gif")
                  ))
   ),
-  tabPanel(title = "Export", icon = icon("box"), value = "export",
-    load_ui_content("ui/tabPanel_export.R"),
+  tabPanel(title = "Summary Export", icon = icon("box-open"), value = "sumandexp",
+    load_ui_content("ui/tabPanel_sumandexp.R"),
     absolutePanel(fixed = TRUE, top = "50%", left = "50%", width = '195px',
                   conditionalPanel(condition="$('html').hasClass('shiny-busy')",
                                    tags$img(src="./img/loader-hex.gif")
                   ))
   ),
-      ############# Read ME ###################
+  ############# Read ME ###################
   navbarMenu( title = "", icon = icon("info"),    
     tabPanel(title = "About", 
                 fluidRow(
@@ -53,11 +59,6 @@ navbarPage(title="shinyBIRDS", id="navBar",
                               </center>
                               <br>'
                          ),
-                          # tags$footer( tags$a(img(src='img/1h.png', width = 130), href="https://www.greensway.se", target="new"),
-                          #              style = "position:fixed; bottom:5px; width:130px; height:auto;
-                          #                                         color: white; padding: 0px;
-                          #                                         background-color: #222D32;z-index: 1000;"),
-                         # includeHTML("data/Description.htm"),
                          offset=2)
                 )
         ),
@@ -75,18 +76,18 @@ navbarPage(title="shinyBIRDS", id="navBar",
     tags$link(rel="shortcut icon", href="img/favicon.ico"),
     includeCSS("www/styles.css"),
     tags$style(".container-drag-source, .box-dad {font-size: 18px;}"),
-    tags$style(".tab-content {padding-top: 45px;}"),
+    tags$style(".tab-content {padding-top: 70px;}"),
     tags$link(rel="stylesheet", href="https://use.fontawesome.com/releases/v5.1.0/css/all.css", integrity="sha384-lKuwvrZot6UHsBSfcMvOkWwlCMgc0TaWr+30HWe3a4ltaBwTZhyTEggF5tJv8tbt", crossorigin="anonymous")
   ),
-  footer = tags$footer( 
-                tags$a(img(src='img/1h.png', width = 130), 
-                  href="https://www.greensway.se", target="new"),
-                style = "position:fixed; bottom:5px; width:130px; height:auto;
-                                          color: white; padding: 0px;
-                                          background-color: #222D32;z-index: 1000;"),
+  # footer = tags$footer( 
+  #               tags$a(img(src='img/1h.png', width = 130), 
+  #                 href="https://www.greensway.se", target="new"),
+  #               style = "position:fixed; bottom:5px; width:130px; height:auto;
+  #                                         color: white; padding: 0px;
+  #                                         background-color: #222D32;z-index: 1000;"),
   inverse = FALSE,
   # shinythemes::themeSelector(),
-  theme = shinytheme("simplex")
+  theme = shinytheme("cosmo")
 ) #end navbarPage
 
 

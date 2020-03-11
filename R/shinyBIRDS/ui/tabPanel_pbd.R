@@ -3,7 +3,8 @@ tagList(
   fluidRow(
     column(4,
            h4("Upload the observations", class="panel-title"),
-           fileInput("csvFile", label = h5(tags$p("Choose a .csv file with the PBD", tags$span("Max file size 300 MB."), class="bubble")),
+           fileInput("csvFile", label = h5(tags$p(strong("Choose a .csv file with the PBD"),
+                                                         tags$span("Max file size 300 MB."), class="bubble")),
                      accept=c('.csv'), multiple=FALSE),
            fluidRow(
              column(6,
@@ -31,13 +32,13 @@ tagList(
            h4("Column names", class="panel-title"),
            selectInput("csvSpp", label = "Scientific species name", choices = "scientificname"),
            checkboxInput("simplifySpp", 
-                         label = h5(tags$p("Simplify the species name", 
+                         label = h5(tags$p(strong("Simplify the species name"), 
                                            tags$span("i.e. remove infraspecific epithets and authors name"), 
                                            class="bubble")),
                          FALSE),
            ## TODO dynamically show example of how the name would look like simplified
            # presenceCol=NULL,
-           checkboxInput("csvTaxonEnable", "Select taxon ranks", FALSE),
+           checkboxInput("csvTaxonEnable", strong("Select taxon ranks"), FALSE),
            uiOutput("taxonRankUI"),
            fluidRow(
              column(6,
@@ -50,7 +51,7 @@ tagList(
            fluidRow(
              column(4,
                     # selectInput("csvCRS", label = "Coordinate Reference System (CRS)", choices = epsg.choices),    
-                    textInput("csvCRS", label = h5(tags$p("CRS", 
+                    textInput("csvCRS", label = h5(tags$p(strong("CRS"), 
                                                           tags$span("Coordinate Reference System"), class="bubble")), 
                               value = 4326, placeholder = "Search for a EPSG number of CRS name")
              ),
@@ -74,7 +75,7 @@ tagList(
            #                                            tags$span("day, month and year will also be added"), 
            #                                            class="bubble")),
            #             choices = "day", multiple = TRUE,  options = list(`actions-box` = TRUE)),
-           selectInput("visitCols", label = h5(tags$p("Visit identifier columns", 
+           selectInput("visitCols", label = h5(tags$p(strong("Visit identifier columns"), 
                                                       tags$span("day, month and year will also be added"), 
                                                       class="bubble")),
                        choices = "day", multiple = TRUE),
