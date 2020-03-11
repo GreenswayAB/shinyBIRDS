@@ -11,17 +11,16 @@ navbarPage(title="shinyBIRDS", id="navBar",
     #   tags$style("tab-content {padding-top: 70px;}"),
     #   tags$link(rel="stylesheet", href="https://use.fontawesome.com/releases/v5.1.0/css/all.css", integrity="sha384-lKuwvrZot6UHsBSfcMvOkWwlCMgc0TaWr+30HWe3a4ltaBwTZhyTEggF5tJv8tbt", crossorigin="anonymous")
     # ),
-    HTML('
-                              <center>
-                              <h1><img src="./img/apple-touch-icon-180x180.png" alt="" style="vertical-align:bottom;float:middle;height:150px;">&nbsp;</h1>
-                              <br>
-                              <h1><strong>Birds</strong>&nbsp;</h1>
-                              </center>
-                              <br>'
+    HTML('<center>
+            <h1><img src="./img/apple-touch-icon-180x180.png" alt="" style="vertical-align:bottom;float:middle;height:150px;">&nbsp;</h1>
+            <br>
+            <h1><strong>Birds</strong>&nbsp;</h1>
+          </center>
+          <br>'
     )
   ),
-  tabPanel(title = "Load PBD", icon = icon("binoculars"), value = "pbdTab",
-    load_ui_content("ui/tabPanel_pbd.R"),# end of TABbox
+  tabPanel(title = "Data", icon = icon("binoculars"), value = "dataTab",
+    load_ui_content("ui/tabPanel_data.R"),# end of TABbox
     absolutePanel(fixed = TRUE, top = "50%", left = "50%", width = '195px',
                   conditionalPanel(condition="$('html').hasClass('shiny-busy')",
                                    tags$img(src="./img/loader-hex.gif")
@@ -33,13 +32,6 @@ navbarPage(title="shinyBIRDS", id="navBar",
                  conditionalPanel(condition="$('html').hasClass('shiny-busy')",
                                   tags$img(src="./img/loader-hex.gif")
                  ))
-  ),
-  tabPanel(title = "Grid and Summary", icon = icon("th"), value = "gridTab",
-    load_ui_content("ui/tabPanel_gridandsum.R"),
-    absolutePanel(fixed = TRUE, top = "50%", left = "50%", width = '195px',
-                  conditionalPanel(condition="$('html').hasClass('shiny-busy')",
-                                   tags$img(src="./img/loader-hex.gif")
-                  ))
   ),
   tabPanel(title = "Export", icon = icon("box"), value = "export",
     load_ui_content("ui/tabPanel_export.R"),

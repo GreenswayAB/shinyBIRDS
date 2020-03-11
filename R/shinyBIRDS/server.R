@@ -77,110 +77,10 @@ shinyServer(function(input, output, session) {
   })
 
   ### read the csv
-  observe({
-    if(is.null(inFileR$newCSV)) return()
-    if(inFileR$newCSV){
-      inFileR$okCSV <- FALSE
- 
-##### TODO is too slow to upload a file to internet, maybe add possibility to get from url
-    tryCatch({
-      PBDin <- fread(file=input$csvFile$datapath, #getcsv, 
-                        stringsAsFactors = FALSE, encoding = ifelse(input$csvUTF,"UTF-8","unknown"), 
-                        header = input$csvHeader, sep = input$csvSep, 
-                        quote = input$csvQuote, na.strings = "", data.table = FALSE)
-    }, error = function(e) e, warning = function(w) w, 
-    finally = {
-      if (exists("PBDin")) {
-        if (class(PBDin)=="data.frame" && length(colnames(PBDin)) > 1) {
-          inFileR$okCSV<-TRUE
-          inFileR$newCSV <- FALSE
-        }  
-      } else {
-        inFileR$okCSV<-FALSE
-      }
-    })
-      
-    if(inFileR$okCSV){
-      enable("csvSpp")
-      enable("csvTaxonEnable")
-      enable("csvLat")
-      enable("csvLon")
-      enable("timeCols")
-      enable("visitCols")
-      
-      colnames(PBDin) <- tolower(colnames(PBDin))
-      PBDcolnames <- colnames(PBDin)
-      csvInfo$wng <- ""
-      csvInfo$msg <- paste0("The input file consist of ", length(PBDcolnames), 
-                          " columns and ", nrow(PBDin), " observations.")
-
-      
-      ## Check columns
-      wColSpp <- switch("scientificname" %in% PBDcolnames, "scientificname", NULL)
-      wColLat <- switch(any(coordLatOpt %in% PBDcolnames), coordLatOpt[which(coordLatOpt %in% PBDcolnames)[1]], NULL)
-      wColLon <- switch(any(coordLonOpt %in% PBDcolnames), coordLonOpt[which(coordLonOpt %in% PBDcolnames)[1]], NULL)
-      updateSelectInput(session, inputId = "csvSpp", choices = PBDcolnames, 
-                        selected = wColSpp)
-      updateSelectInput(session, inputId = "csvLat", choices = PBDcolnames, 
-                        selected = wColLat )
-      updateSelectInput(session, inputId = "csvLon", choices = PBDcolnames, 
-                        selected = wColLon )
-      
-      # presenceCol=NULL
-      wColT <- which(stdTimeCol %in% PBDcolnames) 
-      # updatePickerInput(session, inputId = "timeCols", choices = PBDcolnames,
-      #                     selected = if (length(wColT)>0) stdTimeCol[wColT] else NULL)
-      updateSelectInput(session, inputId = "timeCols", choices = PBDcolnames,
-                        selected = if (length(wColT)>0) stdTimeCol[wColT] else NULL)
-      
-      wColV <- which(stdVisitCol %in% PBDcolnames)
-      ### If year, month, day is included in time, then it will also be use in visit
-      wColV <- wColV[-match(stdTimeCol[wColT], stdVisitCol)] 
-      visitCol.selected <- if (length(wColV)>0) stdVisitCol[wColV] else NULL
-      # updatePickerInput(session, inputId = "visitCols", choices = PBDcolnames, 
-      #                   selected = visitCol.selected )
-      updateSelectInput(session, inputId = "visitCols", choices = PBDcolnames, 
-                        selected = visitCol.selected )
-
-#### TODO check input conditions
-      #columns for time
-      #if (length(input$timeCols) %in% c(1,3))
-      # columns for visits
-      
-      PBD$data <- PBDin
-      ## And start over
-      PBD$organised <- NULL
-      PBD$visits <- NULL
-      PBD$summary <- NULL
-      PBD$exportDef <- NULL
-      PBD$export <- NULL
-      data_stat$data<-NULL
-      drawnPoly$data<-NULL
-      StudyArea$data<-NULL
-      # gridR$data<-NULL ## the grid can stay
-      
-      proxy<-leafletProxy(mapId="map")
-      proxy %>% 
-        # setView(0,0,2) %>% 
-        clearGroup("Study AreaPol") %>% 
-        clearGroup("Study Area") %>% 
-        # clearGroup("Grid") %>% 
-        clearGroup("PBD") %>% 
-        clearControls() 
-        
-      } else { ### File not OK
-        disable("csvSpp")
-        disable("csvTaxonEnable")
-        disable("csvLat")
-        disable("csvLon")
-        disable("timeCols")
-        disable("visitCols")
-        csvInfo$msg <- ""
-        csvInfo$wng <- "The input file is not valid. <br /> Check reading parameters."
-      }
-      
-    }
-  })
+  # observe({
+  #   if(is.null(inFileR$newCSV)) return()
+  #   if(inFileR$newCSV){}
+  # })
   
   #### Search and update CRS
   # observeEvent(input$csvCRS, {
@@ -922,6 +822,142 @@ shinyServer(function(input, output, session) {
   )
   
   ############### MODAL ##############
+  
+  
+  ### load data
+  
+  #When button clicked - show modal
+  observeEvent(input$loadData, {
+    loadDataUI()
+  })
+  
+  #When ok button klicked in modal
+  observeEvent(input$okLoadDataUI, {
+    
+    inFileR$okCSV <- FALSE
+    
+    ##### TODO is too slow to upload a file to internet, maybe add possibility to get from url
+    tryCatch({
+      PBDin <- fread(file=input$csvFile$datapath, #getcsv, 
+                     stringsAsFactors = FALSE, encoding = ifelse(input$csvUTF,"UTF-8","unknown"), 
+                     header = input$csvHeader, sep = input$csvSep, 
+                     quote = input$csvQuote, na.strings = "", data.table = FALSE)
+    }, error = function(e) e, warning = function(w) w, 
+    finally = {
+      if (exists("PBDin")) {
+        if (class(PBDin)=="data.frame" && length(colnames(PBDin)) > 1) {
+          inFileR$okCSV<-TRUE
+          inFileR$newCSV <- FALSE
+        }  
+      } else {
+        inFileR$okCSV<-FALSE
+      }
+    })
+    
+    if(inFileR$okCSV){
+      enable("csvSpp")
+      enable("csvTaxonEnable")
+      enable("csvLat")
+      enable("csvLon")
+      enable("timeCols")
+      enable("visitCols")
+      
+      colnames(PBDin) <- tolower(colnames(PBDin))
+      PBDcolnames <- colnames(PBDin)
+      csvInfo$wng <- ""
+      csvInfo$msg <- paste0("The input file consist of ", length(PBDcolnames), 
+                            " columns and ", nrow(PBDin), " observations.")
+      
+      
+      ## Check columns
+      wColSpp <- switch("scientificname" %in% PBDcolnames, "scientificname", NULL)
+      wColLat <- switch(any(coordLatOpt %in% PBDcolnames), coordLatOpt[which(coordLatOpt %in% PBDcolnames)[1]], NULL)
+      wColLon <- switch(any(coordLonOpt %in% PBDcolnames), coordLonOpt[which(coordLonOpt %in% PBDcolnames)[1]], NULL)
+      updateSelectInput(session, inputId = "csvSpp", choices = PBDcolnames, 
+                        selected = wColSpp)
+      updateSelectInput(session, inputId = "csvLat", choices = PBDcolnames, 
+                        selected = wColLat )
+      updateSelectInput(session, inputId = "csvLon", choices = PBDcolnames, 
+                        selected = wColLon )
+      
+      # presenceCol=NULL
+      wColT <- which(stdTimeCol %in% PBDcolnames) 
+      # updatePickerInput(session, inputId = "timeCols", choices = PBDcolnames,
+      #                     selected = if (length(wColT)>0) stdTimeCol[wColT] else NULL)
+      updateSelectInput(session, inputId = "timeCols", choices = PBDcolnames,
+                        selected = if (length(wColT)>0) stdTimeCol[wColT] else NULL)
+      
+      wColV <- which(stdVisitCol %in% PBDcolnames)
+      ### If year, month, day is included in time, then it will also be use in visit
+      wColV <- wColV[-match(stdTimeCol[wColT], stdVisitCol)] 
+      visitCol.selected <- if (length(wColV)>0) stdVisitCol[wColV] else NULL
+      # updatePickerInput(session, inputId = "visitCols", choices = PBDcolnames, 
+      #                   selected = visitCol.selected )
+      updateSelectInput(session, inputId = "visitCols", choices = PBDcolnames, 
+                        selected = visitCol.selected )
+      
+      #### TODO check input conditions
+      #columns for time
+      #if (length(input$timeCols) %in% c(1,3))
+      # columns for visits
+      
+      PBD$data <- PBDin
+      ## And start over
+      PBD$organised <- NULL
+      PBD$visits <- NULL
+      PBD$summary <- NULL
+      PBD$exportDef <- NULL
+      PBD$export <- NULL
+      data_stat$data<-NULL
+      drawnPoly$data<-NULL
+      StudyArea$data<-NULL
+      # gridR$data<-NULL ## the grid can stay
+      
+      proxy<-leafletProxy(mapId="map")
+      proxy %>% 
+        # setView(0,0,2) %>% 
+        clearGroup("Study AreaPol") %>% 
+        clearGroup("Study Area") %>% 
+        # clearGroup("Grid") %>% 
+        clearGroup("PBD") %>% 
+        clearControls() 
+      
+    } else { ### File not OK
+      disable("csvSpp")
+      disable("csvTaxonEnable")
+      disable("csvLat")
+      disable("csvLon")
+      disable("timeCols")
+      disable("visitCols")
+      csvInfo$msg <- ""
+      csvInfo$wng <- "The input file is not valid. <br /> Check reading parameters."
+    }
+    
+    removeModal()
+  })
+  
+  #When cancel button klicked in modal
+  observeEvent(input$cancelLoadDataUI, {
+    removeModal()
+  })
+  
+  ### Define visits
+  
+  #When button clicked - show modal
+  observeEvent(input$defVisits, {
+    defineVisitsUI()
+  })
+  
+  #When ok button klicked in modal
+  observeEvent(input$okDefineVisitsUI, {
+    
+    removeModal()
+  })
+  
+  #When cancel button klicked in modal
+  observeEvent(input$cancelDefineVisitsUI, {
+    removeModal()
+  })
   
   ### removeObs()
   #Enable or disable the button based on condition

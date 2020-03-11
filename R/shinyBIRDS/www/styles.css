@@ -179,6 +179,10 @@ p.bubble:hover span {
     top: 10px;
 }
 
+.buttonrow {
+  line-height: 3;
+}
+
 /* Allows pop-up modal to not be greyed out*/
 .modal-backdrop {
 z-index: 1000;
