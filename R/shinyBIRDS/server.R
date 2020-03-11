@@ -331,7 +331,7 @@ shinyServer(function(input, output, session) {
         inFileR$newCSV <- FALSE
         orgInfo$msg <- ""
         enable("downloadData") 
-        updateTabsetPanel(session, "pbd_output",selected = "org")
+        updateTabsetPanel(session, "pbd_output", selected = "org")
         # enable("expVisits")
         # enable("summaryGo")
       } else {
@@ -412,7 +412,7 @@ shinyServer(function(input, output, session) {
   
   #Observe the extent 
   observeEvent(input$goExtent, {
-    updateTabsetPanel(session, "navBar",selected = "map")
+    # updateTabsetPanel(session, "navBar",selected = "map")
 ### TODO use  OB2Polygon(df, shape = "bBox") for more shapes
     
     if (is.null(PBD$organised)) return()
@@ -492,7 +492,7 @@ shinyServer(function(input, output, session) {
       reset("shapeFile")
       
     }
-    updateTabsetPanel(session, "navBar",selected = "map")
+    # updateTabsetPanel(session, "navBar",selected = "map")
   })
   
   ### Upload the shape and make it a grid.
@@ -579,7 +579,7 @@ shinyServer(function(input, output, session) {
         addPolygons(data = grid, group = "Grid", weight = 2, col = "black", fillOpacity = 0) %>% 
         addPolygons(data = SpP, group = "Study Area", weight = 2, col = "#ff0066", fillOpacity = 0)  
       
-      updateTabsetPanel(session, "navBar",selected = "map")
+      # updateTabsetPanel(session, "navBar",selected = "map")
     }
   })
   
@@ -648,14 +648,18 @@ shinyServer(function(input, output, session) {
   
   ### Add export definition to a list
   observe({
-    disable("exportAdd")
-    if(validExport$state){
-      enable("exportAdd")} 
-    else {
+    if(is.null(PBD$summary)){
       disable("exportAdd")
+    }else{
+      if(validExport$state){
+        enable("exportAdd")
+      } else {
+        disable("exportAdd")
+      }
     }
+      
   })
-  
+
   observeEvent(input$exportAdd,{
       if(is.null(PBD$exportDef)){
         PBD$exportDef <- data.frame("dimension" = input$expDimension, 
@@ -991,18 +995,18 @@ shinyServer(function(input, output, session) {
   ### obsIndex()
   
   #Enable or disable the button based on condition
-  observeEvent(PBD$summary, {
-
-    if(is.null(PBD$visits)){
-      disable("getObsIndex")
-      disable("getComMatrix")
-      disable("getIgnorance")
-    }else{
-      enable("getObsIndex")
-      enable("getComMatrix")
-      enable("getIgnorance")
+  observe({
+    if(!is.null(PBD$summary)){
+      # if(is.null(PBD$visits)){
+      #   disable("getObsIndex")
+      #   disable("getComMatrix")
+      #   disable("getIgnorance")
+      # }else{
+        enable("getObsIndex")
+        enable("getComMatrix")
+        enable("getIgnorance")
+      # }
     }
-
   })
   
   #When button clicked - show modal
