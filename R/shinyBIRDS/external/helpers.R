@@ -151,6 +151,8 @@ loadDataUI<-function(){
                           ),
                           column(4,includeHTML("ui/loadData.html"))
                         ),
+                        h4("Data preview"),
+                        fluidRow(column(12, DT::dataTableOutput("TablePreview"))),
                         br(),
                         br(),
                         footer = tagList(
@@ -162,12 +164,22 @@ loadDataUI<-function(){
 }
 
 
-defineVisitsUI<-function(){
+defineVisitsUI<-function(colnames){
+  
+  PBDcolnames <- colnames
+  wColSpp <- switch("scientificname" %in% PBDcolnames, "scientificname", NULL)
+  wColLat <- switch(any(coordLatOpt %in% PBDcolnames), coordLatOpt[which(coordLatOpt %in% PBDcolnames)[1]], NULL)
+  wColLon <- switch(any(coordLonOpt %in% PBDcolnames), coordLonOpt[which(coordLonOpt %in% PBDcolnames)[1]], NULL)
+  wColT <- which(stdTimeCol %in% PBDcolnames) 
+  wColV <- which(stdVisitCol %in% PBDcolnames)
+  wColV <- wColV[-match(stdTimeCol[wColT], stdVisitCol)] 
+  visitCol.selected <- if (length(wColV)>0) stdVisitCol[wColV] else NULL
+  
   showModal(modalDialog(title = "Define visits",
                         fluidRow(column(6,
                                  ### TODO something else than just column names like dataset parameters... 
                                  h4("Column names", class="panel-title"),
-                                 selectInput("csvSpp", label = "Scientific species name", choices = "scientificname"),
+                                 selectInput("csvSpp", label = "Scientific species name", choices = PBDcolnames, selected = wColSpp),
                                  checkboxInput("simplifySpp", 
                                                label = h5(tags$p("Simplify the species name", 
                                                                  tags$span("i.e. remove infraspecific epithets and authors name"), 
@@ -179,17 +191,17 @@ defineVisitsUI<-function(){
                                  uiOutput("taxonRankUI"),
                                  fluidRow(
                                    column(6,
-                                          selectInput("csvLat", label = "Latitud", choices = "decimallatitude")         
+                                          selectInput("csvLat", label = "Latitud", choices = PBDcolnames, selected = wColLat)         
                                    ),
                                    column(6,
-                                          selectInput("csvLon", label = "Longitud", choices = "decimallongitude")         
+                                          selectInput("csvLon", label = "Longitud", choices = PBDcolnames, selected = wColLon)         
                                    )
                                  ),
                                  fluidRow(
                                    column(4,
                                           # selectInput("csvCRS", label = "Coordinate Reference System (CRS)", choices = epsg.choices),    
-                                          textInput("csvCRS", label = h5(tags$p("CRS", 
-                                                                                tags$span("Coordinate Reference System"), class="bubble")), 
+                                          textInput("csvCRS", label = h5(tags$p("CRS",
+                                                                                tags$span("Coordinate Reference System"), class="bubble")),
                                                     value = 4326, placeholder = "Search for a EPSG number of CRS name")
                                    ),
                                    column(8,
@@ -206,8 +218,9 @@ defineVisitsUI<-function(){
                                  h4("Visits", class="panel-title"),
                                  # pickerInput("timeCols", label = "Time columns", choices = "day",
                                  #             multiple = TRUE,  options = list(`actions-box` = TRUE)),
-                                 selectInput("timeCols", label = "Time columns", choices = "day",
-                                             multiple = TRUE, selectize = TRUE),
+                                 selectInput("timeCols", label = "Time columns", choices = PBDcolnames,
+                                             multiple = TRUE, selectize = TRUE, 
+                                             selected =  if (length(wColT)>0) stdTimeCol[wColT] else NULL),
                                  # pickerInput("visitCols", label = h5(tags$p("Visit identifier columns", 
                                  #                                            tags$span("day, month and year will also be added"), 
                                  #                                            class="bubble")),
@@ -215,7 +228,8 @@ defineVisitsUI<-function(){
                                  selectInput("visitCols", label = h5(tags$p("Visit identifier columns", 
                                                                             tags$span("day, month and year will also be added"), 
                                                                             class="bubble")),
-                                             choices = "day", multiple = TRUE),
+                                             choices = PBDcolnames, multiple = TRUE, 
+                                             selected = visitCol.selected),
                                  ### TODO add switch to include time variables or not
                                  br(),
                                  htmlOutput("orgInfoUI", inline = FALSE)

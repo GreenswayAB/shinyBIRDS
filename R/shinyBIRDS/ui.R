@@ -37,7 +37,7 @@ navbarPage(title="shinyBIRDS", id="navBar",
     ),
                  conditionalPanel(condition="$('html').hasClass('shiny-busy')",
                                   tags$img(src="./img/loader-hex.gif")
-                 ))
+                 )
   ),
   tabPanel(title = "Summary Export", icon = icon("box-open"), value = "sumandexp",
     load_ui_content("ui/tabPanel_sumandexp.R"),

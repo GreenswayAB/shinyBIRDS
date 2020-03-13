@@ -11,8 +11,6 @@ tagList(
                         icon = icon("search"), class="btn-info btn-sm"),
            actionButton("removeObs", "Remove observations", width = "223", 
                         icon = icon("filter"), class="btn-warning btn-sm"),
-           actionButton("addGrid", HTML("&nbsp;&nbsp;Add grid"), width = "110", 
-                        icon = icon("th"), class="btn-success btn-sm"),
            actionButton("summaryGo", HTML("&nbsp;Summary"), 
                         width = "100", icon = icon("chart-bar"), class="btn-success btn-sm"),
            p("")
