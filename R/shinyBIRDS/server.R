@@ -52,7 +52,8 @@ shinyServer(function(input, output, session) {
                      singleFeature = TRUE) %>% 
       addLayersControl(#baseGroups = c("Google Satellite", "OSM (Hot)","Open Topo", "ESRI Street"),
         overlayGroups = c("PBD","Study Area", "Grid"), 
-        options = layersControlOptions(collapsed=FALSE,  position = "bottomright")) #%>% 
+        options = layersControlOptions(collapsed=FALSE,  position = "bottomright")) %>% 
+    addScaleBar(position = "bottomleft", options = scaleBarOptions(imperial=FALSE, maxWidth = 200))
   }) ## end render map
   
   ### Upload the csv and make it spatial.
@@ -127,14 +128,18 @@ shinyServer(function(input, output, session) {
       
       # presenceCol=NULL
       wColT <- which(stdTimeCol %in% PBDcolnames) 
-      updatePickerInput(session, inputId = "timeCols", choices = PBDcolnames, 
-                          selected = if (length(wColT)>0) stdTimeCol[wColT] else NULL)  
+      # updatePickerInput(session, inputId = "timeCols", choices = PBDcolnames,
+      #                     selected = if (length(wColT)>0) stdTimeCol[wColT] else NULL)
+      updateSelectInput(session, inputId = "timeCols", choices = PBDcolnames,
+                        selected = if (length(wColT)>0) stdTimeCol[wColT] else NULL)
       
       wColV <- which(stdVisitCol %in% PBDcolnames)
       ### If year, month, day is included in time, then it will also be use in visit
       wColV <- wColV[-match(stdTimeCol[wColT], stdVisitCol)] 
       visitCol.selected <- if (length(wColV)>0) stdVisitCol[wColV] else NULL
-      updatePickerInput(session, inputId = "visitCols", choices = PBDcolnames, 
+      # updatePickerInput(session, inputId = "visitCols", choices = PBDcolnames, 
+      #                   selected = visitCol.selected )
+      updateSelectInput(session, inputId = "visitCols", choices = PBDcolnames, 
                         selected = visitCol.selected )
 
 #### TODO check input conditions
@@ -242,9 +247,11 @@ shinyServer(function(input, output, session) {
       tagList(
         selectInput("csvTaxon", label = "Taxon rank column", choices = PBDcolnames, 
                     selected = ifelse("taxonrank" %in% PBDcolnames, "taxonrank", PBDcolnames[1]) ),
-        pickerInput("taxonRankVal", label = "Taxon rank to keep", choices = stdTaxonRank,
-                    selected = stdTaxonRank[1],
-                    multiple = TRUE,  options = list(`actions-box` = TRUE))
+        # pickerInput("taxonRankVal", label = "Taxon rank to keep", choices = stdTaxonRank,
+        #             selected = stdTaxonRank[1],
+        #             multiple = TRUE,  options = list(`actions-box` = TRUE))
+        selectInput("taxonRankVal", label = "Taxon rank to keep", choices = stdTaxonRank,
+                    selected = stdTaxonRank[1], multiple = TRUE)
       )
     } else {
       return()
@@ -255,8 +262,10 @@ shinyServer(function(input, output, session) {
     req(input$csvTaxon)
     taxons <- unique(PBD$data[,input$csvTaxon])
     wTax <- which(stdTaxonRank %in% taxons)
-    updatePickerInput(session, "taxonRankVal", label = "Taxon rank to keep", choices = taxons,
-                    selected = switch(length(wTax) > 0, stdTaxonRank[wTax], NULL))
+    # updatePickerInput(session, "taxonRankVal", label = "Taxon rank to keep", choices = taxons,
+    #                 selected = switch(length(wTax) > 0, stdTaxonRank[wTax], NULL))
+    updateSelectInput(session, "taxonRankVal", label = "Taxon rank to keep", choices = taxons,
+                      selected = switch(length(wTax) > 0, stdTaxonRank[wTax], NULL))
   })
  
   
@@ -304,23 +313,25 @@ shinyServer(function(input, output, session) {
         nObs <- nrow(obsData(PBD$organised))
         n <- 500
         wPlot <- if (nObs > n) sample(nObs, n) else c(1:nObs)
+        labelTxt <- if (nObs > n) "PBD: random subset of 500 obs." else "PBD: all observations"
         PBDpoints <- PBD$organised$spdf[wPlot,]
 
         proxy <- leafletProxy(mapId="map")
         proxy %>% 
           clearGroup("PBD") %>% 
+          clearControls() %>% 
           fitBounds(lng1=boundsStudy[1], lat1=boundsStudy[2], lng2=lng2shift, lat2=boundsStudy[4]) %>% 
           addCircleMarkers(data = PBDpoints, group = "PBD", 
                            color = "black", stroke = FALSE, fillOpacity = 0.5, radius = 5,
                            label = ~as.character(scientificName)) %>% 
-          clearControls() %>% 
           leaflet::addLegend(position = "bottomleft", colors = "black", 
-                    group = "PBD", labels = "Random subset of PBD",
+                    group = "PBD", labels = labelTxt,
                     title = "", opacity = 0.5)
         
         inFileR$newCSV <- FALSE
         orgInfo$msg <- ""
-        enable("downloadData")  
+        enable("downloadData") 
+        updateTabsetPanel(session, "pbd_output", selected = "org")
         # enable("expVisits")
         # enable("summaryGo")
       } else {
@@ -348,6 +359,7 @@ shinyServer(function(input, output, session) {
   ## Explore the visits, before summarysing
   observeEvent(input$expVisits, {
     req(PBD$organised)
+    updateTabsetPanel(session, "pbd_output",selected = "expVis")
     PBDorg<-PBD$organised
     PBD$visits <- exploreVisits(x=PBD$organised, visitCol=attr(PBD$organised, "visitCol"), sppCol="scientificName")
     PBD$visits$day <- as.numeric(PBD$visits$day)
@@ -368,15 +380,15 @@ shinyServer(function(input, output, session) {
     #plot circles
     proxy <- leafletProxy(mapId="map")
     proxy %>% 
+      # clearControls() %>% 
       addCircles(data = PBD$visits, lng = ~centroidX, lat = ~centroidY,
                  group = "PBD", color = "red", stroke = TRUE, 
                  weight = 5, fillOpacity = 0.1, 
                  radius = ~medianDist, #~effortDiam/2, #
                  label = ~visitUID) %>% 
-      clearControls() %>% 
-      leaflet::addLegend(position = "bottomleft", colors = c("red","black"), 
-                group = "PBD", labels = c("Visits extent", "Random subset of PBD"),
-                title = "", opacity = 0.5)
+    leaflet::addLegend(position = "bottomleft", colors = "red", 
+                       group = "PBD", labels = "Visits extent",
+                       title = "", opacity = 0.5)
   })
   
   ######### GRID
@@ -400,7 +412,7 @@ shinyServer(function(input, output, session) {
   
   #Observe the extent 
   observeEvent(input$goExtent, {
-    
+    # updateTabsetPanel(session, "navBar",selected = "map")
 ### TODO use  OB2Polygon(df, shape = "bBox") for more shapes
     
     if (is.null(PBD$organised)) return()
@@ -478,7 +490,9 @@ shinyServer(function(input, output, session) {
       }
       gridR$new<-TRUE
       reset("shapeFile")
+      
     }
+    # updateTabsetPanel(session, "navBar",selected = "map")
   })
   
   ### Upload the shape and make it a grid.
@@ -494,8 +508,9 @@ shinyServer(function(input, output, session) {
       shapeWr$msg<-"Select all files related to the .shp"
       return()
     }
-    # }
+    
   })
+  
   output$shapeMessage<-renderUI(div(HTML( shapeWr$msg ), class="message"))
   
   observe({  
@@ -534,6 +549,7 @@ shinyServer(function(input, output, session) {
       gridR$new<-TRUE
       inFileR$newSHP<-FALSE      
     }
+    
   })
   
   
@@ -562,6 +578,8 @@ shinyServer(function(input, output, session) {
         # addGeoJSON(gridGJS, group = "Grid", layerId= "grid", weight = 2, col = "black", fillOpacity = 0) %>% 
         addPolygons(data = grid, group = "Grid", weight = 2, col = "black", fillOpacity = 0) %>% 
         addPolygons(data = SpP, group = "Study Area", weight = 2, col = "#ff0066", fillOpacity = 0)  
+      
+      # updateTabsetPanel(session, "navBar",selected = "map")
     }
   })
   
@@ -577,7 +595,8 @@ shinyServer(function(input, output, session) {
         # setView(0,0,2) %>% 
         clearGroup("Study AreaPol") %>% 
         clearGroup("Study Area") %>% 
-        clearGroup("Grid")
+        clearGroup("Grid") %>% 
+        clearControls()
   })
   
   #### Summarise
@@ -585,6 +604,7 @@ shinyServer(function(input, output, session) {
   
   observeEvent(input$summaryGo,{
     req(PBD$organised)
+    #TODO prevent Warning: Error in overlayBirds.OrganizedBirds: Observations don't overlap any grid cell
     PBD$summary <- summariseBirds(PBD$organised, gridR$data, 
                                   spillOver = switch(input$spillOver != "Not", 
                                                      tolower(input$spillOver), 
@@ -628,14 +648,18 @@ shinyServer(function(input, output, session) {
   
   ### Add export definition to a list
   observe({
-    disable("exportAdd")
-    if(validExport$state){
-      enable("exportAdd")} 
-    else {
+    if(is.null(PBD$summary)){
       disable("exportAdd")
+    }else{
+      if(validExport$state){
+        enable("exportAdd")
+      } else {
+        disable("exportAdd")
+      }
     }
+      
   })
-  
+
   observeEvent(input$exportAdd,{
       if(is.null(PBD$exportDef)){
         PBD$exportDef <- data.frame("dimension" = input$expDimension, 
@@ -736,7 +760,7 @@ shinyServer(function(input, output, session) {
               autoHideNavigation = TRUE,
               options = list(
                 dom = 'tp',
-                pageLength = 5,
+                pageLength = 15,
                 scrollX=TRUE)
               )
   }, server = TRUE) #end render DataTable
@@ -971,18 +995,18 @@ shinyServer(function(input, output, session) {
   ### obsIndex()
   
   #Enable or disable the button based on condition
-  observeEvent(PBD$summary, {
-
-    if(is.null(PBD$visits)){
-      disable("getObsIndex")
-      disable("getComMatrix")
-      disable("getIgnorance")
-    }else{
-      enable("getObsIndex")
-      enable("getComMatrix")
-      enable("getIgnorance")
+  observe({
+    if(!is.null(PBD$summary)){
+      # if(is.null(PBD$visits)){
+      #   disable("getObsIndex")
+      #   disable("getComMatrix")
+      #   disable("getIgnorance")
+      # }else{
+        enable("getObsIndex")
+        enable("getComMatrix")
+        enable("getIgnorance")
+      # }
     }
-
   })
   
   #When button clicked - show modal
