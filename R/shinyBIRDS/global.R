@@ -31,7 +31,7 @@ require(geosphere)
 library(RColorBrewer)
 # library(plot3D)
 library(esquisse)
-library(CoordinateCleaner) #rnaturalearthdata
+# library(CoordinateCleaner) #rnaturalearthdata
 
 library(httr)
 library(jsonlite)
