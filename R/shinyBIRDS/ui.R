@@ -33,7 +33,7 @@ navbarPage(title="shinyBIRDS", id="navBar",
                              leafletOutput("map", height = "91vh") #"90vh")
                       ),
                       column(4,
-                             load_ui_content("ui/menu_map_grid.R")  
+                             load_ui_content("ui/menu_map_grid.r")  
                       )
                     ),
                     absolutePanel(fixed = TRUE, top = "50%", left = "50%", width = '195px',
