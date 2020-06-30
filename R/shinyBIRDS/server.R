@@ -100,7 +100,16 @@ shinyServer(function(input, output, session) {
 
     if(input$csvCRS != ""){
       searchWeb<-gsub("\ ", "%20", input$csvCRS)
-      getEPSG <- GET(urlEPGS, path=paste0("/?q=", searchWeb, "&format=json"))
+      getEPSG <- tryCatch(GET(urlEPGS, path=paste0("/?q=", searchWeb, "&format=json")),
+                          error = function(e){
+                            print(e)
+                            #isolate({epsgInfo$code <- input$csvCRS})
+                            return(list("status_code" = 0))}, 
+                          warning = function(w){
+                            print(w)
+                            #isolate({epsgInfo$code <- input$csvCRS})
+                            return(list("status_code" = 0))}
+                          )
 
       if(getEPSG$status_code == 200) {
         contEPSG <<- content(getEPSG, encoding = "UTF-8")
@@ -195,7 +204,7 @@ shinyServer(function(input, output, session) {
     print("Organizing...")
     
     PBDdata <- PBD$data[,c(orgVars$sppCol, orgVars$xyCols[1], orgVars$xyCols[2],
-                           orgVars$timeCols, orgVars$idCols, orgVars$csvTaxon)]
+                           orgVars$timeCols, orgVars$idCols, orgVars$csvTaxon, orgVars$presenceCol)]
     
     PBD$organised <- tryCatch(organizeBirds(PBDdata, 
                                             sppCol = orgVars$sppCol, 
@@ -210,9 +219,10 @@ shinyServer(function(input, output, session) {
                                             taxonRank = orgVars$taxonRank,
                                             simplifySppName = orgVars$simplifySppName), 
                               error = function(e){
+                                print(e)
                                 shinyalert::shinyalert(title = "An error occured", text = e$message, type = "error")
-                                return(NULL)}, 
-                              warning = function(w) w) 
+                                return(NULL)}
+                              ) 
     
     str(PBD$organised)
     
@@ -967,9 +977,18 @@ shinyServer(function(input, output, session) {
     orgVars$sppCol <- input$csvSpp
     orgVars$idCols <- input$visitCols
     orgVars$timeCols <- timeCol.selected
-    orgVars$timeInVisits <- "day" ### TODO THis should be variable and optional
+    orgVars$timeInVisits <- if(input$timeInVis == "None"){
+      NULL
+    }else{
+      tolower(input$timeInVis)
+    }
     orgVars$grid <- NULL ### TODO THis should be variable and optional
-    orgVars$presenceCol <- NULL ### TODO THis should be variable and optional
+    orgVars$presenceCol <- if(input$usePresence){
+      print(input$presenceCol)
+      input$presenceCol
+    }else{
+      NULL
+    }
     orgVars$xyCols <- c(input$csvLon, input$csvLat)
     orgVars$dataCRS <- paste0("+init=epsg:", epsgInfo$code)
     orgVars$csvTaxon <- input$csvTaxon

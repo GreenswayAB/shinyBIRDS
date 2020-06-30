@@ -62,6 +62,7 @@ stdTimeCol <- c("year", "month", "day")
 stdTaxonRank <- c("SPECIES","SUBSPECIES","VARIETY")
 coordLatOpt <- c("decimallatitude", "y", "coordinatey")
 coordLonOpt <- c("decimallongitude", "x", "coordinatex")
+presOptions <- c("presence")
 
 urlGBIF <- "http://api.gbif.org"
 urlEPGS <- "http://epsg.io"

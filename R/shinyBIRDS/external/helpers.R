@@ -170,10 +170,12 @@ defineVisitsUI<-function(colnames){
   wColSpp <- switch("scientificname" %in% PBDcolnames, "scientificname", NULL)
   wColLat <- switch(any(coordLatOpt %in% PBDcolnames), coordLatOpt[which(coordLatOpt %in% PBDcolnames)[1]], NULL)
   wColLon <- switch(any(coordLonOpt %in% PBDcolnames), coordLonOpt[which(coordLonOpt %in% PBDcolnames)[1]], NULL)
+  wColPre <- switch(any(presOptions %in% PBDcolnames), presOptions[which(presOptions %in% PBDcolnames)[1]], NULL)
   wColT <- which(stdTimeCol %in% PBDcolnames) 
   wColV <- which(stdVisitCol %in% PBDcolnames)
   wColV <- wColV[-match(stdTimeCol[wColT], stdVisitCol)] 
   visitCol.selected <- if (length(wColV)>0) stdVisitCol[wColV] else NULL
+  timeVisOpt <- c("None", "Day", "Month", "Year")
   
   showModal(modalDialog(title = "Define visits",
                         fluidRow(column(6,
@@ -186,11 +188,14 @@ defineVisitsUI<-function(colnames){
                                                                  class="bubble")),
                                                FALSE),
                                  ## TODO dynamically show example of how the name would look like simplified
-                                 # presenceCol=NULL,
+                                 fluidRow(style='padding-left:0px; margin-left: 0px;',
+                                   column(6, style='padding-left:0px;',
+                                          checkboxInput("usePresence", "Use presence variable", FALSE)),
+                                   column(6, selectInput("presenceCol", "Column for presence", choices = PBDcolnames, selected = wColPre))),
                                  checkboxInput("csvTaxonEnable", "Select taxon ranks", FALSE),
                                  uiOutput("taxonRankUI"),
                                  fluidRow(
-                                   column(6,
+                                   column(6,style='padding-left:0px;',
                                           selectInput("csvLat", label = "Latitud", choices = PBDcolnames, selected = wColLat)         
                                    ),
                                    column(6,
@@ -230,6 +235,7 @@ defineVisitsUI<-function(colnames){
                                                                             class="bubble")),
                                              choices = PBDcolnames, multiple = TRUE, 
                                              selected = visitCol.selected),
+                                 selectInput("timeInVis", "Define visits by time resolution", choices = timeVisOpt, selected = "Day"),
                                  ### TODO add switch to include time variables or not
                                  br(),
                                  htmlOutput("orgInfoUI", inline = FALSE)
