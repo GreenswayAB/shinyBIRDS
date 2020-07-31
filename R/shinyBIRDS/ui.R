@@ -28,14 +28,7 @@ navbarPage(title="shinyBIRDS", id="navBar",
                                   ))
            ),
            tabPanel(title = "Map", icon = icon("globe"), value = "map",
-                    fluidRow(
-                      column(8,
-                             leafletOutput("map", height = "91vh") #"90vh")
-                      ),
-                      column(4,
-                             load_ui_content("ui/menu_map_grid.r")  
-                      )
-                    ),
+                    fluidRow(map_page_ui("mapPage")),
                     absolutePanel(fixed = TRUE, top = "50%", left = "50%", width = '195px',
                                   conditionalPanel(condition="$('html').hasClass('shiny-busy')",
                                                    tags$img(src="./img/loader-hex.gif")
