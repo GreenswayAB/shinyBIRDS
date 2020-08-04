@@ -17,7 +17,6 @@ map_mod_server <- function(id, layers, pbd_data){
                  layersAll <- reactiveValues(layer = list(NULL))
                  
                  observeEvent(pbd_data$organised, {
-                   print("pbd update")
                    if(! is.null(pbd_data$organised)){
                      n <- 500
                      nObs <- nrow(obsData(pbd_data$organised))
@@ -37,11 +36,10 @@ map_mod_server <- function(id, layers, pbd_data){
                  })
                  
                  observeEvent(pbd_data$visits, {
-                   print("pbd update with visits")
                    if(! is.null(pbd_data$visits)){
                      insert <- length(layersAll$layer)+1
                      names <- c(names(layersAll$layer), "PBD")
-                     layersAll$layer[[insert]] <-  list(geom = PBD$visits, type = "visits")
+                     layersAll$layer[[insert]] <-  list(geom = pbd_data$visits, type = "visits")
                      names(layersAll$layer) <- names
                    }else{ 
                      vLayer <- unlist(lapply(layersAll$layer, function(x){x$type=="visits"}))
@@ -50,26 +48,6 @@ map_mod_server <- function(id, layers, pbd_data){
                      }
                    }
                  })
-                   
-                 
-                 # wPlot <- if (nObs > n) sample(nObs, n) else c(1:nObs)
-                 # labelTxt <- if (nObs > n) "PBD: random subset of 500 obs." else "PBD: all observations"
-                 # PBDpoints <- PBD$organised$spdf[wPlot,]
-                 # 
-                 # proxy <- leafletProxy(mapId="map")
-                 # proxy %>% 
-                 #   clearGroup("PBD") %>% 
-                 #   clearControls() %>% 
-                 #   fitBounds(lng1=boundsStudy[1], lat1=boundsStudy[2], lng2=lng2shift, lat2=boundsStudy[4]) %>% 
-                 #   addCircleMarkers(data = PBDpoints, group = "PBD", 
-                 #                    color = "black", stroke = FALSE, fillOpacity = 0.5, radius = 5, label = ~as.character(scientificName))
-                 # 
-                 
-                 # addCircles(data = PBD$visits, lng = ~centroidX, lat = ~centroidY,
-                 #            group = "PBD", color = "red", stroke = TRUE,
-                 #            weight = 5, fillOpacity = 0.1,
-                 #            radius = ~medianDist, #~effortDiam/2, #
-                 #            label = ~visitUID)
                  
                  
                  ## Change in the layers ##
@@ -88,7 +66,6 @@ map_mod_server <- function(id, layers, pbd_data){
                      for(i in 1:length(layers$layers$grids)){
                        g <- names(layers$layers$grids[i])
                        l <- layers$layers$grids[[i]]
-                       print(paste0("Adding layer ", g, " to grid map"))
                        insert <- length(layersAll$layer)+1
                        names <- c(names(layersAll$layer), g)
                        layersAll$layer[[insert]] <- list(geom = l, type = "grid")
@@ -129,34 +106,31 @@ map_mod_server <- function(id, layers, pbd_data){
                    if(length(layersAll$layer) > 0){
                      for(i in 1:length(layersAll$layer)){
                        if(layersAll$layer[[i]]$type == "obsData"){
-                         print("Add cirkle markers")
                          proxy %>%
                            addCircleMarkers(data = layersAll$layer[[i]]$geom, group = names(layersAll$layer[i]),
                                             color = "black", stroke = FALSE, fillOpacity = 0.5, radius = 5,
                                             label = ~as.character(scientificName))
                        }else if(layersAll$layer[[i]]$type == "visits"){
-                         print("Add cirkles")
-                         addCircles(data = layersAll$layer[[i]]$geom, 
-                                    lng = ~centroidX, lat = ~centroidY,
-                                    group = names(layersAll$layer[i]), 
-                                    color = "red", stroke = TRUE,
-                                    weight = 5, fillOpacity = 0.1,
-                                    radius = ~medianDist, #~effortDiam/2, #
-                                    label = ~visitUID)
+                         print("adding Circles")
+                         proxy %>%
+                           addCircles(data = layersAll$layer[[i]]$geom, 
+                                      lng = ~centroidX, lat = ~centroidY,
+                                      group = names(layersAll$layer[i]), 
+                                      color = "red", stroke = TRUE,
+                                      weight = 5, fillOpacity = 0.1,
+                                      radius = ~medianDist, #~effortDiam/2, #
+                                      label = ~visitUID)
                        }else if(layersAll$layer[[i]]$type == "grid"){
-                         print("Add polygon grid") 
                          proxy %>%
                            addPolygons(data = layersAll$layer[[i]]$geom,
                                        group = names(layersAll$layer[i]), 
                                        weight = 2, col = "black", fillOpacity = 0)
                        }else if(layersAll$layer[[i]]$type == "wg"){
-                         print("Add polygon wg")
                          proxy %>%
                            addPolygons(data = layersAll$layer[[i]]$geom,
                                        group = names(layersAll$layer[i]), 
                                        weight = 2, col = "blue", fillOpacity = 0)
                        }else if(layersAll$layer[[i]]$type == "sa"){
-                         print("Add polygon Study area")
                          bb <- layersAll$layer[[i]]$geom@bbox
                          proxy %>%
                            addPolygons(data = layersAll$layer[[i]]$geom,
@@ -215,11 +189,6 @@ map_mod_server <- function(id, layers, pbd_data){
                   }) 
                 
                 return(reactive({drawn$polygon}))
-                 
-                 # observeEvent(drawn$polygon, {
-                 #   print("draw")
-                 #   #print(str(drawn$polygon))
-                 #   return(reactive({drawn$polygon}))
-                 #   })
+
                })
 }

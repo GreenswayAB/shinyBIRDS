@@ -16,16 +16,30 @@ map_page_ui <- function(id) {
   )
 }
 
+#' Map page module server
+#' 
+#' Creates the map page
+#' 
+#' \code{pbd} Should have have the strucure as: \code{reactiveValues(data=NULL, organised=NULL, visits = NULL, summary = NULL, exportDef = NULL, export = NULL)}, where the variables \code{organised} is important and should be a \code{OrganizedBirds-class}.
+#' \code{visits} Should be from \code{exploreVisits()}
+#'
+#' @param id Same as id for grid_mod_ui(id)
+#' @param pbd A reactiveValue
+#' 
+#'
+#' @return A reactiveValue with the structure \code{reactiveValues(layers = list(others = list(), grids = list()))}
+#'   Each object in the other and grid lists are named with the name they should have in the application and the the list should hold the \code{SpatialPolygons}.
+#'   \code{others} are objects, such as study area, observations...
+#'   \code{grids} are grids.
+#'   
+#' @export
+#'
+#' @examples
 map_page_server <- function(id, pbd_data){
   
   moduleServer(id,
                function(input, output, session){
-                 
-                 #layerList <- reactiveValues(layers= NULL)
-                 #Dummy data
-                 # reactive({
-                 #   layerList$grids$name <- matrix(c("lager1", "lager2"),ncol = 1, nrow = 2, byrow = TRUE)
-                 # })
+
                  drawn <- reactiveValues(polygon = NULL)
                  
                  layerList <- grid_mod_server("gridding", pbd_data, drawn)
@@ -35,10 +49,8 @@ map_page_server <- function(id, pbd_data){
                  observeEvent(d(), {
                    drawn$polygon <- d()
                  })
-
-                 #observe({print(str(layerList$layers$others))})
                  
-                 return(NULL)
+                 return(layerList)
                  
                })
 }

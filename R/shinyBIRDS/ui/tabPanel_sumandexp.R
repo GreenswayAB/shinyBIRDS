@@ -15,6 +15,8 @@ tagList(
                                                       class="bubble")),
                        choices = c("Not", "Unique", "Duplicate"), selected = "Unique",
                        multiple = FALSE),
+           selectizeInput("gridInSummary", "Grid for summary", choices = NULL),
+           
            actionButton("summaryGo", HTML("&nbsp;Summary"), 
                         width = "100", icon = icon("chart-bar"), class="btn-success btn-sm")
       ),

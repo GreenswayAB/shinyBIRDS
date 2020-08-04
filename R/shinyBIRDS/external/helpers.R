@@ -164,7 +164,7 @@ loadDataUI<-function(){
 }
 
 
-defineVisitsUI<-function(colnames){
+defineVisitsUI<-function(colnames, grids){
   
   PBDcolnames <- colnames
   wColSpp <- switch("scientificname" %in% PBDcolnames, "scientificname", NULL)
@@ -176,6 +176,13 @@ defineVisitsUI<-function(colnames){
   wColV <- wColV[-match(stdTimeCol[wColT], stdVisitCol)] 
   visitCol.selected <- if (length(wColV)>0) stdVisitCol[wColV] else NULL
   timeVisOpt <- c("None", "Day", "Month", "Year")
+  
+  if(length(grids) > 0){
+    gridAlts <- c("", 1:length(grids)) 
+    names(gridAlts) <- c("", names(grids))
+  }else{
+    gridAlts <- NULL
+  }
   
   showModal(modalDialog(title = "Define visits",
                         fluidRow(column(6,
@@ -236,6 +243,7 @@ defineVisitsUI<-function(colnames){
                                              choices = PBDcolnames, multiple = TRUE, 
                                              selected = visitCol.selected),
                                  selectInput("timeInVis", "Define visits by time resolution", choices = timeVisOpt, selected = "Day"),
+                                 selectizeInput("gridInVis", "Define visits by grid", choices = gridAlts),
                                  ### TODO add switch to include time variables or not
                                  br(),
                                  htmlOutput("orgInfoUI", inline = FALSE)

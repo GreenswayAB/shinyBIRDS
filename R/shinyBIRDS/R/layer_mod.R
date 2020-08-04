@@ -44,7 +44,6 @@ layer_mod_server <- function(id, layers){
                  })
                  
                  observeEvent(input$newName, {
-                   # print(input$newName)
                    i<-input$layerTable_rows_selected
                    if(is.character(input$newName)){
                      names(layers$layers$grids)[i] <- input$newName

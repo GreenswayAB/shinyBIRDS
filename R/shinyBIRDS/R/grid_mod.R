@@ -43,9 +43,7 @@ grid_draw <- function(session){
 ## Functions
 getGridFromShp <- function(shapefiles){
   inFile <- shapefiles
-  #print(inFile)
   dir<-dirname(inFile[1,4]) #Get the directory where the files are stored
-  #print(dir)
 
   #Rename the files from 0 to "number of files"
   for ( i in 1:nrow(inFile)) {
@@ -76,15 +74,11 @@ getGridFromShp <- function(shapefiles){
                       bboxMat[1,2], bboxMat[2,1],
                       bboxMat[1,1], bboxMat[2,1]), ncol = 2, nrow = 5, byrow = TRUE)
 
-  # print(polygonSA)
   SpP <- SpatialPolygons(list(
     Polygons(list(Polygon(polygonSA)), 1)
   ))
   proj4string(SpP) <- CRS("+init=epsg:4326")
-  
-  #str(grid)
-  #str(SpP)
-  
+
   return(list("Working grid" = grid,
               "Study area" = SpP))
   
@@ -96,14 +90,7 @@ getGridFromSettings <- function(area, gridsize, hex, buffer){
   StudyBuff<-gBuffer(area, width = ifelse(buffer, gridSizeDg, 0))
 
   proj4string(area)<-CRS("+init=epsg:4326")
-  
-  # print(area)
-  # print(str(area))
-  # print("studyBuff")
-  # print(str(StudyBuff))
-  # print(str(gridSizeDg))
-  
-  
+
   if(hex){
     points <- spsample(StudyBuff, type = "hexagonal", offset = c(0, 0), cellsize = gridSizeDg)
     proj4string(points)<-CRS("+init=epsg:4326")
@@ -154,6 +141,26 @@ grid_mod_ui <- function(id){
   
 }
 
+#' Grid module server
+#' 
+#' Create the server side module for creating grids
+#' 
+#' \code{pbd} Should have have the strucure as: \code{reactiveValues(data=NULL, organised=NULL, visits = NULL, summary = NULL, exportDef = NULL, export = NULL)}, where the variables \code{organised} is important and should be a \code{OrganizedBirds-class}.
+#' \code{polygonDraw} Should have the structure as: \code{reactiveValues(polygon = NULL)}, where \code{polygon} is a \code{SpatialPolygons}. Generated from \code{map_mod_server()}.
+#'
+#' @param id Same as id for grid_mod_ui(id)
+#' @param pbd A reactiveValue
+#' @param polygonDraw A reactiveValue 
+#' 
+#'
+#' @return A reactiveValue with the structure \code{reactiveValues(layers = list(others = list(), grids = list()))}
+#'   Each object in the other and grid lists are named with the name they should have in the application and the the list should hold the \code{SpatialPolygons}.
+#'   \code{others} are objects, such as study area, observations...
+#'   \code{grids} are grids.
+#'   
+#' @export
+#'
+#' @examples
 grid_mod_server <- function(id, pbd, polygonDraw){
   
   moduleServer(id,
@@ -193,8 +200,6 @@ grid_mod_server <- function(id, pbd, polygonDraw){
                  
                  observeEvent(polygonDraw$polygon, {
                    
-                   print("Polygon drawn")
-                   
                    layerList$layers$others[["Study area"]] <- polygonDraw$polygon
                    
                  })
@@ -208,7 +213,6 @@ grid_mod_server <- function(id, pbd, polygonDraw){
                       tryCatch({
                         layerList$layers$others <- getGridFromShp(input$shapeFile)
                         shapeWr$msg<-""
-                        #print("newGrid")
                         }, error = function(e){
                           shapeWr$msg <- e$message
                         })
