@@ -15,6 +15,7 @@ library(leaflet.extras)
 library(dplyr)
 library(DT)
 library(data.table)
+library(zip)
 
 library(maps) 
 library(maptools) 
@@ -31,6 +32,7 @@ require(geosphere)
 library(RColorBrewer)
 # library(plot3D)
 library(esquisse)
+library(plot.matrix)
 # library(CoordinateCleaner) #rnaturalearthdata
 
 library(httr)
@@ -69,12 +71,6 @@ urlEPGS <- "http://epsg.io"
 
 palRWB <- colorNumeric(c("blue","white", "red"), c(0,1), na.color = "transparent")
 palGWR <- colorNumeric(c("red","lightpink", "green4"), c(0,1), na.color = "transparent")
-
-epsg.choices<-c("WGS84" = "4326",
-                "WGS84 Mercator" = "3857",
-                "NAD83" = "4269",
-                "Equal Area US" = "2163",
-                "SWEREF99TM" = "3006") 
 
 DimeCode<-c("spatial", "temporal")
 Dimension<-c("Spatial", "Temporal")

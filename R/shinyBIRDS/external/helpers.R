@@ -42,85 +42,6 @@ removeObsUI<-function(){
   )
 }
 
-obsIndexUI<-function(spList){
-  showModal(modalDialog(title = "Add observation index",
-                        fluidRow(
-                          column(6,
-                                 selectInput(inputId = "oiDimension",
-                                             label = "Dimension",          
-                                             choices = c(structure(DimeCode, names=Dimension)),
-                                             selectize = FALSE, multiple = FALSE, width = "200"),
-                                 conditionalPanel(condition = "input.oiDimension == 'temporal'",
-                                                  selectInput(inputId = "oiTimeRes",
-                                                              label = "Temporal Resolution",          
-                                                              choices = c("Yearly", "Monthly", "Daily"))),
-                                 selectInput(inputId = "oiFocalSp",
-                                             label = "Focal species",          
-                                             choices = spList),
-                                 checkboxGroupInput("oiBools", label = "", choices = 
-                                                      c("Calculate over number of visits" = "visits", 
-                                                        "Observations for the focal species are included in 'group'" = "fs.rm", 
-                                                        "Normalize the result" = "norm"),
-                                                    selected = c("visits", "fs.rm", "norm"))),
-                          column(6,includeHTML("ui/observationIndex.html"))
-                        ),
-                        br(),
-                        br(),
-                        footer = tagList(
-                          actionBttn("cancelObsIndexUI", NULL, icon = icon("times"), style = "material-circle", color = "danger", size = "xs"),
-                          actionBttn("okObsIndexUI", NULL, icon = icon("check"), style = "material-circle", color = "success", size = "xs")
-                        ), 
-                        easyClose = FALSE, fade = TRUE, size = "l") 
-  )
-}
-
-
-comMatrixUI<-function(){
-  showModal(modalDialog(title = "Add community matrix",
-                        fluidRow(
-                          column(6,
-                                 selectInput(inputId = "cmSampleU",
-                                             label = "Sample unit within a grid cell",          
-                                             choices = c("Observation" = "observation", "Visit" = "visit" ),
-                                             selectize = FALSE, multiple = FALSE, width = "200")),
-                          column(6,includeHTML("ui/communityMatrix.html"))
-                        ),
-                        br(),
-                        br(),
-                        footer = tagList(
-                          actionBttn("cancelComMatrixUI", NULL, icon = icon("times"), style = "material-circle", color = "danger", size = "xs"),
-                          actionBttn("okComMatrixUI", NULL, icon = icon("check"), style = "material-circle", color = "success", size = "xs")
-                        ), 
-                        easyClose = FALSE, fade = TRUE, size = "l") 
-  )
-}
-
-ignoranceUI<-function(){
-  showModal(modalDialog(title = "Add ignorance score",
-                        fluidRow(
-                          column(6,
-                                 selectInput(inputId = "isSampleU",
-                                             label = "Unit for analysis",          
-                                             choices = c("Observations", "Visits"),
-                                             selectize = FALSE, multiple = FALSE, width = "200"),
-                                 conditionalPanel(condition = "input.isSampleU == 'Observations'", 
-                                                  checkboxInput(inputId = "isUseNspp",
-                                                              label = "Use number of unique species observed",
-                                                              value = TRUE)),
-                                 numericInput("isH", "Half ignorance parameter value", value = 1, min = 0)),
-        
-                          column(6,includeHTML("ui/exposeIgnorance.html"))
-                        ),
-                        br(),
-                        br(),
-                        footer = tagList(
-                          actionBttn("cancelIgnoranceUI", NULL, icon = icon("times"), style = "material-circle", color = "danger", size = "xs"),
-                          actionBttn("okIgnoranceUI", NULL, icon = icon("check"), style = "material-circle", color = "success", size = "xs")
-                        ), 
-                        easyClose = FALSE, fade = TRUE, size = "l") 
-  )
-}
-
 loadDataUI<-function(){
   showModal(modalDialog(title = "Load PBD data",
                         fluidRow(
@@ -245,8 +166,8 @@ defineVisitsUI<-function(colnames, grids){
                                  selectInput("timeInVis", "Define visits by time resolution", choices = timeVisOpt, selected = "Day"),
                                  selectizeInput("gridInVis", "Define visits by grid", choices = gridAlts),
                                  ### TODO add switch to include time variables or not
-                                 br(),
-                                 htmlOutput("orgInfoUI", inline = FALSE)
+                                 br()#,
+                                 #htmlOutput("orgInfoUI", inline = FALSE) This fills no purpose since it isn't updated until the ok-button is clicked
                           )
                         ),
                         br(),

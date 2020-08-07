@@ -35,7 +35,7 @@ navbarPage(title="shinyBIRDS", id="navBar",
                                   ))
            ),
            tabPanel(title = "Summary Export", icon = icon("box-open"), value = "sumandexp",
-                    load_ui_content("ui/tabPanel_sumandexp.R"),
+                    fluidRow(summary_page_ui("summaryPage")),
                     absolutePanel(fixed = TRUE, top = "50%", left = "50%", width = '195px',
                                   conditionalPanel(condition="$('html').hasClass('shiny-busy')",
                                                    tags$img(src="./img/loader-hex.gif")
@@ -59,11 +59,9 @@ navbarPage(title="shinyBIRDS", id="navBar",
                        ),
                        ############# Help ###################
                        tabPanel(title = "Help", 
-                                fluidRow(
-                                  column(8,
-                                         # includeHTML("data/Help.htm"),
-                                         offset=2)
-                                )
+                                fluidPage(tags$iframe(src="https://greensway.github.io/BIRDS/articles/BIRDS.html", 
+                                                      frameborder = "no", style='width:95vw;height:100vh;')
+                                          )
                        )
            ),
            position = "fixed-top",

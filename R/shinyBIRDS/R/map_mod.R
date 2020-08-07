@@ -17,6 +17,14 @@ map_mod_server <- function(id, layers, pbd_data){
                  layersAll <- reactiveValues(layer = list(NULL))
                  
                  observeEvent(pbd_data$organised, {
+                   obsLayer <- unlist(lapply(layersAll$layer, function(x){x$type=="obsData"}))
+                   # print(obsLayer)
+                   # print(names(layersAll$layer))
+                   if(! is.null(obsLayer)){
+                     layersAll$layer <- layersAll$layer[! obsLayer]
+                   }
+                   # print(names(layersAll$layer))
+                   
                    if(! is.null(pbd_data$organised)){
                      n <- 500
                      nObs <- nrow(obsData(pbd_data$organised))
@@ -27,25 +35,20 @@ map_mod_server <- function(id, layers, pbd_data){
                      names <- c(names(layersAll$layer), "PBD")
                      layersAll$layer[[insert]] <-  list(geom = PBDpoints, type = "obsData", lbl = labelTxt)
                      names(layersAll$layer) <- names
-                   }else{ 
-                     obsLayer <- unlist(lapply(layersAll$layer, function(x){x$type=="obsData"}))
-                     if(! is.null(obsLayer)){
-                       layersAll$layer <- layersAll$layer[! obsLayer]
-                     }
                    }
                  })
                  
                  observeEvent(pbd_data$visits, {
+                   vLayer <- unlist(lapply(layersAll$layer, function(x){x$type=="visits"}))
+                   if(! is.null(vLayer)){
+                     layersAll$layer <- layersAll$layer[! vLayer]
+                   }
+                   
                    if(! is.null(pbd_data$visits)){
                      insert <- length(layersAll$layer)+1
                      names <- c(names(layersAll$layer), "PBD")
                      layersAll$layer[[insert]] <-  list(geom = pbd_data$visits, type = "visits")
                      names(layersAll$layer) <- names
-                   }else{ 
-                     vLayer <- unlist(lapply(layersAll$layer, function(x){x$type=="visits"}))
-                     if(! is.null(vLayer)){
-                       layersAll$layer <- layersAll$layer[! vLayer]
-                     }
                    }
                  })
                  
@@ -100,18 +103,21 @@ map_mod_server <- function(id, layers, pbd_data){
                    
                    proxy <- leafletProxy(mapId="map")
                    proxy %>% 
-                     clearShapes()%>% 
+                     clearShapes() %>% 
+                     clearMarkers() %>%
                      removeLayersControl()
                    
                    if(length(layersAll$layer) > 0){
                      for(i in 1:length(layersAll$layer)){
                        if(layersAll$layer[[i]]$type == "obsData"){
+                         # print("adding Circle Markers")
+                         # print(nrow(layersAll$layer[[i]]$geom))
                          proxy %>%
                            addCircleMarkers(data = layersAll$layer[[i]]$geom, group = names(layersAll$layer[i]),
                                             color = "black", stroke = FALSE, fillOpacity = 0.5, radius = 5,
                                             label = ~as.character(scientificName))
                        }else if(layersAll$layer[[i]]$type == "visits"){
-                         print("adding Circles")
+                         # print("adding Circles")
                          proxy %>%
                            addCircles(data = layersAll$layer[[i]]$geom, 
                                       lng = ~centroidX, lat = ~centroidY,
