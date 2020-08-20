@@ -53,17 +53,17 @@ loadDataUI<-function(){
                                    column(6,
                                           checkboxInput("csvHeader", "Header", TRUE),
                                           radioButtons("csvSep", "Separator",
-                                                       choices = c(Comma = ",",
-                                                                   Semicolon = ";",
-                                                                   Tab = "\t"),
+                                                       choices = c("Comma" = ",",
+                                                                   "Semicolon" = ";",
+                                                                   "Tab" = "\t"),
                                                        selected = "\t")
                                    ),
                                    column(6, 
                                           checkboxInput("csvUTF", label = "Encoding = UTF-8", TRUE),
                                           radioButtons("csvQuote", "Quote",
-                                                       choices = c(None = "",
-                                                                   "Double Quote" = '"',
-                                                                   "Single Quote" = "'"),
+                                                       choices = c("None" = "",
+                                                                   "Double Quote" = "\"",
+                                                                   "Single Quote" = "\'"),
                                                        selected = "")
                                    )
                                  ),

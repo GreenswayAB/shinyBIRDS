@@ -31,8 +31,7 @@ shinyServer(function(input, output, session) {
       updateTabsetPanel(session, "pbd_output", selected = "org")
       
       # orgInfo$msg <- ""
-      # enable("expVisits")
-      # enable("summaryGo")
+
     } else {
       disable("expVisits")
 
@@ -255,18 +254,26 @@ shinyServer(function(input, output, session) {
   
   observe({
     
-    preTable <- tryCatch(fread(file=input$csvFile$datapath, #getcsv, 
+    file <- input$csvFile$datapath
+    
+    preTable <- tryCatch(fread(file=file, #getcsv, 
                    stringsAsFactors = FALSE, encoding = ifelse(input$csvUTF,"UTF-8","unknown"), 
                    header = input$csvHeader, sep = input$csvSep, 
-                   quote = input$csvQuote, na.strings = "", data.table = FALSE), 
-                   error = function(e) return(NULL))
+                   quote = input$csvQuote, na.strings = "", data.table = FALSE, fill = TRUE), 
+                   error = function(e){
+                     return(NULL)}, 
+                   warning = function(w){
+                     return(NULL)})
     
     if(is.data.frame(preTable)){
-      
+      print("Dataframe")
       if(nrow(preTable)>5){
-        preTable <- preTable[1:5,]
+        preTable <- preTable[1:5, ,drop = FALSE]
       }
     }else{
+      
+      print("No Dataframe")
+      
       preTable <- data.frame("No valid data for preview")
       
       colnames(preTable) <- c("Result")
@@ -298,7 +305,7 @@ shinyServer(function(input, output, session) {
     PBDin <- tryCatch({fread(file=input$csvFile$datapath, #getcsv, 
                              stringsAsFactors = FALSE, encoding = ifelse(input$csvUTF,"UTF-8","unknown"), 
                              header = input$csvHeader, sep = input$csvSep, 
-                             quote = input$csvQuote, na.strings = "", data.table = FALSE)
+                             quote = input$csvQuote, na.strings = "", data.table = FALSE, fill = TRUE)
     }, error = function(e) e, warning = function(w) w)
     
     if (class(PBDin)=="data.frame" && length(colnames(PBDin)) > 1) {
