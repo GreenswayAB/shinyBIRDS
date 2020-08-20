@@ -1,6 +1,7 @@
 ### GRID HANDLER ###
 
 library(rgdal)
+library(dggridR)
 
 ##UIs
 grid_shp <- function(session){
@@ -30,7 +31,13 @@ grid_draw <- function(session){
       ),
       column(width=6, 
              checkboxInput(ns("buff"), "Inclusive", value = FALSE),
-             checkboxInput(ns("hexGrid"), "Hexagonal grid", value = TRUE),
+             selectInput(ns("gridType"), "Type", 
+                         list("Square" = "sq", "Hexagon grid" = "hx", 
+                              "Equal size grid" = 
+                                list("Hexagon" = "hexagon", 
+                                     "Diamond" = "diamond", 
+                                     "Triangle" = "tirangle")), 
+                         selected = "Hexagon"),
              actionButton(ns("goExtent"), HTML("&nbsp;Get extent"), width = "90", icon=icon("expand"), class="btn-info btn-sm"),
              actionButton(ns("goGrid"), HTML("&nbsp;Make grid"), width = "90", icon=icon("th"), class="btn-success btn-sm")
       )
@@ -84,21 +91,21 @@ getGridFromShp <- function(shapefiles){
   
 }
 
-getGridFromSettings <- function(area, gridsize, hex, buffer){
+getGridFromSettings <- function(area, gridsize, type, buffer){
   
   gridSizeDg<-gridsize/111 #because on average 1 degree is 111 km
   StudyBuff<-gBuffer(area, width = ifelse(buffer, gridSizeDg, 0))
 
   proj4string(area)<-CRS("+init=epsg:4326")
-
-  if(hex){
+  
+  if(type == "hx"){
     points <- spsample(StudyBuff, type = "hexagonal", offset = c(0, 0), cellsize = gridSizeDg)
     proj4string(points)<-CRS("+init=epsg:4326")
     grid <- HexPoints2SpatialPolygons(points)
     
     return(grid)
     
-  }else{
+  }else if(type == "sq"){
     points <- spsample(StudyBuff, type = "regular", offset = c(0.5, 0.5), cellsize = gridSizeDg)
     proj4string(points)<-CRS("+init=epsg:4326")
     grid <- as.SpatialPolygons.GridTopology(points2grid(points), proj4string = CRS("+init=epsg:4326"))
@@ -109,6 +116,10 @@ getGridFromSettings <- function(area, gridsize, hex, buffer){
     }
     
     return(grid)
+  }else{
+    
+    return(BIRDS::makeDggrid(area, gridsize, buffer, type))
+    
   }
 
 }
@@ -118,7 +129,6 @@ grid_mod_ui <- function(id){
   ns <- NS(id)
   tagList(
     fluidRow(
-      textOutput(ns("testText")),
       ## TODO add grid for defining visits....
       ## radio buttons with optios
       prettyRadioButtons(ns("gridMethod"), label = "Make your grid by: ", 
@@ -231,7 +241,7 @@ grid_mod_server <- function(id, pbd, polygonDraw){
                      layerList$layers$others[["Working grid"]] <- 
                        tryCatch(getGridFromSettings(layerList$layers$others[["Study area"]],
                                                     input$gridSize,
-                                                    input$hexGrid,
+                                                    input$gridType,
                                                     input$buff),
                                 error = function(e){
                                   shinyalert::shinyalert("Error", "Could not create a grid based on the inputs, try different ones.",
