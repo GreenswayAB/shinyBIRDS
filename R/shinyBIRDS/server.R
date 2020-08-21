@@ -259,21 +259,19 @@ shinyServer(function(input, output, session) {
     preTable <- tryCatch(fread(file=file, #getcsv, 
                    stringsAsFactors = FALSE, encoding = ifelse(input$csvUTF,"UTF-8","unknown"), 
                    header = input$csvHeader, sep = input$csvSep, 
-                   quote = input$csvQuote, na.strings = "", data.table = FALSE, fill = TRUE), 
+                   quote = input$csvQuote, na.strings = "", data.table = FALSE), 
                    error = function(e){
                      return(NULL)}, 
                    warning = function(w){
                      return(NULL)})
     
     if(is.data.frame(preTable)){
-      print("Dataframe")
+
       if(nrow(preTable)>5){
         preTable <- preTable[1:5, ,drop = FALSE]
       }
     }else{
-      
-      print("No Dataframe")
-      
+
       preTable <- data.frame("No valid data for preview")
       
       colnames(preTable) <- c("Result")
@@ -305,7 +303,7 @@ shinyServer(function(input, output, session) {
     PBDin <- tryCatch({fread(file=input$csvFile$datapath, #getcsv, 
                              stringsAsFactors = FALSE, encoding = ifelse(input$csvUTF,"UTF-8","unknown"), 
                              header = input$csvHeader, sep = input$csvSep, 
-                             quote = input$csvQuote, na.strings = "", data.table = FALSE, fill = TRUE)
+                             quote = input$csvQuote, na.strings = "", data.table = FALSE)
     }, error = function(e) e, warning = function(w) w)
     
     if (class(PBDin)=="data.frame" && length(colnames(PBDin)) > 1) {
@@ -335,9 +333,6 @@ shinyServer(function(input, output, session) {
       ## And start over
       PBD$organised <- NULL
       PBD$visits <- NULL
-      PBD$summary <- NULL
-      PBD$exportDef <- NULL
-      PBD$export <- NULL
       data_stat$data<-NULL
       StudyArea$data<-NULL
       # gridR$data<-NULL ## the grid can stay
