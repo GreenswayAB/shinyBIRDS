@@ -36,7 +36,7 @@ grid_draw <- function(session){
                               "Equal size grid" = 
                                 list("Hexagon" = "hexagon", 
                                      "Diamond" = "diamond", 
-                                     "Triangle" = "tirangle")), 
+                                     "Triangle" = "triangle")), 
                          selected = "Hexagon"),
              actionButton(ns("goExtent"), HTML("&nbsp;Get extent"), width = "90", icon=icon("expand"), class="btn-info btn-sm"),
              actionButton(ns("goGrid"), HTML("&nbsp;Make grid"), width = "90", icon=icon("th"), class="btn-success btn-sm")
@@ -238,6 +238,7 @@ grid_mod_server <- function(id, pbd, polygonDraw){
                  observeEvent(input$goGrid, {
                    
                    if(!is.null(layerList$layers$others[["Study area"]])){
+                     
                      layerList$layers$others[["Working grid"]] <- 
                        tryCatch(getGridFromSettings(layerList$layers$others[["Study area"]],
                                                     input$gridSize,
@@ -246,10 +247,11 @@ grid_mod_server <- function(id, pbd, polygonDraw){
                                 error = function(e){
                                   shinyalert::shinyalert("Error", "Could not create a grid based on the inputs, try different ones.",
                                                          "error")
+                                  return(NULL)
                                 })
-                       
+                     
                    }
-
+                   
                  })
                  
                  observeEvent(input$goExtent, {

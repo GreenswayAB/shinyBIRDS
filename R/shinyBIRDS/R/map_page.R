@@ -45,7 +45,7 @@ map_page_server <- function(id, pbd_data){
                  layerList <- grid_mod_server("gridding", pbd_data, drawn)
                  layerList <- layer_mod_server("layers", layerList)
                  d <- map_mod_server("map_part", layerList, pbd_data)
-                 
+
                  observeEvent(d(), {
                    drawn$polygon <- d()
                  })
