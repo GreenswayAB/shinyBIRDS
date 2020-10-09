@@ -13,19 +13,21 @@ resView_mod_ui <- function(id){
   ns <- NS(id)
   tagList(    
     h2("Result view"),
-    conditionalPanel("output.sliderShow == true", ns = ns,
-                     h4(textOutput(ns("column"))),
-                     sliderInput(ns("slider"), label="", min = 1, max = 1, value = 1,
-                                 ticks = FALSE, animate = TRUE),
-                     p("slider")),
+    fluidRow(conditionalPanel("output.sliderShow == true", ns = ns,
+                              h4(textOutput(ns("column"))),
+                              sliderInput(ns("slider"), label="", min = 1, max = 1, value = 1,
+                                          ticks = FALSE, animate = TRUE),
+                              p("slider")),
+             
+             conditionalPanel("output.type == 'map'", ns = ns,
+                              leafletOutput(ns("map"), height = "91vh")),
+             conditionalPanel("output.type == 'plot'", ns = ns,
+                              plot <- plotOutput(ns("plot"))),
+             
+             conditionalPanel("output.type == ''", ns = ns, 
+                              p("Nothing to show")),
+             style = "margin: 30px;margin-bottom: 30px;border-style: solid;border-color: #d6dadc;"),
     
-    conditionalPanel("output.type == 'map'", ns = ns,
-                     leafletOutput(ns("map"), height = "91vh")),
-    conditionalPanel("output.type == 'plot'", ns = ns,
-                     plot <- plotOutput(ns("plot"))),
-    
-    conditionalPanel("output.type == ''", ns = ns, 
-                     p("Nothing to show"))
   )
   
   
@@ -51,10 +53,9 @@ resView_mod_server <- function(id, toView){
                 output$map <- renderLeaflet({
                    leaflet() %>%
                      addTiles(options = tileOptions(minZoom=1, continuousWorld = FALSE)) %>%
-                     setMaxBounds(lng1 = -220, lat1 = 80, lng2 = 220, lat2 = -80) %>%
                      addScaleBar(position = "bottomleft", options =
-                                   scaleBarOptions(imperial=FALSE, maxWidth = 200))
-                     
+                                   scaleBarOptions(imperial=FALSE, maxWidth = 200)) %>%
+                    setView(0, 0, 2)
                  })
                 
                 proxy <- leafletProxy(mapId="map")
