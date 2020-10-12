@@ -47,7 +47,8 @@ map_mod_server <- function(id, layers, pbd_data){
                    if(! is.null(pbd_data$visits)){
                      insert <- length(layersAll$layer)+1
                      names <- c(names(layersAll$layer), "PBD")
-                     layersAll$layer[[insert]] <-  list(geom = pbd_data$visits, type = "visits")
+                     layersAll$layer[[insert]] <-  list(geom = spatialVisits(pbd_data$visits)$effort, 
+                                                        type = "visits")
                      names(layersAll$layer) <- names
                    }
                  })
@@ -119,12 +120,10 @@ map_mod_server <- function(id, layers, pbd_data){
                        }else if(layersAll$layer[[i]]$type == "visits"){
                          # print("adding Circles")
                          proxy %>%
-                           addCircles(data = layersAll$layer[[i]]$geom, 
-                                      lng = ~centroidX, lat = ~centroidY,
+                           addPolygons(data = layersAll$layer[[i]]$geom, 
                                       group = names(layersAll$layer[i]), 
                                       color = "red", stroke = TRUE,
                                       weight = 5, fillOpacity = 0.1,
-                                      radius = ~medianDist, #~effortDiam/2, #
                                       label = ~visitUID)
                        }else if(layersAll$layer[[i]]$type == "grid"){
                          proxy %>%
