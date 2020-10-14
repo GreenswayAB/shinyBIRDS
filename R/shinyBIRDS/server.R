@@ -254,22 +254,32 @@ shinyServer(function(input, output, session) {
   
   observe({
     
+    
+    
     file <- input$csvFile$datapath
     
     preTable <- tryCatch(fread(file=file, #getcsv, 
                    stringsAsFactors = FALSE, encoding = ifelse(input$csvUTF,"UTF-8","unknown"), 
                    header = input$csvHeader, sep = input$csvSep, 
-                   quote = input$csvQuote, na.strings = "", data.table = FALSE), 
+                   quote = input$csvQuote, na.strings = "", data.table = FALSE, fill = TRUE), 
                    error = function(e){
+                     print(e)
                      return(NULL)}, 
                    warning = function(w){
+                     print(w)
                      return(NULL)})
+    
+    str(preTable)
     
     if(is.data.frame(preTable)){
 
       if(nrow(preTable)>5){
         preTable <- preTable[1:5, ,drop = FALSE]
       }
+      
+      colnames(preTable) <- iconv(colnames(preTable), from = (if(input$csvUTF) "UTF-8" else ""), sub = "byte")
+      colnames(preTable) <- 
+        sapply(colnames(preTable), function(x){if(nchar(x) > 25)paste0(substr(x,1,25),"...") else x })
     }else{
 
       preTable <- data.frame("No valid data for preview")
@@ -304,7 +314,7 @@ shinyServer(function(input, output, session) {
                              stringsAsFactors = FALSE, encoding = ifelse(input$csvUTF,"UTF-8","unknown"), 
                              header = input$csvHeader, sep = input$csvSep, 
                              quote = input$csvQuote, na.strings = "", data.table = FALSE)
-    }, error = function(e) e, warning = function(w) w)
+    }, error = function(e) print(e), warning = function(w) print(w))
     
     if (class(PBDin)=="data.frame" && length(colnames(PBDin)) > 1) {
       okCSV<-TRUE
