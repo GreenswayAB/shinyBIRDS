@@ -1,5 +1,13 @@
 # Extra functions
 
+tooltipHTML <- function(text, tip){
+  HTML(paste0('<span class="bubble">', text, '
+            <span>' ,
+              tip,
+            '</span>                                                             
+           </span>'))
+}
+
 IgnComb <- function(x,y,o05,o05spp, ...) {
   IgnOI <- o05spp/(o05spp + x)
   IgnOb <- o05/(o05 + y)
