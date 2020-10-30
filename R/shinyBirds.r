@@ -1,6 +1,11 @@
 #' Run the app
 #' 
 #' A function to run the app
+#' @export
 shinyBirds<-function(){
-  shiny::runApp()
+  appDir <- system.file("shinyBIRDS", package="shinyBIRDS")
+  if(appDir == ""){
+    stop("Couldn't find application directory.Try re-installing ShinyBirds", call.=FALSE)
+  }
+  shiny::runApp(appDir, display.mode="auto")
 }
