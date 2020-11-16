@@ -50,7 +50,6 @@ map_mod_server <- function(id, layers, pbd_data){
                  
                  observeEvent(pbd_data$visits, {
                    print("Drawing visits to map")
-                   utils::str(pbd_data$visits)
                    vLayer <- unlist(lapply(layersAll$layer, function(x){x$type=="visits"}))
                    if(! is.null(vLayer)){
                      layersAll$layer <- layersAll$layer[! vLayer]

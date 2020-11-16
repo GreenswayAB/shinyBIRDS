@@ -77,9 +77,7 @@ resView_mod_server <- function(id, toView){
                    dta <- data$data
                    
                    if(data$type == "map"){
-                     
-                     print(input$slider)
-                     
+
                      if(! is.null(dta)){
                        
                        # The slider value does not update when it's not visible
@@ -91,10 +89,6 @@ resView_mod_server <- function(id, toView){
                        color <- getColor(values, max(values, na.rm = TRUE))
                        
                        bb <- dta@bbox
-                       
-                       print(values)
-                       
-                       print(bb)
                        
                        proxy %>% 
                          clearShapes() %>%
@@ -125,12 +119,14 @@ resView_mod_server <- function(id, toView){
                      
                      sp <- toView()
                      if(length(toView()@polygons) == 1 && nrow(toView()@data) > 1){
-                       
                        sp@data <- data.frame(t(sp@data))
                      }
-                     
+
+
                      data$data <- sp
                      data$type <- "map"
+                     print(utils::str(data$data@data))
+
                      data$colname <- colnames(data$data@data[1])
                      
                      updateSliderInput(session, "slider", value = 1, min = 1, max = ncol(data$data), step = 1)
@@ -138,7 +134,6 @@ resView_mod_server <- function(id, toView){
                      data$sliderShow <- ncol(data$data) > 1
                      
                    }else if(any(class(toView()) == "xts")){
-                     str(toView())
                      data$data <- plot(toView())
                      data$type <- "plot"
                      data$sliderShow <- FALSE
@@ -174,7 +169,8 @@ resView_mod_server <- function(id, toView){
                        colnames(g) <- c("names", "values")
                        
                        data$data <- ggplot2::ggplot(g, ggplot2::aes(x = names, y = values)) + 
-                         ggplot2::geom_col()
+                         ggplot2::geom_col()+
+                         ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust=1))
                      }else{
                        data$type <- "txt"
                        data$data <- toView()
@@ -186,8 +182,9 @@ resView_mod_server <- function(id, toView){
                  
                  observeEvent(input$slider, {
                    
-                   data$colname <- colnames(data.frame(data$data))[input$slider]
-                   
+                   data$colname <- tryCatch({colnames(data$data@data)[input$slider]},
+                                            error = function(e){input$slider})
+
                  })
                  
                  outputOptions(output, "sliderShow", suspendWhenHidden = FALSE)

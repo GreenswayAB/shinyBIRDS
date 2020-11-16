@@ -26,3 +26,4 @@ vignettes/*.pdf
 R/shinyBIRDS/rsconnect/
 shinyBIRDS.Rproj
 .Rproj.user
+.idea/

@@ -48,8 +48,7 @@ getExportBirds <- function(sb, dim, tr, var, mtd){
   }
   
   
-  return(BIRDS::exportBirds(sb,
-                            dim, tr, var, mtd))
+  return(BIRDS::exportBirds(sb, dim, tr, var, mtd))
 }
 
 ##Modal##
@@ -213,6 +212,7 @@ expDef_mod_server <- function(id, summary, exportData){
                                                dataTables$export[tbl1Sel,2],
                                                dataTables$export[tbl1Sel,3],
                                                dataTables$export[tbl1Sel,4])
+
                    }else if(! is.null(tbl2Sel)){
                      res$res <- other$data[[tbl2Sel]]
                    }
@@ -225,11 +225,9 @@ expDef_mod_server <- function(id, summary, exportData){
                  output$downloadData <- downloadHandler(
                    filename = "BIRDS export.zip",
                    content = function(file) {
-                     print(utils::str(file))
                      dir <- paste0(dirname(file), "/export")
                      unlink(dir, recursive = TRUE)
                      dir.create(dir)
-                     print(dir)
                      export<-list()
                      if(nrow(dataTables$export)>0){
                        for(i in 1:nrow(dataTables$export)){

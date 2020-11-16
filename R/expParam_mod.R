@@ -296,9 +296,7 @@ expParam_mod_server <- function(id, summary){
                                     shinyalert::shinyalert(title = "An error occured", text = e$message, type = "error")
                                     return(NULL)
                                   })
-                   
-                   utils::str(cm)
-                   
+
                    if(! is.null(cm)){
                      export$params <- cm
                      export$type <- "Community matrix"
@@ -340,9 +338,7 @@ expParam_mod_server <- function(id, summary){
                                     shinyalert::shinyalert(title = "An error occured", text = e$message, type = "error")
                                     return(NULL)
                                   })
-                   
-                   utils::str(ig)
-                   
+
                    if(! is.null(ig)){
                      export$params <- ig
                      export$type <- "Ignorance score"
