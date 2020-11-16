@@ -22,14 +22,13 @@ resView_mod_ui <- function(id){
     fluidRow(conditionalPanel("output.sliderShow == true", ns = ns,
                               h4(textOutput(ns("column"))),
                               sliderInput(ns("slider"), label="", min = 1, max = 1, value = 1,
-                                          ticks = FALSE, animate = TRUE),
-                              p("slider")),
-             
+                                          ticks = FALSE, animate = TRUE)),
              conditionalPanel("output.type == 'map'", ns = ns,
                               leafletOutput(ns("map"), height = "91vh")),
              conditionalPanel("output.type == 'plot'", ns = ns,
-                              plot <- plotOutput(ns("plot"))),
-             
+                              plotOutput(ns("plot"))),
+             conditionalPanel("output.type == 'txt'", ns = ns,
+                              textOutput(ns("txt"))),
              conditionalPanel("output.type == ''", ns = ns, 
                               p("Nothing to show")),
              style = "margin: 30px;margin-bottom: 30px;border-style: solid;border-color: #d6dadc;"),
@@ -51,114 +50,148 @@ resView_mod_server <- function(id, toView){
   moduleServer(id,
                function(input, output, session){
                  
-                data <- reactiveValues(plotData = NULL, geomData = NULL, 
-                                       color = NULL, colname = NULL) 
+                 data <- reactiveValues(data = NULL, type = "map", colname = NULL, sliderShow = FALSE) 
                  
-                output$sliderShow <- reactive({
-                  FALSE
-                })
-                output$type <- reactive({
-                  "map"
-                })
-                
-                output$column <- renderText(data$colname)
-                
-                output$map <- renderLeaflet({
+                 output$sliderShow <- reactive({
+                   data$sliderShow
+                 })
+                 
+                 output$type <- reactive({
+                   data$type
+                 })
+                 
+                 output$column <- renderText(data$colname)
+                 
+                 output$map <- renderLeaflet({
                    leaflet() %>%
                      addTiles(options = tileOptions(minZoom=1, continuousWorld = FALSE)) %>%
                      addScaleBar(position = "bottomleft", options =
                                    scaleBarOptions(imperial=FALSE, maxWidth = 200)) %>%
-                    setView(0, 0, 2)
+                     setView(0, 0, 2)
                  })
-                
-                proxy <- leafletProxy(mapId="map")
-                
-                output$plot <- renderPlot(plot(data$plotData))
+                 
+                 proxy <- leafletProxy(mapId="map")
+                 
+                 observe({
+                   
+                   dta <- data$data
+                   
+                   if(data$type == "map"){
+                     
+                     print(input$slider)
+                     
+                     if(! is.null(dta)){
+                       
+                       # The slider value does not update when it's not visible
+                       # View data in column one if there is no slider. 
+                       sVal <- if(! data$sliderShow) 1 else input$slider
+                       
+                       values <- dta@data[, sVal]
+                       
+                       color <- getColor(values, max(values, na.rm = TRUE))
+                       
+                       bb <- dta@bbox
+                       
+                       print(values)
+                       
+                       print(bb)
+                       
+                       proxy %>% 
+                         clearShapes() %>%
+                         addPolygons(data = dta,
+                                     group = "layer",
+                                     weight = 2, fillColor = color,
+                                     label = ~htmltools::htmlEscape(values)) %>%
+                         fitBounds(lng1 = bb[1,1], lat1 = bb[2,1], lng2 = bb[1,2], lat2 = bb[2,2]) 
+                     }
+                     
+                   }else if(data$type == "plot"){
+                     
+                     if(! is.null(dta)){
+                       
+                       output$plot <- renderPlot(dta)
+                       
+                     }
+                     
+                   }else if(data$type == "txt"){
+                     output$txt <- renderText(paste("The value of ", names(dta) ," is:", dta))
+                   }
+                   
+                   
+                 })
                  
                  observeEvent(toView(), {
-                   obj <- toView()
-                   print(class(obj))
-                   if(any(class(obj) == "SpatialPolygonsDataFrame")){
+                   if(any(class(toView()) == "SpatialPolygonsDataFrame")){
                      
-                     if(length(obj@polygons) == 1 && nrow(obj@data) > 1){
-                       data$geomData <- data.frame(t(obj@data))
-                       colnames(data$geomData) <- rownames(obj@data)
-                     }else{
-                       data$geomData <- obj@data
+                     sp <- toView()
+                     if(length(toView()@polygons) == 1 && nrow(toView()@data) > 1){
+                       
+                       sp@data <- data.frame(t(sp@data))
                      }
                      
-                     bb <- toView()@bbox
+                     data$data <- sp
+                     data$type <- "map"
+                     data$colname <- colnames(data$data@data[1])
                      
+                     updateSliderInput(session, "slider", value = 1, min = 1, max = ncol(data$data), step = 1)
+                     
+                     data$sliderShow <- ncol(data$data) > 1
+                     
+                   }else if(any(class(toView()) == "xts")){
                      str(toView())
+                     data$data <- plot(toView())
+                     data$type <- "plot"
+                     data$sliderShow <- FALSE
                      
-                     proxy %>% 
-                       clearShapes() %>%
-                       addPolygons(data = toView(),
-                                   group = "layer",
-                                   weight = 2, fillColor = data$color,
-                                   popup = htmltools::htmlEscape(toView()@data[,1])) %>%
-                       fitBounds(lng1 = bb[1,1], lat1 = bb[2,1], lng2 = bb[1,2], lat2 = bb[2,2])
+                   }else if (any(class(toView()) == "matrix")){
                      
+                     data$type <- "plot"
                      
-                     updateSliderInput(session, "slider", value = 1, min = 1, max = ncol(data$geomData), step = 1)
+                     s <- toView()
                      
-                     if(ncol(data$geomData)>1){
-                       output$sliderShow <- reactive({
-                         TRUE
-                       })
+                     save(s, file = "C:/Users/Anton.GREENSWAY/Documents/R/test/matrix.rdata")
+                     
+                     g <- data.frame(reshape2::melt(toView()))
+                     
+                     g <- data.frame(reshape2::melt(s))
+                     
+                     g$color <- getColor(g$value, max(g$value, na.rm = TRUE))
+                     g$Var1 <- as.character(g$Var1)
+                     g$Var2 <- as.character(g$Var2)
+                     
+                     data$data <- ggplot2::ggplot(g, ggplot2::aes(x = Var2, y = Var1)) +
+                       ggplot2::geom_tile(ggplot2::aes(fill = value)) +
+                       ggplot2::scale_fill_gradient(low = "blue", high = "red", na.value = "transparent") +
+                       ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust=1))
+                     
+                   }else{
+                     if(length(toView()) > 1){
+                       
+                       data$type <- "plot"
+                       
+                       g <- data.frame(matrix(c(names(toView()), toView()), ncol = 2))
+                       
+                       colnames(g) <- c("names", "values")
+                       
+                       data$data <- ggplot2::ggplot(g, ggplot2::aes(x = names, y = values)) + 
+                         ggplot2::geom_col()
                      }else{
-                       output$sliderShow <- reactive({
-                         FALSE
-                       })
+                       data$type <- "txt"
+                       data$data <- toView()
                      }
                      
-                     output$type <- reactive({
-                       "map"
-                     })
-                     
-                   }else if(any(class(obj) == "xts") || any(class(obj) == "matrix")){
-                     
-                     data$plotData <- obj
-                     
-                     output$sliderShow <- reactive({
-                       FALSE
-                     })
-                     
-                     output$type <- reactive({
-                       "plot"
-                     })
-                   }else{
-                     output$sliderShow <- reactive({
-                       FALSE
-                     })
-                     
-                     output$type <- reactive({
-                       ""
-                     })
+                     data$sliderShow <- FALSE
                    }
                  })
                  
                  observeEvent(input$slider, {
                    
-                   if(any(class(toView()) == "SpatialPolygonsDataFrame")){
-                     output$column <- renderText(colnames(data$geomData[,input$slider, drop =FALSE]))
-                     print(colnames(data$geomData[,input$slider, drop =FALSE]))
-                     color <- getColor(data$geomData[,input$slider], max(data$geomData, na.rm = TRUE))
-                     print(data$color)
-                     
-                     proxy %>% 
-                       clearShapes() %>%
-                       addPolygons(data = toView(),
-                                   group = "layer",
-                                   weight = 2, fillColor = color)
-                   
-                   }
+                   data$colname <- colnames(data.frame(data$data))[input$slider]
                    
                  })
                  
                  outputOptions(output, "sliderShow", suspendWhenHidden = FALSE)
                  outputOptions(output, "type", suspendWhenHidden = FALSE)
-                 
                })
   
 }
