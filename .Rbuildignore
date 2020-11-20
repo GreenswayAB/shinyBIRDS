@@ -3,3 +3,13 @@
 ^\.httr-oauth$
 
 ^data-raw$
+
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+data-raw/
+.github/
+cran-comments.md
+CODE_OF_CONDUCT.md
+LICENSE
+.travis.yml
