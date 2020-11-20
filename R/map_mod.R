@@ -124,8 +124,10 @@ map_mod_server <- function(id, layers, pbd_data){
                        if(layersAll$layer[[i]]$type == "obsData"){
 
                          proxy %>%
-                           addCircleMarkers(data = layersAll$layer[[i]]$geom, group = names(layersAll$layer[i]),
-                                            color = "black", stroke = FALSE, fillOpacity = 0.5, radius = 5,
+                           addCircleMarkers(data = layersAll$layer[[i]]$geom, 
+                                            group = names(layersAll$layer[i]),
+                                            color = "black", stroke = FALSE, 
+                                            fillOpacity = 0.5, radius = 5,
                                             label = ~as.character(scientificName))
                        }else if(layersAll$layer[[i]]$type == "visits"){
                          proxy %>%

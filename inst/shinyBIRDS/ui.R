@@ -13,7 +13,7 @@ navbarPage(title="shinyBIRDS", id="navBar",
                     # ),
                     HTML('
                               <center>
-                              <h1><img src="./img/apple-touch-icon-180x180.png" alt="" style="vertical-align:bottom;float:middle;height:150px;">&nbsp;</h1>
+                              <h1><img src="./img/BirdsLogo.png" alt="" style="vertical-align:bottom;float:middle;height:150px;">&nbsp;</h1>
                               <br>
                               <h1><strong>Birds</strong>&nbsp;</h1>
                               </center>
@@ -48,7 +48,7 @@ navbarPage(title="shinyBIRDS", id="navBar",
                                   column(8,
                                          HTML('
                               <center>
-                              <h1><img src="./img/apple-touch-icon-180x180.png" alt="" style="vertical-align:bottom;float:middle;height:150px;">&nbsp;</h1>
+                              <h1><img src="./img/BirdsLogo.png" alt="" style="vertical-align:bottom;float:middle;height:150px;">&nbsp;</h1>
                               <br>
                               <h1><strong>Birds</strong>&nbsp;</h1>
                               </center>
@@ -70,7 +70,10 @@ navbarPage(title="shinyBIRDS", id="navBar",
              includeCSS("www/styles.css"),
              tags$style(".container-drag-source, .box-dad {font-size: 18px;}"),
              tags$style(".tab-content {padding-top: 70px;}"),
-             tags$link(rel="stylesheet", href="https://use.fontawesome.com/releases/v5.1.0/css/all.css", integrity="sha384-lKuwvrZot6UHsBSfcMvOkWwlCMgc0TaWr+30HWe3a4ltaBwTZhyTEggF5tJv8tbt", crossorigin="anonymous")
+             tags$link(rel="stylesheet", 
+                       href="https://use.fontawesome.com/releases/v5.1.0/css/all.css", 
+                       integrity="sha384-lKuwvrZot6UHsBSfcMvOkWwlCMgc0TaWr+30HWe3a4ltaBwTZhyTEggF5tJv8tbt", 
+                       crossorigin="anonymous")
            ),
            # footer = tags$footer( 
            #               tags$a(img(src='img/1h.png', width = 130), 

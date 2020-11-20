@@ -97,7 +97,7 @@ defineVisitsUI<-function(colnames, grids){
   wColT <- which(stdTimeCol %in% PBDcolnames) 
   wColV <- which(stdVisitCol %in% PBDcolnames)
   wColV <- wColV[-match(stdTimeCol[wColT], stdVisitCol)] 
-  visitCol.selected <- if (length(wColV)>0) stdVisitCol[wColV] else NULL
+  visitCol.selected <- if (length(wColV) > 0) stdVisitCol[wColV] else NULL
   timeVisOpt <- c("None", "Day", "Month", "Year")
   
   if(length(grids) > 0){
