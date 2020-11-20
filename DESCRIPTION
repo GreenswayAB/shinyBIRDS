@@ -30,7 +30,7 @@ Imports:
     plot.matrix,
     rgdal (>= 1.4),
     rgeos (>= 0.4),
-    shiny (>= 1.0),
+    shiny (>= 1.5),
     shinyalert,
     shinyjs,
     shinythemes,

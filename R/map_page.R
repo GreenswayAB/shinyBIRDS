@@ -30,7 +30,6 @@ map_page_ui <- function(id) {
 #' @param pbd_data A reactiveValue
 #' 
 #' @import shiny
-#' @importFrom shiny moduleServer
 #' @return A reactiveValue with the structure \code{reactiveValues(layers = list(others = list(), grids = list()))}
 #'   Each object in the other and grid lists are named with the name they should have in the application and the the list should hold the \code{SpatialPolygons}.
 #'   \code{others} are objects, such as study area, observations...
