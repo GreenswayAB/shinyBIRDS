@@ -94,9 +94,12 @@ defineVisitsUI<-function(colnames, grids){
   wColLat <- switch(any(coordLatOpt %in% PBDcolnames), coordLatOpt[which(coordLatOpt %in% PBDcolnames)[1]], NULL)
   wColLon <- switch(any(coordLonOpt %in% PBDcolnames), coordLonOpt[which(coordLonOpt %in% PBDcolnames)[1]], NULL)
   wColPre <- switch(any(presOptions %in% PBDcolnames), presOptions[which(presOptions %in% PBDcolnames)[1]], NULL)
-  wColT <- which(stdTimeCol %in% PBDcolnames) 
+  #To keep the time column index in the right order:
+  wColT <- c(which(PBDcolnames == stdTimeCol[1]), 
+             which(PBDcolnames == stdTimeCol[2]), 
+             which(PBDcolnames == stdTimeCol[3]))
   wColV <- which(stdVisitCol %in% PBDcolnames)
-  wColV <- wColV[-match(stdTimeCol[wColT], stdVisitCol)] 
+  wColV <- wColV[-match(PBDcolnames[wColT], stdVisitCol)] 
   visitCol.selected <- if (length(wColV)>0) stdVisitCol[wColV] else NULL
   timeVisOpt <- c("None", "Day", "Month", "Year")
   
@@ -152,11 +155,11 @@ defineVisitsUI<-function(colnames, grids){
                           ),
                           column(6,
                                  h4("Visits", class="panel-title"),
-                                 selectInput("timeCols", label = tooltipHTML("Time columns", 
-                                                                             "The column(s) holding the observation dates"), 
+                                 selectizeInput("timeCols", label = tooltipHTML("Time columns", 
+                                                                             "The column(s) holding the observation dates. Make sure to order them like year, month, day."), 
                                              choices = PBDcolnames,
-                                             multiple = TRUE, selectize = TRUE, 
-                                             selected =  if (length(wColT)>0) stdTimeCol[wColT] else NULL),
+                                             multiple = TRUE,
+                                             options = list(items = if (length(wColT)>0) PBDcolnames[wColT] else NULL)),
                                  selectInput("visitCols", label = tooltipHTML("Visit identifier columns", 
                                                                               "The columns that are holding the information that identifies a visit. 
                                                                               What a visit should be is not always clearly defined and extractable 

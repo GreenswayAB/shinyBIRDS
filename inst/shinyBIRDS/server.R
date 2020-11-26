@@ -376,7 +376,7 @@ shinyServer(function(input, output, session) {
     removeModal()
   })
   
-  #When cancel button klicked in modal
+  #When cancel button clicked in modal
   observeEvent(input$cancelLoadDataUI, {
     removeModal()
   })
@@ -388,10 +388,10 @@ shinyServer(function(input, output, session) {
     defineVisitsUI(colnames(PBD$data), mapLayers$layers$grids)
   })
   
-  #When ok button klicked in modal
+  #When ok button clicked in modal
   observeEvent(input$okDefineVisitsUI, {
     
-    timeCol.selected <- input$timeCols
+    timeCol.selected <- c(input$timeCols)
     
     orgVars$sppCol <- input$csvSpp
     orgVars$idCols <- input$visitCols
