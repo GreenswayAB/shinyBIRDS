@@ -15,6 +15,7 @@ map_page_ui <- function(id) {
     column(8, map_mod_ui(ns("map_part"))),
     column(4, 
            fluidRow(grid_mod_ui(ns("gridding")),
+                    br(),
                     layer_mod_ui(ns("layers"))))
   )
 }

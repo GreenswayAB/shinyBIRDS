@@ -1,6 +1,6 @@
 # library(remotes)
 # remotes::install_github('Greensway/BIRDS')
-
+library(BIRDS)
 library(shiny)
 library(shinyjs)
 library(shinyalert)
@@ -28,7 +28,7 @@ source("external/helpers.R")
 td <- file.path(paste0(tempdir(), "/SppObsExp"))
 dir.create(td, showWarnings = FALSE)
 
-stdVisitCol <- c("locality", "day", "month", "year", "recordedby")
+stdVisitCol <- c("locality", "year", "month", "day", "recordedby")
 stdTimeCol <- c("year", "month", "day")
 stdTaxonRank <- c("SPECIES","SUBSPECIES","VARIETY")
 coordLatOpt <- c("decimallatitude", "y", "coordinatey")

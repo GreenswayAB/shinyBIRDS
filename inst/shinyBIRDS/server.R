@@ -138,8 +138,205 @@ shinyServer(function(input, output, session) {
     }  
   })
   
-  ############
-  ############ Organise
+  ########################################### DATA TAB #############################
+  
+  ### load data ####
+  
+  #When button clicked - show modal
+  observeEvent(input$loadData, {
+    loadDataUI()
+  })
+  
+  #When ok button klicked in modal
+  observeEvent(input$okLoadDataUI, {
+    
+    okCSV <- FALSE
+    
+    ##### TODO is too slow to upload a file to internet, maybe add possibility to get from url
+    PBDin <- tryCatch({fread(file=input$csvFile$datapath, #getcsv, 
+                             stringsAsFactors = FALSE, encoding = ifelse(input$csvUTF,"UTF-8","unknown"), 
+                             header = input$csvHeader, sep = input$csvSep, 
+                             quote = input$csvQuote, na.strings = "", data.table = FALSE)
+    }, error = function(e){
+      shinyalert::shinyalert(title = "An error occured", text = e$message, type = "error")
+      return(NULL)
+    })
+    
+    if (class(PBDin)=="data.frame" && length(colnames(PBDin)) > 1) {
+      okCSV<-TRUE
+      # inFileR$newCSV <- FALSE
+    }  
+    
+    if(okCSV){
+      
+      colnames(PBDin) <- tolower(colnames(PBDin))
+      
+      # csvInfo$wng <- ""
+      # csvInfo$msg <- paste0("The input file consist of ", length(PBDcolnames),
+      # " columns and ", nrow(PBDin), " observations.")
+      
+      
+      
+      # presenceCol=NULL
+      
+      
+      #### TODO check input conditions
+      #columns for time
+      #if (length(input$timeCols) %in% c(1,3))
+      # columns for visits
+      
+      PBD$data <- PBDin
+      ## And start over
+      PBD$organised <- NULL
+      PBD$visits <- NULL
+      data_stat$data<-NULL
+      StudyArea$data<-NULL
+      # gridR$data<-NULL ## the grid can stay
+      
+      orgVars$sppCol <- NULL
+      orgVars$idCols <- NULL
+      orgVars$timeCols <- NULL
+      orgVars$timeInVisits <-NULL
+      orgVars$grid <- NULL
+      orgVars$presenceCol <- NULL
+      orgVars$xyCols <- NULL
+      orgVars$dataCRS <- NULL
+      orgVars$taxonRankCol <- NULL
+      orgVars$taxonRank <- NULL
+      orgVars$simplifySppName <- NULL
+      orgVars$csvTaxon <- NULL
+      orgVars$defined <- FALSE
+    } 
+    
+    removeModal()
+  })
+  
+  #When cancel button clicked in modal
+  observeEvent(input$cancelLoadDataUI, {
+    removeModal()
+  })
+  
+  
+  ### observe input file ###
+  observe({
+    file <- input$csvFile$datapath
+    
+    preTable <- tryCatch(fread(file=file, #getcsv, 
+                               stringsAsFactors = FALSE, encoding = ifelse(input$csvUTF,"UTF-8","unknown"), 
+                               header = input$csvHeader, sep = input$csvSep, 
+                               quote = input$csvQuote, na.strings = "", data.table = FALSE, fill = TRUE), 
+                         error = function(e){
+                           return(NULL)}, 
+                         warning = function(w){
+                           return(NULL)})
+    
+    if(is.data.frame(preTable)){
+      
+      if(nrow(preTable)>5){
+        preTable <- preTable[1:5, ,drop = FALSE]
+      }
+      
+      colnames(preTable) <- iconv(colnames(preTable), from = (if(input$csvUTF) "UTF-8" else ""), sub = "byte")
+      colnames(preTable) <- 
+        sapply(colnames(preTable), function(x){if(nchar(x) > 25)paste0(substr(x,1,25),"...") else x })
+    }else{
+      
+      preTable <- data.frame("No valid data for preview")
+      
+      colnames(preTable) <- c("Result")
+    }
+    
+    output$TablePreview <- DT::renderDataTable(datatable(preTable, rownames = FALSE, 
+                                                         options = list(dom = "t", scrollX = TRUE, 
+                                                                        scrollY = "20vh")))
+    
+    
+  })
+  
+  output$TablePBD <- DT::renderDataTable({
+    if (is.null(PBD$data)) return()
+    # req(PBD$data)
+    
+    table<-PBD$data
+    table<-as.data.frame(table, row.names = c(1:nrow(table)))
+    
+    datatable(table, class = 'cell-border stripe',
+              caption = HTML("The table below shows the data for each observation."), 
+              rownames = FALSE,
+              autoHideNavigation = TRUE,
+              options = list(
+                dom = 'tp',
+                pageLength = 15,
+                scrollX=TRUE)
+    )
+  }, server = TRUE) #end render DataTable
+  
+  output$TablePBDOrg <- DT::renderDataTable({
+    req(PBD$organised)
+    
+    table <- BIRDS::obsData(PBD$organised)
+    table <- as.data.frame(table, row.names = c(1:nrow(table)))
+    
+    datatable(table, class = 'cell-border stripe',
+              caption = HTML("The table below shows the data organised by visits."), 
+              autoHideNavigation = TRUE,
+              rownames = FALSE,
+              options = list(
+                dom = 'tp',
+                pageLength = 15,
+                scrollX=TRUE)
+              #lengthMenu = c(10, 25, 50, 100))
+    )
+  }, server = TRUE) #end render DataTable
+  
+  
+  ### Define visits
+  
+  #When button clicked - show modal
+  observeEvent(input$defVisits, {
+    defineVisitsUI(colnames(PBD$data), mapLayers$layers$grids)
+  })
+  
+  #When ok button clicked in modal
+  observeEvent(input$okDefineVisitsUI, {
+    
+    timeCol.selected <- c(input$timeCols)
+    
+    orgVars$sppCol <- input$csvSpp
+    orgVars$idCols <- input$visitCols
+    orgVars$timeCols <- timeCol.selected
+    orgVars$timeInVisits <- if(input$timeInVis == "None"){
+      NULL
+    }else{
+      tolower(input$timeInVis)
+    }
+    
+    orgVars$grid <- mapLayers$layers$grids[[as.integer(input$gridInVis)]]  ### TODO THis should be variable and optional
+    
+    orgVars$presenceCol <- if(input$usePresence){
+      #print(input$presenceCol)
+      input$presenceCol
+    }else{
+      NULL
+    }
+    orgVars$xyCols <- c(input$csvLon, input$csvLat)
+    orgVars$dataCRS <- paste0("+init=epsg:", epsgInfo$code)
+    orgVars$csvTaxon <- input$csvTaxon
+    orgVars$taxonRankCol <- switch(input$csvTaxonEnable, input$csvTaxon, NULL)
+    orgVars$taxonRank <- switch(input$csvTaxonEnable, input$taxonRankVal, stdTaxonRank)
+    orgVars$simplifySppName <- input$simplifySpp
+    
+    orgVars$defined <- TRUE
+    
+    removeModal()
+  })
+  
+  #When cancel button klicked in modal
+  observeEvent(input$cancelDefineVisitsUI, {
+    removeModal()
+  })
+  
+  ############ Organise #######
   
   ## organise it and make it spatial and plot it in the map
   observeEvent(input$orgData, {
@@ -226,206 +423,7 @@ shinyServer(function(input, output, session) {
   shinyBIRDS::summary_page_server("summaryPage", PBD, mapLayers)
 
   
-  ########################################### DATA TAB #############################
-  output$TablePBD <- DT::renderDataTable({
-    if (is.null(PBD$data)) return()
-    # req(PBD$data)
-    
-    table<-PBD$data
-    table<-as.data.frame(table, row.names = c(1:nrow(table)))
-
-    datatable(table, class = 'cell-border stripe',
-              caption = HTML("The table below shows the data for each observation."), 
-              rownames = FALSE,
-              autoHideNavigation = TRUE,
-              options = list(
-                dom = 'tp',
-                pageLength = 15,
-                scrollX=TRUE)
-              )
-  }, server = TRUE) #end render DataTable
   
-  output$TablePBDOrg <- DT::renderDataTable({
-    req(PBD$organised)
-    
-    table <- BIRDS::obsData(PBD$organised)
-    table <- as.data.frame(table, row.names = c(1:nrow(table)))
-
-    datatable(table, class = 'cell-border stripe',
-              caption = HTML("The table below shows the data organised by visits."), 
-              autoHideNavigation = TRUE,
-              rownames = FALSE,
-              options = list(
-                dom = 'tp',
-                pageLength = 15,
-                scrollX=TRUE)
-              #lengthMenu = c(10, 25, 50, 100))
-    )
-  }, server = TRUE) #end render DataTable
-  
-  
-
-
-  
-  observe({
-    file <- input$csvFile$datapath
-    
-    preTable <- tryCatch(fread(file=file, #getcsv, 
-                   stringsAsFactors = FALSE, encoding = ifelse(input$csvUTF,"UTF-8","unknown"), 
-                   header = input$csvHeader, sep = input$csvSep, 
-                   quote = input$csvQuote, na.strings = "", data.table = FALSE, fill = TRUE), 
-                   error = function(e){
-                     return(NULL)}, 
-                   warning = function(w){
-                     return(NULL)})
-    
-    if(is.data.frame(preTable)){
-
-      if(nrow(preTable)>5){
-        preTable <- preTable[1:5, ,drop = FALSE]
-      }
-      
-      colnames(preTable) <- iconv(colnames(preTable), from = (if(input$csvUTF) "UTF-8" else ""), sub = "byte")
-      colnames(preTable) <- 
-        sapply(colnames(preTable), function(x){if(nchar(x) > 25)paste0(substr(x,1,25),"...") else x })
-    }else{
-
-      preTable <- data.frame("No valid data for preview")
-      
-      colnames(preTable) <- c("Result")
-    }
-
-    output$TablePreview <- DT::renderDataTable(datatable(preTable, rownames = FALSE, 
-                                                         options = list(dom = "t", scrollX = TRUE, 
-                                                                        scrollY = "20vh")))
-   
-    
-  })
-  
-  ############### MODAL ##############
-  
-  
-  ### load data
-  
-  #When button clicked - show modal
-  observeEvent(input$loadData, {
-    loadDataUI()
-  })
-  
-  #When ok button klicked in modal
-  observeEvent(input$okLoadDataUI, {
-    
-    okCSV <- FALSE
-    
-    ##### TODO is too slow to upload a file to internet, maybe add possibility to get from url
-    PBDin <- tryCatch({fread(file=input$csvFile$datapath, #getcsv, 
-                             stringsAsFactors = FALSE, encoding = ifelse(input$csvUTF,"UTF-8","unknown"), 
-                             header = input$csvHeader, sep = input$csvSep, 
-                             quote = input$csvQuote, na.strings = "", data.table = FALSE)
-    }, error = function(e){
-      shinyalert::shinyalert(title = "An error occured", text = e$message, type = "error")
-      return(NULL)
-    })
-    
-    if (class(PBDin)=="data.frame" && length(colnames(PBDin)) > 1) {
-      okCSV<-TRUE
-      # inFileR$newCSV <- FALSE
-    }  
-      
-    if(okCSV){
-      
-      colnames(PBDin) <- tolower(colnames(PBDin))
-
-      # csvInfo$wng <- ""
-      # csvInfo$msg <- paste0("The input file consist of ", length(PBDcolnames),
-      # " columns and ", nrow(PBDin), " observations.")
-
-      
-      
-      # presenceCol=NULL
-      
-      
-      #### TODO check input conditions
-      #columns for time
-      #if (length(input$timeCols) %in% c(1,3))
-      # columns for visits
-      
-      PBD$data <- PBDin
-      ## And start over
-      PBD$organised <- NULL
-      PBD$visits <- NULL
-      data_stat$data<-NULL
-      StudyArea$data<-NULL
-      # gridR$data<-NULL ## the grid can stay
-      
-      orgVars$sppCol <- NULL
-      orgVars$idCols <- NULL
-      orgVars$timeCols <- NULL
-      orgVars$timeInVisits <-NULL
-      orgVars$grid <- NULL
-      orgVars$presenceCol <- NULL
-      orgVars$xyCols <- NULL
-      orgVars$dataCRS <- NULL
-      orgVars$taxonRankCol <- NULL
-      orgVars$taxonRank <- NULL
-      orgVars$simplifySppName <- NULL
-      orgVars$csvTaxon <- NULL
-      orgVars$defined <- FALSE
-    } 
-    
-    removeModal()
-  })
-  
-  #When cancel button clicked in modal
-  observeEvent(input$cancelLoadDataUI, {
-    removeModal()
-  })
-  
-  ### Define visits
-  
-  #When button clicked - show modal
-  observeEvent(input$defVisits, {
-    defineVisitsUI(colnames(PBD$data), mapLayers$layers$grids)
-  })
-  
-  #When ok button clicked in modal
-  observeEvent(input$okDefineVisitsUI, {
-    
-    timeCol.selected <- c(input$timeCols)
-    
-    orgVars$sppCol <- input$csvSpp
-    orgVars$idCols <- input$visitCols
-    orgVars$timeCols <- timeCol.selected
-    orgVars$timeInVisits <- if(input$timeInVis == "None"){
-      NULL
-    }else{
-      tolower(input$timeInVis)
-    }
-
-    orgVars$grid <- mapLayers$layers$grids[[as.integer(input$gridInVis)]]  ### TODO THis should be variable and optional
-   
-    orgVars$presenceCol <- if(input$usePresence){
-      #print(input$presenceCol)
-      input$presenceCol
-    }else{
-      NULL
-    }
-    orgVars$xyCols <- c(input$csvLon, input$csvLat)
-    orgVars$dataCRS <- paste0("+init=epsg:", epsgInfo$code)
-    orgVars$csvTaxon <- input$csvTaxon
-    orgVars$taxonRankCol <- switch(input$csvTaxonEnable, input$csvTaxon, NULL)
-    orgVars$taxonRank <- switch(input$csvTaxonEnable, input$taxonRankVal, stdTaxonRank)
-    orgVars$simplifySppName <- input$simplifySpp
-    
-    orgVars$defined <- TRUE
-    
-    removeModal()
-  })
-  
-  #When cancel button klicked in modal
-  observeEvent(input$cancelDefineVisitsUI, {
-    removeModal()
-  })
   
   ### removeObs()
   #Enable or disable the button based on condition
