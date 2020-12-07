@@ -2,7 +2,7 @@ language: r
 os: linux
 dist: bionic
 cache: packages
-
+warnings_are_errors: false
 
 addons:
   apt:
