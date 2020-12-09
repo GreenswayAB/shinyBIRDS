@@ -9,23 +9,25 @@ summary_mod_ui <- function(id){
   ns <- NS(id)
   
   tagList(  
-    fluidRow(    
-      h4("Summarise"),
-      # materialSwitch("searchYearRng", "Filter years", value = TRUE, status = "primary", right=TRUE),
-      # pickerInput("spillOver", label = h5(tags$p("Spill visits over neighbour cells", 
-      #                                            tags$span("See Birds vignetes for an explanation on how spill over works. Else, just leave 'unique'."),
-      #                                            class="bubble")),
-      #             choices = c("Not", "Unique", "Duplicate"), selected = "Unique",
-      #             multiple = FALSE,  options = list(`actions-box` = TRUE)),
-      selectInput(ns("spillOver"), label = h5(tags$p(strong("Spill visits over neighbour cells"), 
-                                                 tags$span("See BIRDs vignetes for an explanation on how spill over works. Else, just leave it as 'unique'."),
-                                                 class="bubble")),
-                  choices = c("Not", "Unique", "Duplicate"), selected = "Unique",
-                  multiple = FALSE),
-      selectizeInput(ns("gridInSummary"), "Grid for summary", choices = NULL),
-      
-      actionButton(ns("summaryGo"), HTML("&nbsp;Summary"), 
-                   width = "100", icon = icon("chart-bar"), class="btn-success btn-sm")
+    fluidRow(
+      column(12,
+        h4("Summarise"),
+        # materialSwitch("searchYearRng", "Filter years", value = TRUE, status = "primary", right=TRUE),
+        # pickerInput("spillOver", label = h5(tags$p("Spill visits over neighbour cells", 
+        #                                            tags$span("See Birds vignetes for an explanation on how spill over works. Else, just leave 'unique'."),
+        #                                            class="bubble")),
+        #             choices = c("Not", "Unique", "Duplicate"), selected = "Unique",
+        #             multiple = FALSE,  options = list(`actions-box` = TRUE)),
+        selectInput(ns("spillOver"), label = h5(tags$p(strong("Spill visits over neighbour cells"), 
+                                                   tags$span("See BIRDs vignetes for an explanation on how spill over works. Else, just leave it as 'unique'."),
+                                                   class="bubble")),
+                    choices = c("Not", "Unique", "Duplicate"), selected = "Unique",
+                    multiple = FALSE),
+        selectizeInput(ns("gridInSummary"), "Grid for summary", choices = NULL),
+        
+        actionButton(ns("summaryGo"), HTML("&nbsp;Summary"), 
+                     width = "100", icon = icon("chart-bar"), class="btn-success btn-sm")
+      )
     ),
     br(),
     fluidRow(

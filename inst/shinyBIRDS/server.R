@@ -147,7 +147,7 @@ shinyServer(function(input, output, session) {
     loadDataUI()
   })
   
-  #When ok button klicked in modal
+  #When ok button clicked in modal
   observeEvent(input$okLoadDataUI, {
     
     okCSV <- FALSE
@@ -299,35 +299,40 @@ shinyServer(function(input, output, session) {
   
   #When ok button clicked in modal
   observeEvent(input$okDefineVisitsUI, {
+    withProgress( message = "Creating visits" , {
     
-    timeCol.selected <- c(input$timeCols)
-    
-    orgVars$sppCol <- input$csvSpp
-    orgVars$idCols <- input$visitCols
-    orgVars$timeCols <- timeCol.selected
-    orgVars$timeInVisits <- if(input$timeInVis == "None"){
-      NULL
-    }else{
-      tolower(input$timeInVis)
-    }
-    
-    orgVars$grid <- mapLayers$layers$grids[[as.integer(input$gridInVis)]]  ### TODO THis should be variable and optional
-    
-    orgVars$presenceCol <- if(input$usePresence){
-      #print(input$presenceCol)
-      input$presenceCol
-    }else{
-      NULL
-    }
-    orgVars$xyCols <- c(input$csvLon, input$csvLat)
-    orgVars$dataCRS <- paste0("+init=epsg:", epsgInfo$code)
-    orgVars$csvTaxon <- input$csvTaxon
-    orgVars$taxonRankCol <- switch(input$csvTaxonEnable, input$csvTaxon, NULL)
-    orgVars$taxonRank <- switch(input$csvTaxonEnable, input$taxonRankVal, stdTaxonRank)
-    orgVars$simplifySppName <- input$simplifySpp
-    
-    orgVars$defined <- TRUE
-    
+      timeCol.selected <- c(input$timeCols)
+      
+      orgVars$sppCol <- input$csvSpp
+      orgVars$idCols <- input$visitCols
+      orgVars$timeCols <- timeCol.selected
+      orgVars$timeInVisits <- if(input$timeInVis == "None"){
+        NULL
+      }else{
+        tolower(input$timeInVis)
+      }
+      setProgress(.3)
+      
+      orgVars$grid <- mapLayers$layers$grids[[as.integer(input$gridInVis)]]  ### TODO THis should be variable and optional
+      
+      orgVars$presenceCol <- if(input$usePresence){
+        #print(input$presenceCol)
+        input$presenceCol
+      }else{
+        NULL
+      }
+      setProgress(.5)
+      orgVars$xyCols <- c(input$csvLon, input$csvLat)
+      orgVars$dataCRS <- paste0("+init=epsg:", epsgInfo$code)
+      orgVars$csvTaxon <- input$csvTaxon
+      setProgress(.8)
+      orgVars$taxonRankCol <- switch(input$csvTaxonEnable, input$csvTaxon, NULL)
+      orgVars$taxonRank <- switch(input$csvTaxonEnable, input$taxonRankVal, stdTaxonRank)
+      orgVars$simplifySppName <- input$simplifySpp
+      setProgress(.9)
+      orgVars$defined <- TRUE
+      setProgress(1)
+    })
     removeModal()
   })
   
@@ -343,78 +348,82 @@ shinyServer(function(input, output, session) {
     req(PBD$data)
     req(epsgInfo$code)
     # PBD$organised <- NULL
-    
-    print("Organizing...")
-    #print(orgVars$dataCRS)
-    
-    print(c(orgVars$sppCol, orgVars$xyCols[1], orgVars$xyCols[2],
-            orgVars$timeCols, orgVars$idCols, orgVars$csvTaxon, orgVars$presenceCol))
-    
-    PBDdata <- PBD$data[,c(orgVars$sppCol, orgVars$xyCols[1], orgVars$xyCols[2],
-                           orgVars$timeCols, orgVars$idCols, orgVars$csvTaxon, orgVars$presenceCol)]
-    
-    PBD$organised <- tryCatch(BIRDS::organizeBirds(PBDdata, 
-                                            sppCol = orgVars$sppCol, 
-                                            idCols = orgVars$idCols,
-                                            timeCols = orgVars$timeCols,
-                                            timeInVisits = orgVars$timeInVisits,
-                                            grid = orgVars$grid,
-                                            presenceCol = orgVars$presenceCol,
-                                            xyCols = orgVars$xyCols, 
-                                            dataCRS = orgVars$dataCRS, ## alt: epsgInfo$proj4
-                                            taxonRankCol = orgVars$taxonRankCol,
-                                            taxonRank = orgVars$taxonRank,
-                                            simplifySppName = orgVars$simplifySppName), 
-                              error = function(e){
-                                print(str(e))
-                                shinyalert::shinyalert(title = "An error occured", text = e$message, type = "error")
-                                return(NULL)}
-                              ) 
-    
-    #str(PBD$organised)
+    withProgress( message = "Organizing the observations" , {
+      setProgress(.2)
+      print("Organizing...")
+      #print(orgVars$dataCRS)
+      
+      # print(c(orgVars$sppCol, orgVars$xyCols[1], orgVars$xyCols[2],
+      #         orgVars$timeCols, orgVars$idCols, orgVars$csvTaxon, orgVars$presenceCol))
+      
+      PBDdata <- PBD$data[,c(orgVars$sppCol, orgVars$xyCols[1], orgVars$xyCols[2],
+                             orgVars$timeCols, orgVars$idCols, orgVars$csvTaxon, orgVars$presenceCol)]
+      
+      PBD$organised <- tryCatch(BIRDS::organizeBirds(PBDdata, 
+                                              sppCol = orgVars$sppCol, 
+                                              idCols = orgVars$idCols,
+                                              timeCols = orgVars$timeCols,
+                                              timeInVisits = orgVars$timeInVisits,
+                                              grid = orgVars$grid,
+                                              presenceCol = orgVars$presenceCol,
+                                              xyCols = orgVars$xyCols, 
+                                              dataCRS = orgVars$dataCRS, ## alt: epsgInfo$proj4
+                                              taxonRankCol = orgVars$taxonRankCol,
+                                              taxonRank = orgVars$taxonRank,
+                                              simplifySppName = orgVars$simplifySppName), 
+                                error = function(e){
+                                  print(str(e))
+                                  shinyalert::shinyalert(title = "An error occured", 
+                                                         text = e$message, type = "error")
+                                  return(NULL)}
+                                ) 
+      
+      #str(PBD$organised)
+      setProgress(.8)
+    })
    
   })
   
-  # output$orgInfoUI<-renderUI( 
-  #   tagList(
-  #       br(),
-  #       div(HTML(orgInfo$msg), class="message")
-  #   )
-  # ) This fills no purpose since it isn't updated in the define visits modal 
-  # until the ok-button in the is clicked
-  
-  ## Explore the visits, before summarysing
+  ## Explore the visits, before summarising
   observeEvent(input$expVisits, {
     req(PBD$organised)
-    updateTabsetPanel(session, "pbd_output",selected = "expVis")
+    updateTabsetPanel(session, "pbd_output", selected = "expVis")
     #PBDorg<-PBD$organised
-    PBD$visits <- tryCatch(BIRDS::exploreVisits(x=PBD$organised, 
-                                         visitCol=attr(PBD$organised, "visitCol"), 
-                                         sppCol="scientificName"), 
-                           error = function(e){
-                             shinyalert::shinyalert(title = "An error occured", text = e$message, type = "error")
-                             return(NULL)
-                           })
-    if(! is.null(PBD$visits)){
-      PBD$visits$day <- as.numeric(PBD$visits$day)
-      PBD$visits$month <- as.numeric(PBD$visits$month)
-      PBD$visits$year <- as.numeric(PBD$visits$year)
-      # PBD$visits$effortDiam <- PBD$visits$effortDiam/1000
-      # PBD$visits$medianDist <- PBD$visits$medianDist/1000
-      data_stat$data <- PBD$visits
-      # colnames(data_stat$data)<-c("Projekt Skapare", "Projekt", "Datum Projekt", "Objekt", "Inventerare", "Start Enkät", "Stop Enkät", "Status")
-    }
-    
-    str(data_stat$data)
-    str(PBD$visits)
-
+    withProgress( message = "Making some calculations for you..." , {
+      setProgress(.2)
+      PBD$visits <- tryCatch(BIRDS::exploreVisits(x=PBD$organised, 
+                                           visitCol=attr(PBD$organised, "visitCol"), 
+                                           sppCol="scientificName"), 
+                             error = function(e){
+                               shinyalert::shinyalert(title = "An error occured", text = e$message, type = "error")
+                               return(NULL)
+                             })
+      setProgress(.8, message = "almost done")
+      if(! is.null(PBD$visits)){
+        PBD$visits$day <- as.numeric(PBD$visits$day)
+        PBD$visits$month <- as.numeric(PBD$visits$month)
+        PBD$visits$year <- as.numeric(PBD$visits$year)
+        # PBD$visits$effortDiam <- PBD$visits$effortDiam/1000
+        # PBD$visits$medianDist <- PBD$visits$medianDist/1000
+        data_stat$data <- PBD$visits
+        # colnames(data_stat$data)<-c("Projekt Skapare", "Projekt", "Datum Projekt", "Objekt", "Inventerare", "Start Enkät", "Stop Enkät", "Status")
+      }
+      
+      # str(data_stat$data)
+      # str(PBD$visits)
+      setProgress(.1)
+    })
   })
   
   observe({
     req(data_stat$data)
     req(PBD$visits)
     print("Calling esquisserServer...")
-    callModule(module = esquisserServer, id = "visitsEsquisse", data = data_stat)  
+    withProgress( message = "Oppening the canvas..." , {
+      setProgress(.2)
+      callModule(module = esquisserServer, id = "visitsEsquisse", data = data_stat)  
+      setProgress(.9)
+    })
   })
   
   #### Summarise

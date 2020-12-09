@@ -31,13 +31,14 @@ grid_draw <- function(session){
     fluidRow(
       ### From data extent
       column(width=6,
-             br(),
+             # br(),
              numericInput(inputId = ns("gridSize"),
                           label = h5(tags$p("Grid cell width (Km)",tags$span("The polygon must be wider than grid cells"), class="bubble")),
-                          value=1000, min = 1, max = 500, width = 250)
+                          value=1000, min = 1, max = 500, width = 250),
+             checkboxInput(ns("buff"), "Inclusive", value = FALSE)
       ),
       column(width=6, 
-             checkboxInput(ns("buff"), "Inclusive", value = FALSE),
+             # checkboxInput(ns("buff"), "Inclusive", value = FALSE),
              selectInput(ns("gridType"), "Type", 
                          list("Square" = "sq", "Hexagon grid" = "hx", 
                               "Equal size grid" = 
@@ -45,8 +46,10 @@ grid_draw <- function(session){
                                      "Diamond" = "diamond", 
                                      "Triangle" = "triangle")), 
                          selected = "Hexagon"),
-             actionButton(ns("goExtent"), HTML("&nbsp;Get extent"), width = "90", icon=icon("expand"), class="btn-info btn-sm"),
-             actionButton(ns("goGrid"), HTML("&nbsp;Make grid"), width = "90", icon=icon("th"), class="btn-success btn-sm")
+             # actionButton(ns("goExtent"), HTML("&nbsp;Get extent"), width = "90", icon=icon("expand"), class="btn-info btn-sm"),
+             actionBttn(ns("goExtent"), HTML("&nbsp;Get extent"), style = "simple", color = "royal", icon = icon("expand"), size="xs"),
+             # actionButton(ns("goGrid"), HTML("&nbsp;Make grid"), width = "90", icon=icon("th"), class="btn-success btn-sm")
+             actionBttn(ns("goGrid"), HTML("&nbsp;Make grid"), style = "simple", color = "success", icon = icon("th"), size="xs")
       )
     ),# end fluid row
     #htmlOutput(ns("MessageWrPol"), inline=FALSE)
@@ -86,7 +89,7 @@ getGridFromShp <- function(shapefiles){
 
   #Getting the bounding box (studyarea)
   bboxMat<- as.matrix(grid@bbox)
-  polygonSA<-matrix(c(bboxMat[1,1], bboxMat[2,1],
+  polygonSA <- matrix(c(bboxMat[1,1], bboxMat[2,1],
                       bboxMat[1,1], bboxMat[2,2],
                       bboxMat[1,2], bboxMat[2,2],
                       bboxMat[1,2], bboxMat[2,1],
@@ -164,10 +167,14 @@ grid_mod_ui <- function(id){
       ),
       br(),
       textInput(ns("gridName"), "Name for new grid:"),
-      actionButton(ns("clearButton"), HTML("&nbsp;Clear grid"), 
-                   width = "100", icon = icon("trash"), class="btn-warning btn-sm"), 
-      actionButton(ns("addGrid"), HTML("&nbsp; Add grid"), 
-                   width = "100", icon = icon("check"), class="btn-success btn-sm")
+      actionBttn(ns("clearButton"), HTML("&nbsp;Clear grid"), style = "simple", 
+                 color = "warning", icon = icon("trash"), size="xs"),
+      actionBttn(ns("addGrid"), HTML("&nbsp;Add grid"), style = "simple", 
+                 color = "success", icon = icon("check"), size="xs")
+      # actionButton(ns("clearButton"), HTML("&nbsp;Clear grid"), 
+      #              width = "100", icon = icon("trash"), class="btn-warning btn-sm"), 
+      # actionButton(ns("addGrid"), HTML("&nbsp; Add grid"), 
+      #              width = "100", icon = icon("check"), class="btn-success btn-sm")
     )
   )
   
