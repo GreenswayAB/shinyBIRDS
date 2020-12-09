@@ -18,27 +18,26 @@ getColor <- function(data, max){
 resView_mod_ui <- function(id){
   ns <- NS(id)
   tagList(    
-    h2("Result view"),
-    fluidRow(conditionalPanel("output.sliderShow == true", ns = ns,
-                              h4(textOutput(ns("column"))),
-                              sliderInput(ns("slider"), label="", min = 1, max = 1, value = 1,
-                                          ticks = FALSE, animate = TRUE)),
-             conditionalPanel("output.type == 'map'", ns = ns,
-                              leafletOutput(ns("map"), height = "91vh")),
-             conditionalPanel("output.type == 'plot'", ns = ns,
-                              plotOutput(ns("plot"))),
-             conditionalPanel("output.type == 'txt'", ns = ns,
-                              textOutput(ns("txt"))),
-             conditionalPanel("output.type == ''", ns = ns, 
-                              p("Nothing to show")),
-             style = "margin: 30px;margin-bottom: 30px;border-style: solid;border-color: #d6dadc;"),
-    
+    # h2("Result view"),
+    fluidRow(
+      conditionalPanel("output.sliderShow == true", ns = ns,
+                       h4(textOutput(ns("column"))),
+                       sliderInput(ns("slider"), label="", min = 1, max = 1, value = 1,
+                                   ticks = FALSE, animate = TRUE)),
+      conditionalPanel("output.type == 'map'", ns = ns,
+                       leafletOutput(ns("map"), height = "85vh")),
+      conditionalPanel("output.type == 'plot'", ns = ns,
+                       plotOutput(ns("plot"))),
+      conditionalPanel("output.type == 'txt'", ns = ns,
+                       textOutput(ns("txt"))),
+      conditionalPanel("output.type == ''", ns = ns, 
+                       p("Nothing to show")),
+      # style = "margin: 10px; margin-bottom: 10px;border-style: solid; border-color: #d6dadc;")
+      style = "margin: 10px; margin-bottom: 10px;")
   )
-  
-  
 }
 
-#' Export parameters server
+#' RESULTS server
 #' 
 #' @param id The \code{input} that refers to the UI.
 #' @param toView  Reactive value with the layers to show

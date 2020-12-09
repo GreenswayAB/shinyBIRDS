@@ -34,7 +34,7 @@ navbarPage(title="shinyBIRDS", id="navBar",
                                                    tags$img(src="./img/loader-hex.gif")
                                   ))
            ),
-           tabPanel(title = "Summary Export", icon = icon("box-open"), value = "sumandexp",
+           tabPanel(title = "Summary and Export", icon = icon("box-open"), value = "sumandexp",
                     fluidRow(shinyBIRDS::summary_page_ui("summaryPage")),
                     absolutePanel(fixed = TRUE, top = "50%", left = "50%", width = '195px',
                                   conditionalPanel(condition="$('html').hasClass('shiny-busy')",
@@ -64,12 +64,12 @@ navbarPage(title="shinyBIRDS", id="navBar",
                                           )
                        )
            ),
-           position = "fixed-top",
+           position = "static-top", #"fixed-top",
            header = list(
              tags$link(rel="shortcut icon", href="img/favicon.ico"),
              includeCSS("www/styles.css"),
              tags$style(".container-drag-source, .box-dad {font-size: 18px;}"),
-             tags$style(".tab-content {padding-top: 70px;}"),
+             # tags$style(".tab-content {padding-top: 70px;}"),
              tags$link(rel="stylesheet", 
                        href="https://use.fontawesome.com/releases/v5.1.0/css/all.css", 
                        integrity="sha384-lKuwvrZot6UHsBSfcMvOkWwlCMgc0TaWr+30HWe3a4ltaBwTZhyTEggF5tJv8tbt", 

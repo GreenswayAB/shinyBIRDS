@@ -115,45 +115,41 @@ expParam_mod_ui <- function(id){
   ns <- NS(id)
 
   fluidRow(
-    h4("Export parameters"),
-    fluidRow(column(3, selectInput(inputId = ns("expDimension"),
-                                   label = "Dimension",          
-                                   choices = c(structure(DimeCode(), names=Dimension())),
-                                   multiple = FALSE, width = "200")),
-             column(3, selectInput(inputId = ns("expTimeRes"),
-                                   label = "Temporal Resolution",          
-                                   choices = c(structure(TimeResCode(), names=TimeRes())),
-                                   multiple = FALSE, width = "200")),
-             column(3, selectInput(inputId = ns("expVariable"),
-                                   label = "Variable",          
-                                   choices = c(structure(VarCode(), names=Variable())),
-                                   multiple = FALSE, width = "200")),
-             column(3, selectInput(inputId = ns("expMethod"),
-                                   label = "Summary method",          
-                                   choices = c(structure(MethCode(), names=Method())),
-                                   multiple = FALSE, width = "200"))),
-    fluidRow(column(12,
-                    htmlOutput(ns("exportMsgUI"), inline = FALSE),
-                    actionButton(ns("exportAdd"), HTML("&nbsp; Add definition"), 
-                                 width = "150", icon = icon("box-open"), class="btn-success btn-sm"))
-      ),
-    br(),
-    h4("Other results to export"),
-    fluidRow( 
-             actionButton(ns("getObsIndex"), HTML("&nbsp;Add observation index"), 
-                          width = "200", icon = icon("indent"), class="btn-success btn-sm",
-                          style = "margin-top: 5px;margin-bottom: 5px;margin-left: 5px;margin-right: 5px;"),
-             actionButton(ns("getComMatrix"), HTML("&nbsp;Add community matrix"), 
-                          width = "200", icon = icon("indent"), class="btn-success btn-sm",
-                          style = "margin-top: 5px;margin-bottom: 5px;margin-left: 5px;margin-right: 5px;"),
-             actionButton(ns("getIgnorance"), HTML("&nbsp;Add ignorance score"), 
-                          width = "200", icon = icon("indent"), class="btn-success btn-sm",
-                          style = "margin-top: 5px;margin-bottom: 5px;margin-left: 5px;margin-right: 5px;")
+    column(12,
+      fluidRow(
+               h4("Export parameters"),
+               column(3, selectInput(inputId = ns("expDimension"),
+                                     label = "Dimension",          
+                                     choices = c(structure(DimeCode(), names=Dimension())),
+                                     multiple = FALSE, width = "200")),
+               column(3, selectInput(inputId = ns("expTimeRes"),
+                                     label = "Temporal Resolution",          
+                                     choices = c(structure(TimeResCode(), names=TimeRes())),
+                                     multiple = FALSE, width = "200")),
+               column(3, selectInput(inputId = ns("expVariable"),
+                                     label = "Variable",          
+                                     choices = c(structure(VarCode(), names=Variable())),
+                                     multiple = FALSE, width = "200")),
+               column(3, selectInput(inputId = ns("expMethod"),
+                                     label = "Summary method",          
+                                     choices = c(structure(MethCode(), names=Method())),
+                                     multiple = FALSE, width = "200"))
+              ),
+       fluidRow( 
+         htmlOutput(ns("exportMsgUI"), inline = FALSE),
+         actionBttn(ns("exportAdd"), HTML("&nbsp;Add definition"), style = "simple", 
+                   color = "success", icon = icon("box-open"), size="xs"),
+         br(),br(),
+         h4("Other results to export"),
+         actionBttn(ns("getObsIndex"), HTML("&nbsp;Add observation index"), style = "simple", 
+                   color = "success", icon = icon("indent"), size="xs"),
+         actionBttn(ns("getComMatrix"), HTML("&nbsp;Add community matrix"), style = "simple", 
+                   color = "success", icon = icon("indent"), size="xs"),
+         actionBttn(ns("getIgnorance"), HTML("&nbsp;Add ignorance score"), style = "simple", 
+                   color = "success", icon = icon("indent"), size="xs")
+      )
     )
   )
-
-   
-
 }
 
 #' Export parameters server

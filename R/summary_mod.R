@@ -25,8 +25,10 @@ summary_mod_ui <- function(id){
                     multiple = FALSE),
         selectizeInput(ns("gridInSummary"), "Grid for summary", choices = NULL),
         
-        actionButton(ns("summaryGo"), HTML("&nbsp;Summary"), 
-                     width = "100", icon = icon("chart-bar"), class="btn-success btn-sm")
+        actionBttn(ns("summaryGo"), HTML("&nbsp;Summary"), style = "simple", 
+                   color = "success", icon = icon("chart-bar"), size="xs")
+        # actionButton(ns("summaryGo"), HTML("&nbsp;Summary"), 
+        #              width = "100", icon = icon("chart-bar"), class="btn-success btn-sm")
       )
     ),
     br(),

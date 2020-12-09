@@ -61,22 +61,31 @@ getExportBirds <- function(sb, dim, tr, var, mtd){
 expDef_mod_ui <- function(id){
   ns <- NS(id)
   fluidRow(
-    h4("Export definitions"),
-    DT::dataTableOutput(ns("exportDefs"), width = "90%"),
-    br(),
-    h4("Other variables to export"),
-    DT::dataTableOutput(ns("otherDefs"), width = "90%"),
-    br(),
-    actionButton(ns("exportClear"), HTML("&nbsp;Remove"), 
-                 width = "100", icon = icon("trash-alt"), class="btn-warning btn-sm"),
-    actionButton(ns("exportGo"), HTML("&nbsp;View"), 
-                 width = "100", icon = icon("box"), class="btn-success btn-sm"),
-    selectInput(inputId = ns("dnlCRS"),
-                label = h5(tags$p("Coordinate Reference Systems", 
-                                  tags$span("Projection system of the layers. Source EPSG.org"), class="bubble")),
-                choices = epsg.choices(), #structure(EPSG.code, names=EPSG.name), 
-                multiple = FALSE, selected = 4326, width = 200),
-    downloadButton(ns("downloadData"), "Download", class="btn-success btn-sm", width = 200)
+    column(12,
+      h4("Export definitions"),
+      DT::dataTableOutput(ns("exportDefs"), width = "90%"),
+      br(),
+      h4("Other variables to export"),
+      DT::dataTableOutput(ns("otherDefs"), width = "90%"),
+      br(),
+      actionBttn(ns("exportClear"), HTML("&nbsp;Remove"), style = "simple", 
+                 color = "warning", icon = icon("trash-alt"), size="xs"),
+      actionBttn(ns("exportGo"), HTML("&nbsp;View"), style = "simple", 
+                 color = "success", icon = icon("box"), size="xs"),
+      # actionButton(ns("exportClear"), HTML("&nbsp;Remove"), 
+      #              width = "100", icon = icon("trash-alt"), class="btn-warning btn-sm"),
+      # actionButton(ns("exportGo"), HTML("&nbsp;View"), 
+      #              width = "100", icon = icon("box"), class="btn-success btn-sm"),
+      br(),br(),
+      selectInput(inputId = ns("dnlCRS"),
+                  label = h5(tags$p("Coordinate Reference Systems", 
+                                    tags$span("Projection system of the layers. Source EPSG.org"), class="bubble")),
+                  choices = epsg.choices(), #structure(EPSG.code, names=EPSG.name), 
+                  multiple = FALSE, selected = 4326, width = 200),
+      downloadBttn(ns("downloadData"), "Download", style = "simple", 
+                     color = "success", size="xs")
+      # downloadButton(ns("downloadData"), "Download", class="btn-success btn-sm", width = 200)
+    )
   )
   
 }
