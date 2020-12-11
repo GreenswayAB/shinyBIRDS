@@ -28,157 +28,7 @@ map_mod_server <- function(id, layers, pbd_data){
                  
                  layersAll <- reactiveValues(layer = list(NULL))
                  
-                 observeEvent(pbd_data$organised, {
-                   obsLayer <- unlist(lapply(layersAll$layer, function(x){x$type=="obsData"}))
-
-                   if(! is.null(obsLayer)){
-                     layersAll$layer <- layersAll$layer[! obsLayer]
-                   }
-
-                   if(! is.null(pbd_data$organised)){
-                     n <- 500
-                     nObs <- nrow(BIRDS::obsData(pbd_data$organised))
-                     wPlot <- if (nObs > n) sample(nObs, n) else c(1:nObs)
-                     labelTxt <- if (nObs > n) "PBD: random subset of 500 obs." else "PBD: all observations"
-                     PBDpoints <- pbd_data$organised$spdf[wPlot,]
-                     insert <- length(layersAll$layer)+1
-                     names <- c(names(layersAll$layer), "PBD")
-                     layersAll$layer[[insert]] <-  list(geom = PBDpoints, type = "obsData", lbl = labelTxt)
-                     names(layersAll$layer) <- names
-                   }
-                 })
-                 
-                 observeEvent(pbd_data$visits, {
-                   print("Drawing visits to map")
-                   vLayer <- unlist(lapply(layersAll$layer, function(x){x$type=="visits"}))
-                   if(! is.null(vLayer)){
-                     layersAll$layer <- layersAll$layer[! vLayer]
-                   }
-                   
-                   if(! is.null(pbd_data$visits)){
-                     insert <- length(layersAll$layer)+1
-                     names <- c(names(layersAll$layer), "PBD")
-                     layersAll$layer[[insert]] <-  list(geom = BIRDS::spatialVisits(pbd_data$visits)$effort, 
-                                                        type = "visits")
-                     names(layersAll$layer) <- names
-                   }
-                 })
-                 
-                 
-                 ## Change in the layers ##
-                 observeEvent(layers$layers, {
-                   #Removing the old grids in layersAll
-                   gridLayers <- unlist(lapply(layersAll$layer, function(x){x$type=="grid"}))
-                   if(! is.null(gridLayers)){
-                     layersAll$layer <- layersAll$layer[! gridLayers]
-                   }
-
-
-                   #The grids
-                   if(length(layers$layers$grids) > 0){
-                     
-                     #Adding grids to layersAll
-                     for(i in 1:length(layers$layers$grids)){
-                       g <- names(layers$layers$grids[i])
-                       l <- layers$layers$grids[[i]]
-                       insert <- length(layersAll$layer)+1
-                       names <- c(names(layersAll$layer), g)
-                       layersAll$layer[[insert]] <- list(geom = l, type = "grid")
-                       names(layersAll$layer) <- names
-                       
-                     }
-                   }
-                     
-                   
-                   if(! is.null(layers$layers$others[["Working grid"]])){
-                     layersAll$layer[["Working grid"]] <- list(geom = layers$layers$others[["Working grid"]], 
-                                                               type = "wg")
-                    
-                   }else{
-                     layersAll$layer <- layersAll$layer[names(layersAll$layer) != "Working grid"]  
-                   }
-                   
-                   
-                   if(! is.null(layers$layers$others[["Study area"]])){
-                     layersAll$layer[["Study area"]] <- list(geom = layers$layers$others[["Study area"]], 
-                                                             type = "sa")
-                     
-                   }else{
-                     layersAll$layer <- layersAll$layer[names(layersAll$layer) != "Study area"]  
-                   }
-                   
-                 })
-                 
-                 observeEvent(layersAll$layer, {
-                   #TODO Data that is loaded before the map is shown the first time, i.e. pbd-data
-                   # is not loaded until the map has been rendered and some other layer is loaded into the map. 
-                   
-                   proxy <- leafletProxy(mapId="map")
-                   proxy %>% 
-                     clearShapes() %>% 
-                     clearMarkers() %>%
-                     removeLayersControl()
-                   
-                   if(length(layersAll$layer) > 0){
-                     for(i in 1:length(layersAll$layer)){
-                       if(layersAll$layer[[i]]$type == "obsData"){
-
-                         proxy %>%
-                           addCircleMarkers(data = layersAll$layer[[i]]$geom, 
-                                            group = names(layersAll$layer[i]),
-                                            color = "black", stroke = FALSE, 
-                                            fillOpacity = 0.5, radius = 5,
-                                            label = ~as.character(scientificName))
-                       }else if(layersAll$layer[[i]]$type == "visits"){
-                         proxy %>%
-                           addPolygons(data = layersAll$layer[[i]]$geom, 
-                                      group = names(layersAll$layer[i]), 
-                                      color = "red", stroke = TRUE,
-                                      weight = 5, fillOpacity = 0.1,
-                                      label = ~visitUID)
-                       }else if(layersAll$layer[[i]]$type == "grid"){
-                         proxy %>%
-                           addPolygons(data = layersAll$layer[[i]]$geom,
-                                       group = names(layersAll$layer[i]), 
-                                       weight = 2, color = "black", fillOpacity = 0)
-                       }else if(layersAll$layer[[i]]$type == "wg"){
-                         proxy %>%
-                           addPolygons(data = layersAll$layer[[i]]$geom,
-                                       group = names(layersAll$layer[i]), 
-                                       weight = 2, color = "blue", fillOpacity = 0)
-                       }else if(layersAll$layer[[i]]$type == "sa"){
-                         bb <- layersAll$layer[[i]]$geom@bbox
-                         proxy %>%
-                           addPolygons(data = layersAll$layer[[i]]$geom,
-                                       group = names(layersAll$layer[i]), weight = 2, color = "#ff0066", fillOpacity = 0) %>%
-                           fitBounds(lng1 = bb[1,1], lat1 = bb[2,1], lng2 = bb[1,2], lat2 = bb[2,2])
-                       }
-                       
-                     }
-                     
-                     proxy %>%
-                       addLayersControl(overlayGroups = names(layersAll$layer),
-                                        options = layersControlOptions(
-                                          collapsed=FALSE,  position = "bottomright")
-                       )
-                   }
-                   
-                 })
-                 
-                 ## Feature is drawn ##
-                 observeEvent(input$map_draw_new_feature, {
-                   nr <-length(unlist(list(input$map_draw_new_feature)[[1]]$geometry$coordinates))/2
-                   d <- matrix(unlist(input$map_draw_new_feature$geometry$coordinates), 
-                              nrow=nr,ncol=2, byrow=TRUE)
-                   drawn$polygon <-sp::SpatialPolygons(list(sp::Polygons(list(sp::Polygon(d)), 1)))
-                   
-                   proxy <- leafletProxy(mapId="map")
-                   
-                   proxy %>% 
-                     hideGroup("draw")
-                   })
-                 
-                 ## Render the map ##
+                 #### Render the map ####
                  output$map <- renderLeaflet({
                    leaflet() %>%
                      addTiles(options = tileOptions(minZoom=1, continuousWorld = FALSE)) %>% 
@@ -200,9 +50,221 @@ map_mod_server <- function(id, layers, pbd_data){
                      addScaleBar(position = "bottomleft", options = scaleBarOptions(imperial=FALSE, maxWidth = 200))
                  })
                  
+                 #### observe PBD data ####
+                 observeEvent(pbd_data$data, {
+                   ## remove data dependent layers
+                   obsLayer <- unlist(lapply(layersAll$layer, function(x){x$type=="obsData"}))
+                   if(! is.null(obsLayer)){
+                     layersAll$layer <- layersAll$layer[! obsLayer]
+                   }
+                   
+                   vLayer <- unlist(lapply(layersAll$layer, function(x){x$type=="visits"}))
+                   if(! is.null(vLayer)){
+                     layersAll$layer <- layersAll$layer[! vLayer]
+                   }
+                   
+                   saLayers <- unlist(lapply(layersAll$layer, function(x){x$type=="sa"}))
+                   if(! is.null(saLayers)){
+                     layersAll$layer <- layersAll$layer[! saLayers]
+                   }
+                   
+                   if(length(layersAll$layer) == 0){
+                     layersAll$layer <- list(NULL)
+                   }
+                 })
+                 
+                 #### observer organised ####
+                 observeEvent(pbd_data$organised, {
+                   print("Making observations as a layer")
+                   #Removing the old layers in layersAll
+                   obsLayer <- unlist(lapply(layersAll$layer, function(x){x$type=="obsData"}))
+                   if(! is.null(obsLayer)){
+                     layersAll$layer <- layersAll$layer[! obsLayer]
+                   }
+                   
+                   vLayer <- unlist(lapply(layersAll$layer, function(x){x$type=="visits"}))
+                   if(! is.null(vLayer)){
+                     layersAll$layer <- layersAll$layer[! vLayer]
+                   }
+                   
+                   # wgLayers <- unlist(lapply(layersAll$layer, function(x){x$type=="wg"}))
+                   # if(! is.null(wgLayers)){
+                   #   layersAll$layer <- layersAll$layer[! wgLayers]
+                   # }
+                   # saLayers <- unlist(lapply(layersAll$layer, function(x){x$type=="sa"}))
+                   # if(! is.null(saLayers)){
+                   #   layersAll$layer <- layersAll$layer[! saLayers]
+                   # }
+                   
+                   # if(length(layersAll$layer) == 0){
+                   #   layersAll$layer <- list(NULL)
+                   # }
+                   
+                   ## Adding the new obsevations
+                   if(! is.null(pbd_data$organised)){
+                     n <- 500
+                     nObs <- nrow(BIRDS::obsData(pbd_data$organised))
+                     wPlot <- if (nObs > n) sample(nObs, n) else c(1:nObs)
+                     labelTxt <- if (nObs > n) "PBD: random subset of 500 obs." else "PBD: all observations"
+                     PBDpoints <- pbd_data$organised$spdf[wPlot,]
+                     insert <- length(layersAll$layer)+1
+                     names <- c(names(layersAll$layer), labelTxt)
+                     layersAll$layer[[insert]] <-  list(geom = PBDpoints, type = "obsData") #lbl = labelTxt
+                     names(layersAll$layer) <- names
+                   }
+                   print(names(layersAll$layer))
+                 })
+                 
+                 #### observer visits ####
+                 observeEvent(pbd_data$visits, {
+                   print("Making visits as a layer")
+                   vLayer <- unlist(lapply(layersAll$layer, function(x){x$type=="visits"}))
+                   if(! is.null(vLayer)){
+                     layersAll$layer <- layersAll$layer[! vLayer]
+                   }
+                   
+                   if(! is.null(pbd_data$visits)){
+                     insert <- length(layersAll$layer)+1
+                     names <- c(names(layersAll$layer), "Visits")
+                     layersAll$layer[[insert]] <-  list(geom = BIRDS::spatialVisits(pbd_data$visits)$effort, 
+                                                        type = "visits")
+                     names(layersAll$layer) <- names
+                   }
+                 })
+                 
+                 
+                 #### observe change in the layers ####
+                 observeEvent(layers$layers, {
+                   #Removing the old grids in layersAll
+                   gridLayers <- unlist(lapply(layersAll$layer, function(x){x$type=="grid"}))
+                   if(! is.null(gridLayers)){
+                     layersAll$layer <- layersAll$layer[! gridLayers]
+                   }
+
+                   #The grids
+                   if(length(layers$layers$grids) > 0){
+                     
+                     #Adding grids to layersAll
+                     for(i in 1:length(layers$layers$grids)){
+                       g <- names(layers$layers$grids[i])
+                       l <- layers$layers$grids[[i]]
+                       insert <- length(layersAll$layer)+1
+                       names <- c(names(layersAll$layer), g)
+                       layersAll$layer[[insert]] <- list(geom = l, type = "grid")
+                       names(layersAll$layer) <- names
+                       
+                     }
+                   }
+                    
+                   ## TODO this is unnecessarily being loaded into the map every time some grid is added 
+                   if(! is.null(layers$layers$others[["Working grid"]])){
+                     layersAll$layer[["Working grid"]] <- list(geom = layers$layers$others[["Working grid"]], 
+                                                               type = "wg")
+                   }else{
+                     layersAll$layer <- layersAll$layer[names(layersAll$layer) != "Working grid"]  
+                   }
+         
+                   
+                   if(! is.null(layers$layers$others[["Study area"]])){
+                     layersAll$layer[["Study area"]] <- list(geom = layers$layers$others[["Study area"]], 
+                                                             type = "sa")
+                   }else{
+                     layersAll$layer <- layersAll$layer[names(layersAll$layer) != "Study area"]  
+                   }
+                   
+                 })
+                 
+                  #### add layers to map ####
+                 # observeEvent(layersAll$layer, {
+                 observe({ 
+                   # print(output$map)
+                   proxy <- leafletProxy(mapId="map")
+                   # if(!any(unlist(lapply(layersAll$layer, FUN = function(x) !is.null(x))))) return()
+                   if(any(unlist(lapply(layersAll$layer, FUN = function(x) !is.null(x))))){
+
+                     groupNamesGrids <- unlist(lapply(layersAll$layer, function(x){x$type=="grid"}))
+                     if(! is.null(groupNamesGrids)){
+                       groupNamesGrids <- names(layersAll$layer[! groupNamesGrids])
+                     }
+                     
+                     proxy %>% 
+                       clearGroup(c("Study area", "Working grid", groupNamesGrids)) %>% 
+                       clearMarkers() %>%
+                       removeLayersControl()
+
+                     # if(length(layersAll$layer) > 0){
+                     # TODO unnecesarilly loads ALL the layers everytime something changes... 
+                       for(i in 1:length(layersAll$layer)){
+                         if(layersAll$layer[[i]]$type == "obsData"){
+                           print("Drawing observations to map")
+                           bb <- layersAll$layer[[i]]$geom@bbox
+                           proxy %>%
+                             addCircleMarkers(data = layersAll$layer[[i]]$geom, 
+                                              group = names(layersAll$layer[i]),
+                                              color = "black", stroke = FALSE, 
+                                              fillOpacity = 0.5, radius = 5,
+                                              label = ~as.character(scientificName)) %>% 
+                             fitBounds(lng1 = bb[1,1], lat1 = bb[2,1], lng2 = bb[1,2], lat2 = bb[2,2])
+                           
+                         }else if(layersAll$layer[[i]]$type == "visits"){
+                           print("Drawing visits to map")
+                           proxy %>%
+                             addPolygons(data = layersAll$layer[[i]]$geom, 
+                                        group = names(layersAll$layer[i]), 
+                                        color = "red", stroke = TRUE,
+                                        weight = 5, fillOpacity = 0.1,
+                                        label = ~visitUID)
+                         }else if(layersAll$layer[[i]]$type == "grid"){
+                           proxy %>%
+                             addPolygons(data = layersAll$layer[[i]]$geom,
+                                         group = names(layersAll$layer[i]), 
+                                         weight = 2, color = "black", fillOpacity = 0)
+                         }else if(layersAll$layer[[i]]$type == "wg"){
+                           proxy %>%
+                             addPolygons(data = layersAll$layer[[i]]$geom,
+                                         group = names(layersAll$layer[i]), 
+                                         weight = 2, color = "blue", fillOpacity = 0)
+                         }else if(layersAll$layer[[i]]$type == "sa"){
+                           bb <- layersAll$layer[[i]]$geom@bbox
+                           proxy %>%
+                             addPolygons(data = layersAll$layer[[i]]$geom,
+                                         group = names(layersAll$layer[i]), weight = 2, color = "#ff0066", fillOpacity = 0) %>%
+                             fitBounds(lng1 = bb[1,1], lat1 = bb[2,1], lng2 = bb[1,2], lat2 = bb[2,2])
+                         }
+                         
+                       } #end for loop
+                       
+                       proxy %>%
+                         addLayersControl(overlayGroups = names(layersAll$layer),
+                                          options = layersControlOptions(
+                                            collapsed=FALSE, position = "bottomright"))
+                   }else{
+                     proxy %>% 
+                       clearGroup(c("Study area", "Working grid")) %>% 
+                       clearMarkers() %>%
+                       removeLayersControl()
+                   } #end if condition
+                   
+                 })
+                 
+                 ## Feature is drawn ##
+                 observeEvent(input$map_draw_new_feature, {
+                   nr <-length(unlist(list(input$map_draw_new_feature)[[1]]$geometry$coordinates))/2
+                   d <- matrix(unlist(input$map_draw_new_feature$geometry$coordinates), 
+                              nrow=nr,ncol=2, byrow=TRUE)
+                   drawn$polygon <-sp::SpatialPolygons(list(sp::Polygons(list(sp::Polygon(d)), 1)))
+                   
+                   proxy <- leafletProxy(mapId="map")
+                   
+                   proxy %>% 
+                     hideGroup("draw")
+                  })
+                 
+                 
+                 
                 observe({
                   return(reactive({drawn$polygon}))
-                  }) 
+                }) 
                 
                 return(reactive({drawn$polygon}))
 

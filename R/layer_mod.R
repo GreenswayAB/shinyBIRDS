@@ -9,18 +9,15 @@ layer_mod_ui <- function(id){
   ns <- NS(id)
   
   fluidRow(
-    # h3("Grid layers"),
-    h4("Your grid layers"),
-    DT::DTOutput(ns("layerTable"), width = "100%"),
-    actionBttn(ns("renameLayer"), HTML("&nbsp;Rename"), style = "simple", 
+    column(12,
+           h4("Your grid layers"),
+           DT::DTOutput(ns("layerTable"), width = "100%"),
+           br(),
+           actionBttn(ns("renameLayer"), HTML("&nbsp;Rename"), style = "simple", 
                color = "warning", icon = icon("pen"), size="xs"),
-    actionBttn(ns("removeLayer"), HTML("&nbsp;Remove"), style = "simple", 
+           actionBttn(ns("removeLayer"), HTML("&nbsp;Remove"), style = "simple", 
                color = "danger", icon = icon("trash"), size="xs")
-    
-    # actionButton(ns("renameLayer"), HTML("&nbsp;Rename layer"), 
-    #              width = "125", icon = icon("pen"), class="btn-warning btn-sm"), 
-    # actionButton(ns("removeLayer"), HTML("&nbsp; Remove layer"), 
-    #              width = "125", icon = icon("trash"), class="btn-danger btn-sm")
+    )
   )
   
 }
@@ -84,9 +81,6 @@ layer_mod_server <- function(id, layers){
                                                      lengthChange = FALSE),
                                                    rownames = NULL, 
                                                    colnames = NULL)
-                 
-                 
-                 
                  return(layers)
                })
 }

@@ -23,11 +23,11 @@ summary_page_ui <- function(id){
                          br(),
                          expDef_mod_ui(ns("expDef"))
                          ),
-                tabPanel(title = "Results", 
-                         icon = icon("search"), 
-                         value = "resTab",
-                         resView_mod_ui(ns("resultView"))
-                         ),
+                # tabPanel(title = "Results",
+                #          icon = icon("search"),
+                #          value = "resTab",
+                #          resView_mod_ui(ns("resultView"))
+                #          ),
                 absolutePanel(fixed = TRUE, top = "50%", 
                               left = "50%", width = '195px',
                               conditionalPanel(condition="$('html').hasClass('shiny-busy')",

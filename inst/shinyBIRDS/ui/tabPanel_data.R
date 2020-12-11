@@ -20,21 +20,25 @@ tagList(
   fluidRow(
     tabsetPanel(id = "pbd_output",
       tabPanel("PBD", icon = icon("binoculars"), value = "pbd",
-               DT::dataTableOutput("TablePBD", width = "90%")
+               column(12,
+                      DT::dataTableOutput("TablePBD", width = "95vw")
+               )
        ),
       tabPanel("Organised", icon=icon("sitemap"), value = "org",
-               DT::dataTableOutput("TablePBDOrg", width = "90%")
+               column(12,
+                      DT::dataTableOutput("TablePBDOrg", width = "95vw")
+               )
       ),
       tabPanel("Explore Visits", icon = icon("search"), value = "expVis",
-       # fluidRow(
-         esquisserUI(
-           id = "visitsEsquisse",
-           container = esquisseContainer(height = "100%"),
-           header = FALSE, # dont display gadget title
-           choose_data = FALSE # dont display button to change data
-         )
-       # )
-      )
+               column(12,
+                      esquisserUI(
+                        id = "visitsEsquisse",
+                        container = esquisseContainer(height = "83vh"),
+                        header = FALSE, # dont display gadget title
+                        choose_data = FALSE # dont display button to change data
+                        )
+                      )
+               )
     )
   )
 )

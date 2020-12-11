@@ -118,6 +118,7 @@ expParam_mod_ui <- function(id){
     column(12,
       fluidRow(
                h4("Export parameters"),
+               # div(style="display: inline-block; vertical-align:top; width: 200;",
                column(3, selectInput(inputId = ns("expDimension"),
                                      label = "Dimension",          
                                      choices = c(structure(DimeCode(), names=Dimension())),
