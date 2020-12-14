@@ -2,7 +2,7 @@
 % Please edit documentation in R/resView.R
 \name{resView_mod_server}
 \alias{resView_mod_server}
-\title{Export parameters server}
+\title{RESULTS server}
 \usage{
 resView_mod_server(id, toView)
 }
@@ -15,5 +15,5 @@ resView_mod_server(id, toView)
 
 }
 \description{
-Export parameters server
+RESULTS server
 }
