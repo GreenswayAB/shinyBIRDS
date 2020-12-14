@@ -23,30 +23,28 @@ map_mod_server <- function(id, layers, pbd_data){
   
   moduleServer(id,
                function(input, output, session){
-                 
                  drawn <- reactiveValues(polygon = NULL)
-                 
                  layersAll <- reactiveValues(layer = list(NULL))
                  
-                 #### Render the map ####
+                 # #### Render the map ####
                  output$map <- renderLeaflet({
                    leaflet() %>%
-                     addTiles(options = tileOptions(minZoom=1, continuousWorld = FALSE)) %>% 
+                     addTiles(options = tileOptions(minZoom=1, continuousWorld = FALSE)) %>%
                      # addTiles(urlTemplate = "https://mts1.google.com/vt/lyrs=s&hl=en&src=app&x={x}&y={y}&z={z}&s=G",
-                     #          attribution = "Google Maps", group = "Google Satellite") %>% 
+                     #          attribution = "Google Maps", group = "Google Satellite") %>%
                      # addProviderTiles(providers$OpenStreetMap.HOT, group = "OSM (Hot)") %>%
                      # addProviderTiles(providers$OpenTopoMap, group = "Open Topo") %>%
-                     # addProviderTiles(providers$Esri.WorldStreetMap, group = "ESRI Street") %>%  
-                     setView(lng = 0, lat = 0, zoom = 2) %>% 
-                     setMaxBounds(lng1 = -220, lat1 = 80, lng2 = 220, lat2 = -80) %>% 
-                     addDrawToolbar(targetGroup = "draw", 
+                     # addProviderTiles(providers$Esri.WorldStreetMap, group = "ESRI Street") %>%
+                     setView(lng = 0, lat = 0, zoom = 2) %>%
+                     setMaxBounds(lng1 = -220, lat1 = 80, lng2 = 220, lat2 = -80) %>%
+                     addDrawToolbar(targetGroup = "draw",
                                     polylineOptions = FALSE, circleOptions = FALSE, markerOptions = FALSE, circleMarkerOptions = FALSE,
                                     editOptions = drawShapeOptions(stroke = TRUE, color = "#ff0066", weight = 1, opacity = 1,
                                                                    fill = TRUE, fillColor = "#ff0066", fillOpacity = 0.2),
-                                    singleFeature = TRUE) %>% 
+                                    singleFeature = TRUE) %>%
                      # addLayersControl(#baseGroups = c("Google Satellite", "OSM (Hot)","Open Topo", "ESRI Street"),
-                     #   overlayGroups = c("PBD","Study Area", "Grid"), 
-                     #   options = layersControlOptions(collapsed=FALSE,  position = "bottomright")) %>% 
+                     #   overlayGroups = c("PBD","Study Area", "Grid"),
+                     #   options = layersControlOptions(collapsed=FALSE,  position = "bottomright")) %>%
                      addScaleBar(position = "bottomleft", options = scaleBarOptions(imperial=FALSE, maxWidth = 200))
                  })
                  
@@ -87,22 +85,8 @@ map_mod_server <- function(id, layers, pbd_data){
                      layersAll$layer <- layersAll$layer[! vLayer]
                    }
                    
-                   # wgLayers <- unlist(lapply(layersAll$layer, function(x){x$type=="wg"}))
-                   # if(! is.null(wgLayers)){
-                   #   layersAll$layer <- layersAll$layer[! wgLayers]
-                   # }
-                   # saLayers <- unlist(lapply(layersAll$layer, function(x){x$type=="sa"}))
-                   # if(! is.null(saLayers)){
-                   #   layersAll$layer <- layersAll$layer[! saLayers]
-                   # }
-                   
-                   # if(length(layersAll$layer) == 0){
-                   #   layersAll$layer <- list(NULL)
-                   # }
-                   
                    ## Adding the new obsevations
                    if(! is.null(pbd_data$organised)){
-                     n <- 500
                      nObs <- nrow(BIRDS::obsData(pbd_data$organised))
                      wPlot <- if (nObs > n) sample(nObs, n) else c(1:nObs)
                      labelTxt <- if (nObs > n) "PBD: random subset of 500 obs." else "PBD: all observations"
@@ -112,7 +96,7 @@ map_mod_server <- function(id, layers, pbd_data){
                      layersAll$layer[[insert]] <-  list(geom = PBDpoints, type = "obsData") #lbl = labelTxt
                      names(layersAll$layer) <- names
                    }
-                   print(names(layersAll$layer))
+print(names(layersAll$layer))
                  })
                  
                  #### observer visits ####
@@ -124,9 +108,14 @@ map_mod_server <- function(id, layers, pbd_data){
                    }
                    
                    if(! is.null(pbd_data$visits)){
+                     nVis <- nrow(pbd_data$visits)
+                     wPlot <- if (nVis > n) sample(nVis, n) else c(1:nVis)
+                     labelTxt <- if (nVis > n) "Visits: random subset of 500" else "Visits"
                      insert <- length(layersAll$layer)+1
-                     names <- c(names(layersAll$layer), "Visits")
-                     layersAll$layer[[insert]] <-  list(geom = BIRDS::spatialVisits(pbd_data$visits)$effort, 
+                     names <- c(names(layersAll$layer), labelTxt)
+                     # layersAll$layer[[insert]] <-  list(geom = BIRDS::spatialVisits(pbd_data$visits)$effort, 
+                     #                                    type = "visits")
+                     layersAll$layer[[insert]] <-  list(geom = BIRDS::spatialVisits(pbd_data$visits[wPlot,])$effort, 
                                                         type = "visits")
                      names(layersAll$layer) <- names
                    }
@@ -156,7 +145,7 @@ map_mod_server <- function(id, layers, pbd_data){
                      }
                    }
                     
-                   ## TODO this is unnecessarily being loaded into the map every time some grid is added 
+## TODO this is unnecessarily being loaded into the map every time some grid is added 
                    if(! is.null(layers$layers$others[["Working grid"]])){
                      layersAll$layer[["Working grid"]] <- list(geom = layers$layers$others[["Working grid"]], 
                                                                type = "wg")
@@ -177,7 +166,7 @@ map_mod_server <- function(id, layers, pbd_data){
                   #### add layers to map ####
                  # observeEvent(layersAll$layer, {
                  observe({ 
-                   # print(output$map)
+print(unlist(lapply(layersAll$layer, FUN = function(x) !is.null(x))))
                    proxy <- leafletProxy(mapId="map")
                    # if(!any(unlist(lapply(layersAll$layer, FUN = function(x) !is.null(x))))) return()
                    if(any(unlist(lapply(layersAll$layer, FUN = function(x) !is.null(x))))){
@@ -186,14 +175,18 @@ map_mod_server <- function(id, layers, pbd_data){
                      if(! is.null(groupNamesGrids)){
                        groupNamesGrids <- names(layersAll$layer[! groupNamesGrids])
                      }
+                     groupNamesObs <- unlist(lapply(layersAll$layer, function(x){x$type=="obs"}))
+                     if(! is.null(groupNamesObs)){
+                       groupNamesObs <- names(layersAll$layer[! groupNamesObs])
+                     }
                      
                      proxy %>% 
-                       clearGroup(c("Study area", "Working grid", groupNamesGrids)) %>% 
+                       clearGroup(c("Study area", "Working grid", groupNamesGrids, groupNamesObs)) %>% 
                        clearMarkers() %>%
                        removeLayersControl()
 
                      # if(length(layersAll$layer) > 0){
-                     # TODO unnecesarilly loads ALL the layers everytime something changes... 
+# TODO unnecessarily loads ALL the layers every time something changes... 
                        for(i in 1:length(layersAll$layer)){
                          if(layersAll$layer[[i]]$type == "obsData"){
                            print("Drawing observations to map")
@@ -237,12 +230,13 @@ map_mod_server <- function(id, layers, pbd_data){
                        proxy %>%
                          addLayersControl(overlayGroups = names(layersAll$layer),
                                           options = layersControlOptions(
-                                            collapsed=FALSE, position = "bottomright"))
+                                            collapsed = FALSE, position = "bottomright"))
                    }else{
                      proxy %>% 
                        clearGroup(c("Study area", "Working grid")) %>% 
                        clearMarkers() %>%
-                       removeLayersControl()
+                       removeLayersControl() #%>% 
+                       # fitBounds(-72, 40, -70, 43)
                    } #end if condition
                    
                  })

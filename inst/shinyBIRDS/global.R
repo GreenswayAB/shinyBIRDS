@@ -6,6 +6,7 @@ library(shinyjs)
 library(shinyalert)
 library(shinythemes)
 library(shinyWidgets)
+library(shinydashboard)
 library(leaflet)
 library(leaflet.extras)
 library(DT)
@@ -22,6 +23,8 @@ v <- numeric_version("0.0.1")
 
 w <- simpleWarning("WARNING")
 e <- simpleError("ERROR")
+
+n <- 500 ## max observations in map
 
 source("external/helpers.R")
 

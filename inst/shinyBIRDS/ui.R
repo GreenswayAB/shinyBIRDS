@@ -15,6 +15,7 @@ navbarPage(title=div(img(src="./img/BirdsLogo.png", alt="", style="vertical-alig
                        integrity="sha384-lKuwvrZot6UHsBSfcMvOkWwlCMgc0TaWr+30HWe3a4ltaBwTZhyTEggF5tJv8tbt", 
                        crossorigin="anonymous"),
              useShinyjs(),
+             useShinydashboard(),
              useShinyalert()
              # ###Splash screen
              # tags$div(id="splash",

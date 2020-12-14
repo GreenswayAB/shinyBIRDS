@@ -11,6 +11,7 @@ summary_mod_ui <- function(id){
   tagList(  
     fluidRow(
       column(12,
+             br(),
         h4("Summarise"),
         # materialSwitch("searchYearRng", "Filter years", value = TRUE, status = "primary", right=TRUE),
         selectInput(ns("spillOver"), label = h5(tags$p(strong("Spill visits over neighbour cells"), 
@@ -73,7 +74,7 @@ summary_mod_server <- function(id, pbd, layersFromMap){
                    #Store which grid that is used for summary for it to be used in export. 
                    grid <- layersFromMap$layers$grids[[as.integer(input$gridInSummary)]]
                    
-                   #TODO prevent Warning: Error in overlayBirds.OrganizedBirds: Observations don't overlap any grid cell
+#TODO prevent Warning: Error in overlayBirds.OrganizedBirds: Observations don't overlap any grid cell
                    res$summary <- tryCatch(BIRDS::summariseBirds(pbd$organised, 
                                                  grid = grid, 
                                                  spillOver = switch(input$spillOver != "Not", 
@@ -83,7 +84,8 @@ summary_mod_server <- function(id, pbd, layersFromMap){
                                              print(str(e))
                                              shinyalert::shinyalert(title = "An error occured", text = e$message, type = "error")
                                              return(NULL)})
-                   res$sppList <- unique(pbd$organised$spdf$scientificName)
+                   # res$sppList <- unique(pbd$organised$spdf$scientificName)
+                   res$sppList <- sppList(pbd$organised)
                  })
                  
                  output$summaryUI <- renderUI({

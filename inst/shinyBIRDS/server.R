@@ -14,9 +14,12 @@ shinyServer(function(input, output, session) {
   data_stat <- reactiveValues(data = NULL, name = "visitsData")
   # cleancoord <- reactiveValues(x=NULL, logs=NULL)
   
-  mapLayers <- map_page_server("mapPage", PBD)
+    mapLayers <- map_page_server("mapPage", PBD)
   
-  # updateTabsetPanel(session, "navBar", selected = "map")
+  updateTabsetPanel(session, "navBar", selected = "map")
+  shinyalert::shinyalert(title = "Welcome to shinyBIRDS", 
+                         text = "Start by creating a grid over the study area",
+                         type = "info")
   # Sys.sleep(10)
   # updateTabsetPanel(session, "navBar", selected = "data")
   # removeUI("#splash")
@@ -32,14 +35,9 @@ shinyServer(function(input, output, session) {
   observe({
     if (!is.null (PBD$organised)){
       enable("expVisits")
-      updateTabsetPanel(session, "pbd_output", selected = "org")
-      
-      # orgInfo$msg <- ""
-
+      # updateTabsetPanel(session, "pbd_output", selected = "org")
     } else {
       disable("expVisits")
-
-      # orgInfo$msg <- "There is no SpatialPoints Data Frame. <br/>Maybe coordinate columns or CRS is wrong?"
     }
   })
   
