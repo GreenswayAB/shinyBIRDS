@@ -60,32 +60,45 @@ getExportBirds <- function(sb, dim, tr, var, mtd){
 #' @return
 expDef_mod_ui <- function(id){
   ns <- NS(id)
-  fluidRow(
+  tagList(
+    hr(),
+    fluidRow(
+      column(5,
+        h4("Export definitions"),
+        DT::dataTableOutput(ns("exportDefs"), width = "98%"),
+      ),
+      column(5,
+        h4("Other statistics to export"),
+        DT::dataTableOutput(ns("otherDefs"), width = "98%")
+      ),
+      column(2,
+             box(title=NULL, status="info", width = 12, solidHeader = FALSE,
+                 h4("If spatial:"),
+                 selectInput(inputId = ns("dnlCRS"),
+                             label = h5(tags$p("Coordinate Reference Systems", 
+                                               tags$span("Projection system of the layers. Source EPSG.org"), class="bubble")),
+                             choices = epsg.choices(), #structure(EPSG.code, names=EPSG.name), 
+                             multiple = FALSE, selected = 4326, width = "200px")
+             )
+      ),
+    # ),
+    # fluidRow(
     column(12,
-      h4("Export definitions"),
-      DT::dataTableOutput(ns("exportDefs"), width = "90%"),
-      br(),
-      h4("Other variables to export"),
-      DT::dataTableOutput(ns("otherDefs"), width = "90%"),
-      br(),
-      actionBttn(ns("exportClear"), HTML("&nbsp;Remove"), style = "simple", 
-                 color = "warning", icon = icon("trash-alt"), size="xs"),
-      actionBttn(ns("exportGo"), HTML("&nbsp;View"), style = "simple", 
-                 color = "success", icon = icon("box"), size="xs"),
-      # actionButton(ns("exportClear"), HTML("&nbsp;Remove"), 
-      #              width = "100", icon = icon("trash-alt"), class="btn-warning btn-sm"),
-      # actionButton(ns("exportGo"), HTML("&nbsp;View"), 
-      #              width = "100", icon = icon("box"), class="btn-success btn-sm"),
-      br(),br(),
-      selectInput(inputId = ns("dnlCRS"),
-                  label = h5(tags$p("Coordinate Reference Systems", 
-                                    tags$span("Projection system of the layers. Source EPSG.org"), class="bubble")),
-                  choices = epsg.choices(), #structure(EPSG.code, names=EPSG.name), 
-                  multiple = FALSE, selected = 4326, width = 200),
-      downloadBttn(ns("downloadData"), "Download", style = "simple", 
-                     color = "success", size="xs")
-      # downloadButton(ns("downloadData"), "Download", class="btn-success btn-sm", width = 200)
+        br(),
+        actionBttn(ns("exportClear"), HTML("&nbsp;Remove selected"), style = "simple", 
+                   color = "warning", icon = icon("trash-alt"), size="xs"),
+        # actionBttn(ns("exportGo"), HTML("&nbsp;View"), style = "simple",
+        #            color = "success", icon = icon("box"), size="xs"),
+        br(),br(),
+        # selectInput(inputId = ns("dnlCRS"),
+        #             label = h5(tags$p("Coordinate Reference Systems", 
+        #                               tags$span("Projection system of the layers. Source EPSG.org"), class="bubble")),
+        #             choices = epsg.choices(), #structure(EPSG.code, names=EPSG.name), 
+        #             multiple = FALSE, selected = 4326, width = 200),
+        downloadBttn(ns("downloadData"), "Download", style = "simple", 
+                       color = "success", size="sm")
     )
+  )
   )
   
 }
@@ -94,7 +107,7 @@ expDef_mod_ui <- function(id){
 #'
 #' @param id The \code{input} that refers to the UI.
 #' @param summary A reactive value with the summary data
-#' @param exportData A reacive value with data to export
+#' @param exportData A reactive value with data to export
 #'
 #' @import shiny
 #' @return
@@ -209,24 +222,23 @@ expDef_mod_server <- function(id, summary, exportData){
                    }
                  })
                  
-                 observeEvent(input$exportGo, {
-                   tbl1Sel <- input$exportDefs_rows_selected
-                   tbl2Sel <- input$otherDefs_rows_selected
-
-                   if(! is.null(tbl1Sel)){
-
-                     
-                     res$res <- getExportBirds(summary$summary, 
-                                               dataTables$export[tbl1Sel,1], 
-                                               dataTables$export[tbl1Sel,2],
-                                               dataTables$export[tbl1Sel,3],
-                                               dataTables$export[tbl1Sel,4])
-
-                   }else if(! is.null(tbl2Sel)){
-                     res$res <- other$data[[tbl2Sel]]
-                   }
-                   
-                 })
+                 # ### this is "view"... not neded
+                 # observeEvent(input$exportGo, {
+                 #   tbl1Sel <- input$exportDefs_rows_selected
+                 #   tbl2Sel <- input$otherDefs_rows_selected
+                 # 
+                 #   if(! is.null(tbl1Sel)){
+                 #     res$res <- getExportBirds(summary$summary, 
+                 #                               dataTables$export[tbl1Sel,1], 
+                 #                               dataTables$export[tbl1Sel,2],
+                 #                               dataTables$export[tbl1Sel,3],
+                 #                               dataTables$export[tbl1Sel,4])
+                 # 
+                 #   }else if(! is.null(tbl2Sel)){
+                 #     res$res <- other$data[[tbl2Sel]]
+                 #   }
+                 #   
+                 # })
                  
                  
                  ########### Download
@@ -238,7 +250,10 @@ expDef_mod_server <- function(id, summary, exportData){
                      unlink(dir, recursive = TRUE)
                      dir.create(dir)
                      export<-list()
-                     if(nrow(dataTables$export)>0){
+## TODO add observations and visits to export 
+## pbd_data$organised$spdf
+## BIRDS::spatialVisits(pbd_data$visits[wPlot,])
+                     if(nrow(dataTables$export) > 0){
                        for(i in 1:nrow(dataTables$export)){
                          name <- tolower(paste(dataTables$export[i, 2],
                                                dataTables$export[i, 3],

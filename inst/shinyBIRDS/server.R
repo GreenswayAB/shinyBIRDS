@@ -3,9 +3,10 @@ shinyServer(function(input, output, session) {
   gridR <- reactiveValues(data=NULL)
   csvInfo <- reactiveValues(msg=NULL, wng=NULL)
   epsgInfo <- reactiveValues(msg=NULL, wng=NULL, code=NULL, proj4=NULL)
-
+  
+  readTable <- reactiveValues(data=NULL, preview=NULL)
   PBD <- reactiveValues(data=NULL, organised=NULL, visits = NULL)
-  orgVars<- reactiveValues(sppCol = NULL, idCols = NULL, timeCols = NULL, timeInVisits = NULL, 
+  orgVars <- reactiveValues(sppCol = NULL, idCols = NULL, timeCols = NULL, timeInVisits = NULL, 
                            grid = NULL, presenceCol = NULL, xyCols = NULL, dataCRS = NULL,
                            csvTaxon = NULL, taxonRankCol = NULL, taxonRank = NULL, 
                            simplifySppName = NULL, defined = FALSE)
@@ -13,7 +14,15 @@ shinyServer(function(input, output, session) {
   data_stat <- reactiveValues(data = NULL, name = "visitsData")
   # cleancoord <- reactiveValues(x=NULL, logs=NULL)
   
-  mapLayers <- map_page_server("mapPage", PBD)
+    mapLayers <- map_page_server("mapPage", PBD)
+  
+  updateTabsetPanel(session, "navBar", selected = "map")
+  shinyalert::shinyalert(title = "Welcome to shinyBIRDS", 
+                         text = "Start by creating a grid over the study area",
+                         type = "info")
+  # Sys.sleep(10)
+  # updateTabsetPanel(session, "navBar", selected = "data")
+  # removeUI("#splash")
   
   observe({
     if(! is.null(PBD$data)){
@@ -26,14 +35,9 @@ shinyServer(function(input, output, session) {
   observe({
     if (!is.null (PBD$organised)){
       enable("expVisits")
-      updateTabsetPanel(session, "pbd_output", selected = "org")
-      
-      # orgInfo$msg <- ""
-
+      # updateTabsetPanel(session, "pbd_output", selected = "org")
     } else {
       disable("expVisits")
-
-      # orgInfo$msg <- "There is no SpatialPoints Data Frame. <br/>Maybe coordinate columns or CRS is wrong?"
     }
   })
   
@@ -50,57 +54,6 @@ shinyServer(function(input, output, session) {
   output$csvMessage <- renderUI( div(HTML(csvInfo$wng ), class="message") )
   output$csvInfo    <- renderUI( div(HTML(csvInfo$msg ), class="infotext"))
   
-  #### Search and update CRS, used in defineVisitsUI
-  observeEvent(input$csvCRS, {
-  # observe({
-    req(PBD$data)
-    epsgInfo$msg<-""
-    epsgInfo$wng<-""
-    epsgInfo$code<-NULL
-    epsgInfo$proj4<-NULL
-
-    if(input$csvCRS != ""){
-      searchWeb<-gsub("\ ", "%20", input$csvCRS)
-      getEPSG <- tryCatch(GET(urlEPGS, path=paste0("/?q=", searchWeb, "&format=json")),
-                          error = function(e){
-                            print(e)
-                            #isolate({epsgInfo$code <- input$csvCRS})
-                            return(list("status_code" = 0))}, 
-                          warning = function(w){
-                            print(w)
-                            #isolate({epsgInfo$code <- input$csvCRS})
-                            return(list("status_code" = 0))}
-                          )
-
-      if(getEPSG$status_code == 200) {
-        contEPSG <<- content(getEPSG, encoding = "UTF-8")
-        if (contEPSG$number_result==0){
-          epsgInfo$wng <- "Nothing found"
-        } else {
-          if (contEPSG$number_result==1){
-            epsgInfo$code <- contEPSG$results[[1]]$code
-            epsgInfo$proj4 <- contEPSG$results[[1]]$proj4
-            epsgInfo$msg <- paste0( contEPSG$results[[1]]$name,
-                                   "<br /> EPSG: ",  epsgInfo$code,
-                                   "<br /> Proj4: ", epsgInfo$proj4)
-          } else {
-            epsgList <- paste(unlist(
-                              lapply(contEPSG$results, function(x) paste0(x$name," : ", x$code))),
-                              collapse = ",<br/>")
-            epsgInfo$wng <-paste0("Refine your search, there are ", contEPSG$number_result, " potential matchs.<br/>
-                                 Candidates are: <br/>", epsgList)
-          }
-        }
-      } else {epsgInfo$wng <- "Bad request"}
-    }
-  })
-  
-  output$epsgInfoUI<-renderUI( tagList(
-                                br(),
-                                div(HTML(epsgInfo$msg), class="infotext"),
-                                div(HTML(epsgInfo$wng), class="message")
-                              )
-                            )
 
   #### Clean coordinates
   ### Check how the function works, it removes everything
@@ -115,30 +68,8 @@ shinyServer(function(input, output, session) {
   # output$CleanCoordInfo<-renderUI( div(HTML(cleancoord$logs), class="infotext")  )
   
   
-  ### Update taxonrank, used in defineVisitsUI
-  output$taxonRankUI <- renderUI({
-    req(PBD$data)
-    if (input$csvTaxonEnable) {
-      PBDcolnames <- colnames(PBD$data)
-      tagList(
-        selectInput("csvTaxon", label = tooltipHTML("Taxon rank column",
-                                                    "The name of the column containing the taxonomic rank for 
-                                                    the observation. That is the minimum taxonomic identification 
-                                                    level"), 
-                    choices = PBDcolnames, 
-                    selected = ifelse("taxonrank" %in% PBDcolnames, "taxonrank", PBDcolnames[1]) ),
-        # pickerInput("taxonRankVal", label = "Taxon rank to keep", choices = stdTaxonRank,
-        #             selected = stdTaxonRank[1],
-        #             multiple = TRUE,  options = list(`actions-box` = TRUE))
-        selectInput("taxonRankVal", label = "Taxon rank to keep", choices = stdTaxonRank,
-                    selected = stdTaxonRank[1], multiple = TRUE)
-      )
-    } else {
-      return()
-    }  
-  })
   
-  ########################################### DATA TAB #############################
+  ########################################### Data Tab #############################
   
   ### load data ####
   
@@ -147,36 +78,72 @@ shinyServer(function(input, output, session) {
     loadDataUI()
   })
   
+  ### observe input file ###
+  observe({
+  # observeEvent(input$csvFile$datapath,{
+    if(is.null(input$csvFile$datapath)) return()
+    file <- input$csvFile$datapath
+    readTable$preview <- NULL
+
+    ##### TODO issue#6 is too slow to upload a file to internet, maybe add possibility to get from url
+    preTable <- tryCatch(fread(file=file, #getcsv, 
+                               stringsAsFactors = FALSE, encoding = ifelse(input$csvUTF,"UTF-8","unknown"), 
+                               header = input$csvHeader, sep = input$csvSep, 
+                               quote = input$csvQuote, na.strings = "", data.table = FALSE, fill = TRUE), 
+                         error = function(e){
+                           shinyalert::shinyalert(title = "An error occured", text = e$message, type = "error")
+                           return(NULL)}, 
+                         warning = function(w){
+                           return(NULL)})
+    
+    readTable$data <- preTable
+    
+    if(is.data.frame(preTable)){
+      if(nrow(preTable) > 5){
+        preTable <- preTable[1:5, ,drop = FALSE] #,drop = FALSE
+      }
+
+      if (length(colnames(preTable)) > 1) {
+      colnames(preTable) <- iconv(colnames(preTable), 
+                                  from = (if(input$csvUTF) "UTF-8" else ""), sub = "byte")
+      colnames(preTable) <- sapply(colnames(preTable), 
+                                   function(x){if(nchar(x) > 25) paste0(substr(x,1,25),"...") else x })
+      }
+      
+    }else{
+      preTable <- "No valid data for preview"
+    }
+
+    readTable$preview <- preTable
+  })
+
+  output$TablePreview <- DT::renderDataTable({
+    if (is.null(readTable$preview)) return()
+    if (!is.data.frame(readTable$preview)){
+      preTable <- data.frame("Try changing the separator")
+      colnames(preTable) <- c("No valid data for preview")
+    } else {
+      preTable <- readTable$preview
+    }
+    
+    datatable(preTable, rownames = FALSE, 
+              options = list(dom = "t", 
+                             scrollX = TRUE, 
+                             scrollY = "30vh"))
+  })
+    
   #When ok button clicked in modal
   observeEvent(input$okLoadDataUI, {
-    
     okCSV <- FALSE
-    
-    ##### TODO is too slow to upload a file to internet, maybe add possibility to get from url
-    PBDin <- tryCatch({fread(file=input$csvFile$datapath, #getcsv, 
-                             stringsAsFactors = FALSE, encoding = ifelse(input$csvUTF,"UTF-8","unknown"), 
-                             header = input$csvHeader, sep = input$csvSep, 
-                             quote = input$csvQuote, na.strings = "", data.table = FALSE)
-    }, error = function(e){
-      shinyalert::shinyalert(title = "An error occured", text = e$message, type = "error")
-      return(NULL)
-    })
+    PBDin <- readTable$data
     
     if (class(PBDin)=="data.frame" && length(colnames(PBDin)) > 1) {
-      okCSV<-TRUE
+      okCSV <- TRUE
       # inFileR$newCSV <- FALSE
     }  
     
     if(okCSV){
-      
       colnames(PBDin) <- tolower(colnames(PBDin))
-      
-      # csvInfo$wng <- ""
-      # csvInfo$msg <- paste0("The input file consist of ", length(PBDcolnames),
-      # " columns and ", nrow(PBDin), " observations.")
-      
-      
-      
       # presenceCol=NULL
       
       
@@ -206,6 +173,12 @@ shinyServer(function(input, output, session) {
       orgVars$simplifySppName <- NULL
       orgVars$csvTaxon <- NULL
       orgVars$defined <- FALSE
+      
+      readTable$preview <- NULL
+      readTable$data <- NULL
+      # is it ok to reload a server?
+      # mapLayers <- map_page_server("mapPage", PBD)
+      
     } 
     
     removeModal()
@@ -213,44 +186,9 @@ shinyServer(function(input, output, session) {
   
   #When cancel button clicked in modal
   observeEvent(input$cancelLoadDataUI, {
+    readTable$preview <- NULL
+    readTable$data <- NULL
     removeModal()
-  })
-  
-  
-  ### observe input file ###
-  observe({
-    file <- input$csvFile$datapath
-    
-    preTable <- tryCatch(fread(file=file, #getcsv, 
-                               stringsAsFactors = FALSE, encoding = ifelse(input$csvUTF,"UTF-8","unknown"), 
-                               header = input$csvHeader, sep = input$csvSep, 
-                               quote = input$csvQuote, na.strings = "", data.table = FALSE, fill = TRUE), 
-                         error = function(e){
-                           return(NULL)}, 
-                         warning = function(w){
-                           return(NULL)})
-    
-    if(is.data.frame(preTable)){
-      
-      if(nrow(preTable)>5){
-        preTable <- preTable[1:5, ,drop = FALSE]
-      }
-      
-      colnames(preTable) <- iconv(colnames(preTable), from = (if(input$csvUTF) "UTF-8" else ""), sub = "byte")
-      colnames(preTable) <- 
-        sapply(colnames(preTable), function(x){if(nchar(x) > 25)paste0(substr(x,1,25),"...") else x })
-    }else{
-      
-      preTable <- data.frame("No valid data for preview")
-      
-      colnames(preTable) <- c("Result")
-    }
-    
-    output$TablePreview <- DT::renderDataTable(datatable(preTable, rownames = FALSE, 
-                                                         options = list(dom = "t", scrollX = TRUE, 
-                                                                        scrollY = "20vh")))
-    
-    
   })
   
   output$TablePBD <- DT::renderDataTable({
@@ -271,30 +209,87 @@ shinyServer(function(input, output, session) {
     )
   }, server = TRUE) #end render DataTable
   
-  output$TablePBDOrg <- DT::renderDataTable({
-    req(PBD$organised)
-    
-    table <- BIRDS::obsData(PBD$organised)
-    table <- as.data.frame(table, row.names = c(1:nrow(table)))
-    
-    datatable(table, class = 'cell-border stripe',
-              caption = HTML("The table below shows the data organised by visits."), 
-              autoHideNavigation = TRUE,
-              rownames = FALSE,
-              options = list(
-                dom = 'tp',
-                pageLength = 15,
-                scrollX=TRUE)
-              #lengthMenu = c(10, 25, 50, 100))
-    )
-  }, server = TRUE) #end render DataTable
-  
-  
-  ### Define visits
+  ### Define visits ####
   
   #When button clicked - show modal
   observeEvent(input$defVisits, {
     defineVisitsUI(colnames(PBD$data), mapLayers$layers$grids)
+  })
+  
+  #### Search and update CRS, used in defineVisitsUI
+  observeEvent(input$csvCRS, {
+    # observe({
+    req(PBD$data)
+    epsgInfo$msg<-""
+    epsgInfo$wng<-""
+    epsgInfo$code<-NULL
+    epsgInfo$proj4<-NULL
+    
+    if(input$csvCRS != ""){
+      searchWeb<-gsub("\ ", "%20", input$csvCRS)
+      getEPSG <- tryCatch(GET(urlEPGS, path=paste0("/?q=", searchWeb, "&format=json")),
+                          error = function(e){
+                            print(e)
+                            #isolate({epsgInfo$code <- input$csvCRS})
+                            return(list("status_code" = 0))}, 
+                          warning = function(w){
+                            print(w)
+                            #isolate({epsgInfo$code <- input$csvCRS})
+                            return(list("status_code" = 0))}
+      )
+      
+      if(getEPSG$status_code == 200) {
+        contEPSG <<- content(getEPSG, encoding = "UTF-8")
+        if (contEPSG$number_result==0){
+          epsgInfo$wng <- "Nothing found"
+        } else {
+          if (contEPSG$number_result==1){
+            epsgInfo$code <- contEPSG$results[[1]]$code
+            epsgInfo$proj4 <- contEPSG$results[[1]]$proj4
+            epsgInfo$msg <- paste0( contEPSG$results[[1]]$name,
+                                    "<br /> EPSG: ",  epsgInfo$code,
+                                    "<br /> Proj4: ", epsgInfo$proj4)
+          } else {
+            epsgList <- paste(unlist(
+              lapply(contEPSG$results, function(x) paste0(x$name," : ", x$code))),
+              collapse = ",<br/>")
+            epsgInfo$wng <-paste0("Refine your search, there are ", contEPSG$number_result, " potential matchs.<br/>
+                                 Candidates are: <br/>", epsgList)
+          }
+        }
+      } else {epsgInfo$wng <- "Bad request"}
+    }
+  })
+  
+  output$epsgInfoUI<-renderUI( 
+    tagList(
+      br(),
+      div(HTML(epsgInfo$msg), class="infotext"),
+      div(HTML(epsgInfo$wng), class="message")
+    )
+  )
+  
+  ### Update taxonrank, used in defineVisitsUI
+  output$taxonRankUI <- renderUI({
+    req(PBD$data)
+    if (input$csvTaxonEnable) {
+      PBDcolnames <- colnames(PBD$data)
+      tagList(
+        selectInput("csvTaxon", label = tooltipHTML("Taxon rank column",
+                                                    "The name of the column containing the taxonomic rank for 
+                                                    the observation. That is the minimum taxonomic identification 
+                                                    level"), 
+                    choices = PBDcolnames, 
+                    selected = ifelse("taxonrank" %in% PBDcolnames, "taxonrank", PBDcolnames[1]) ),
+        # pickerInput("taxonRankVal", label = "Taxon rank to keep", choices = stdTaxonRank,
+        #             selected = stdTaxonRank[1],
+        #             multiple = TRUE,  options = list(`actions-box` = TRUE))
+        selectInput("taxonRankVal", label = "Taxon rank to keep", choices = stdTaxonRank,
+                    selected = stdTaxonRank[1], multiple = TRUE)
+      )
+    } else {
+      return()
+    }  
   })
   
   #When ok button clicked in modal
@@ -336,7 +331,7 @@ shinyServer(function(input, output, session) {
     removeModal()
   })
   
-  #When cancel button klicked in modal
+  #When cancel button clicked in modal
   observeEvent(input$cancelDefineVisitsUI, {
     removeModal()
   })
@@ -380,10 +375,32 @@ shinyServer(function(input, output, session) {
       
       #str(PBD$organised)
       setProgress(.8)
+      # updateTabsetPanel(session, "pbd_output", selected = "org")
+      # updateTabsetPanel(session, "navBar", selected = "map")
     })
    
   })
   
+  output$TablePBDOrg <- DT::renderDataTable({
+    req(PBD$organised)
+    
+    table <- BIRDS::obsData(PBD$organised)
+    table <- as.data.frame(table, row.names = c(1:nrow(table)))
+    
+    datatable(table, class = 'cell-border stripe',
+              caption = HTML("The table below shows the data organised by visits."), 
+              autoHideNavigation = TRUE,
+              rownames = FALSE,
+              options = list(
+                dom = 'tp',
+                pageLength = 15,
+                scrollX=TRUE)
+              #lengthMenu = c(10, 25, 50, 100))
+    )
+  }, server = TRUE) #end render DataTable
+  
+  
+  ###### Explore #####
   ## Explore the visits, before summarising
   observeEvent(input$expVisits, {
     req(PBD$organised)
@@ -411,7 +428,7 @@ shinyServer(function(input, output, session) {
       
       # str(data_stat$data)
       # str(PBD$visits)
-      setProgress(.1)
+      setProgress(.9)
     })
   })
   
@@ -426,15 +443,9 @@ shinyServer(function(input, output, session) {
     })
   })
   
-  #### Summarise
-  # observe({print(input$spillOver)})
   
-  shinyBIRDS::summary_page_server("summaryPage", PBD, mapLayers)
 
-  
-  
-  
-  ### removeObs()
+  ### remove Obs #####
   #Enable or disable the button based on condition
   observe({
     if(is.null(PBD$visits)){
@@ -489,12 +500,13 @@ shinyServer(function(input, output, session) {
     
   })
   
-  #When cancel button klicked in modal
+  # When cancel button klicked in modal
   observeEvent(input$cancelRemoveObsUI, {
     removeModal()
   })
   
   
-  ### obsIndex()
+  #### Summarise ######
+  shinyBIRDS::summary_page_server("summaryPage", PBD, mapLayers)
   
 }) # end server function

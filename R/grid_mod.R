@@ -11,9 +11,12 @@ grid_shp <- function(session){
   
   tagList(
     h4("Upload a .shp file for the grid", class="panel-title"),
-    fileInput(ns("shapeFile"), label = h5(tags$p("Select files", tags$span("Include all files related to the .shp file (e.g. '.dbf', '.sbn', '.sbx', '.shx', '.prj')"), class="bubble")),
-              accept=c('.shp','.dbf','.sbn','.sbx','.shx',".prj"), multiple=TRUE, width = 400),
-    htmlOutput(ns("shapeMessage"), inline=FALSE)
+    # column(12,
+      br(),
+      fileInput(ns("shapeFile"), label = h5(tags$p("Select files", tags$span("Include all files related to the .shp file (e.g. '.dbf', '.sbn', '.sbx', '.shx', '.prj')"), class="bubble")),
+                accept=c('.shp','.dbf','.sbn','.sbx','.shx',".prj"), multiple=TRUE, width = 400),
+      htmlOutput(ns("shapeMessage"), inline=FALSE)
+    # )
   )
   
 }
@@ -28,33 +31,33 @@ grid_draw <- function(session){
   
   tagList(
     h4("Make a grid from the data extent \nor draw your own grid", class="panel-title"),
-    fluidRow(
+    br(),
+    # fluidRow(
       ### From data extent
-      column(width=6,
-             # br(),
+    div(style="display: inline-block; vertical-align:top; width: 200;",
+      # column(width=6,
              numericInput(inputId = ns("gridSize"),
-                          label = h5(tags$p("Grid cell width (Km)",tags$span("The polygon must be wider than grid cells"), class="bubble")),
-                          value=1000, min = 1, max = 500, width = 250),
-             checkboxInput(ns("buff"), "Inclusive", value = FALSE)
-      ),
-      column(width=6, 
-             # checkboxInput(ns("buff"), "Inclusive", value = FALSE),
+                          # label = h5(tags$p("Grid cell width (Km)",tags$span("The grid cells must be narrower than the working area"), class="bubble")),
+                          label = "Grid cell width (Km)",
+                          value = 1000, min = 1, max = 50000, width = 150),
+             checkboxInput(ns("buff"), "Inclusive", value = FALSE, width = 150)
+    ),
+    div(style="display: inline-block; vertical-align:top; width: 200;",
+      # column(width=6, 
              selectInput(ns("gridType"), "Type", 
                          list("Square" = "sq", "Hexagon grid" = "hx", 
                               "Equal size grid" = 
                                 list("Hexagon" = "hexagon", 
                                      "Diamond" = "diamond", 
                                      "Triangle" = "triangle")), 
-                         selected = "Hexagon"),
-             # actionButton(ns("goExtent"), HTML("&nbsp;Get extent"), width = "90", icon=icon("expand"), class="btn-info btn-sm"),
-             actionBttn(ns("goExtent"), HTML("&nbsp;Get extent"), style = "simple", color = "royal", icon = icon("expand"), size="xs"),
-             # actionButton(ns("goGrid"), HTML("&nbsp;Make grid"), width = "90", icon=icon("th"), class="btn-success btn-sm")
-             actionBttn(ns("goGrid"), HTML("&nbsp;Make grid"), style = "simple", color = "success", icon = icon("th"), size="xs")
-      )
-    ),# end fluid row
-    #htmlOutput(ns("MessageWrPol"), inline=FALSE)
+                         selected = "Hexagon", width = 150, selectize = FALSE),
+             actionBttn(ns("goExtent"), HTML("&nbsp;Get extent"), style = "simple", 
+                        color = "royal", icon = icon("expand"), size="xs"),
+             actionBttn(ns("goGrid"), HTML("&nbsp;Make grid"), style = "simple", 
+                        color = "success", icon = icon("th"), size="xs")
+    )
+    # )# end fluid row
   )
-  
 }
 
 ## Functions
@@ -155,26 +158,28 @@ grid_mod_ui <- function(id){
   ns <- NS(id)
   tagList(
     fluidRow(
+      column(12,
       ## radio buttons with options
       prettyRadioButtons(ns("gridMethod"), label = "Make your grid by: ", 
                          choiceNames = c("loading a .shp file", 
                                          "drawing your polygon"),
-                         choiceValues = list(1,2)),
-      fluidRow(
+                         choiceValues = list(1,2))
+      )
+    ),
+    fluidRow(
         column(12,
                uiOutput(ns("gridMethodUI"))
         )
-      ),
-      br(),
-      textInput(ns("gridName"), "Name for new grid:"),
-      actionBttn(ns("clearButton"), HTML("&nbsp;Clear grid"), style = "simple", 
+    ),
+    br(),
+    fluidRow(
+      column(12,
+             textInput(ns("gridName"), "Name for new grid:"),
+             actionBttn(ns("clearButton"), HTML("&nbsp;Clear grid"), style = "simple", 
                  color = "warning", icon = icon("trash"), size="xs"),
-      actionBttn(ns("addGrid"), HTML("&nbsp;Add grid"), style = "simple", 
+             actionBttn(ns("addGrid"), HTML("&nbsp;Add grid"), style = "simple", 
                  color = "success", icon = icon("check"), size="xs")
-      # actionButton(ns("clearButton"), HTML("&nbsp;Clear grid"), 
-      #              width = "100", icon = icon("trash"), class="btn-warning btn-sm"), 
-      # actionButton(ns("addGrid"), HTML("&nbsp; Add grid"), 
-      #              width = "100", icon = icon("check"), class="btn-success btn-sm")
+      )
     )
   )
   
@@ -215,24 +220,6 @@ grid_mod_server <- function(id, pbd, polygonDraw){
                    } else if(input$gridMethod == 2){
                      grid_draw(session)
                    }
-                 })
-                 
-                 observeEvent(input$clearButton, {
-                   layerList$layers$others <- list()
-                 })
-                 
-                 observeEvent(input$addGrid, {
-                   if(! is.null(layerList$layers$others[["Working grid"]])){
-                     name <- input$gridName
-                     
-                     layernames <- names(layerList$layers$grids)
-                     
-                     layerList$layers$grids <- append(layerList$layers$grids, 
-                                                      layerList$layers$others[["Working grid"]])
-                     
-                     names(layerList$layers$grids) <- c(layernames, name)
-                   }
-                   
                  })
                  
                  observeEvent(polygonDraw$polygon, {
@@ -300,7 +287,28 @@ grid_mod_server <- function(id, pbd, polygonDraw){
                      layerList$layers$others[["Study area"]] <- SpP
                        
                    }
-
+                 })
+                 
+                 observeEvent(input$clearButton, {
+                   layerList$layers$others <- list()
+                 })
+                 
+                 observeEvent(input$addGrid, {
+                   if(! is.null(layerList$layers$others[["Working grid"]])){
+                     name <- input$gridName
+                     
+                     layernames <- names(layerList$layers$grids)
+                     
+                     layerList$layers$grids <- append(layerList$layers$grids, 
+                                                      layerList$layers$others[["Working grid"]])
+                     
+                     names(layerList$layers$grids) <- c(layernames, name)
+                     
+                     ## Remove working grid
+                     updateTextInput("gridName",  value = "", session = session )
+                     layerList$layers$others[["Working grid"]] <- NULL
+                   }
+                   
                  })
        
                  return(layerList)

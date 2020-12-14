@@ -116,39 +116,53 @@ expParam_mod_ui <- function(id){
 
   fluidRow(
     column(12,
-      fluidRow(
-               h4("Export parameters"),
-               column(3, selectInput(inputId = ns("expDimension"),
-                                     label = "Dimension",          
-                                     choices = c(structure(DimeCode(), names=Dimension())),
-                                     multiple = FALSE, width = "200")),
-               column(3, selectInput(inputId = ns("expTimeRes"),
-                                     label = "Temporal Resolution",          
-                                     choices = c(structure(TimeResCode(), names=TimeRes())),
-                                     multiple = FALSE, width = "200")),
-               column(3, selectInput(inputId = ns("expVariable"),
-                                     label = "Variable",          
-                                     choices = c(structure(VarCode(), names=Variable())),
-                                     multiple = FALSE, width = "200")),
-               column(3, selectInput(inputId = ns("expMethod"),
-                                     label = "Summary method",          
-                                     choices = c(structure(MethCode(), names=Method())),
-                                     multiple = FALSE, width = "200"))
-              ),
-       fluidRow( 
-         htmlOutput(ns("exportMsgUI"), inline = FALSE),
-         actionBttn(ns("exportAdd"), HTML("&nbsp;Add definition"), style = "simple", 
+    #   fluidRow(
+       br(),
+        h4("Export parameters"),
+        div(style="display: inline-block; vertical-align:top; width: 250px;",
+            selectInput(inputId = ns("expDimension"),
+                        label = "Dimension",          
+                        choices = c(structure(DimeCode(), names=Dimension())),
+                        multiple = FALSE, width = "200px")),
+        div(style="display: inline-block; vertical-align:top; width: 250px;",
+           selectInput(inputId = ns("expTimeRes"),
+                       label = "Temporal Resolution",          
+                       choices = c(structure(TimeResCode(), names=TimeRes())),
+                       multiple = FALSE, width = "200px")),
+       div(style="display: inline-block; vertical-align:top; width: 250px;",
+       selectInput(inputId = ns("expVariable"),
+                   label = "Variable",          
+                   choices = c(structure(VarCode(), names=Variable())),
+                   multiple = FALSE, width = "200px")),
+       div(style="display: inline-block; vertical-align:top; width: 250px;",
+           selectInput(inputId = ns("expMethod"),
+                       label = "Summary method",          
+                       choices = c(structure(MethCode(), names=Method())),
+                       multiple = FALSE, width = "200px")),
+       # div(style="display: inline-block; vertical-align:top; width: 250px;",
+       # box(title=NULL, status="info", width = 12, solidHeader = FALSE,
+       #     h4("If spatial:"),
+       #     selectInput(inputId = ns("dnlCRS"),
+       #               label = h5(tags$p("Coordinate Reference Systems", 
+       #                                 tags$span("Projection system of the layers. Source EPSG.org"), class="bubble")),
+       #               choices = epsg.choices(), #structure(EPSG.code, names=EPSG.name), 
+       #               multiple = FALSE, selected = 4326, width = "200px"),
+       # ))
+      # ),
+      # fluidRow( 
+        htmlOutput(ns("exportMsgUI"), inline = FALSE),
+        actionBttn(ns("exportAdd"), HTML("&nbsp;Add definition"), style = "simple", 
                    color = "success", icon = icon("box-open"), size="xs"),
          br(),br(),
-         h4("Other results to export"),
+         h4("Other statistics to export"),
          actionBttn(ns("getObsIndex"), HTML("&nbsp;Add observation index"), style = "simple", 
                    color = "success", icon = icon("indent"), size="xs"),
          actionBttn(ns("getComMatrix"), HTML("&nbsp;Add community matrix"), style = "simple", 
                    color = "success", icon = icon("indent"), size="xs"),
          actionBttn(ns("getIgnorance"), HTML("&nbsp;Add ignorance score"), style = "simple", 
                    color = "success", icon = icon("indent"), size="xs")
-      )
-    )
+      # )
+     )
   )
 }
 
@@ -216,13 +230,15 @@ expParam_mod_server <- function(id, summary){
                    validExport$msg<-msg
                  })
                  
-                 output$exportMsgUI <- renderUI(
+                 output$exportMsgUI <- renderUI({
+                   if (validExport$state) return()
                    tagList(
                      br(),
+                     # HTML(validExport$msg),
                      div(HTML(validExport$msg), class="message"),
                      br()
                    )
-                 )
+                 })
                  
                  ##Only export the parameters for this type, since it can result in a lot of data (grids) if 
                  ## all should be exported calculated. It is already checked if it should work. 
@@ -237,13 +253,13 @@ expParam_mod_server <- function(id, summary){
                      export$update <- export$update + 1
                  })
                  
-                 ####### MODAL ########
-                 #When button clicked - show modal
+                 ####### modal ########
+                 #### When button clicked - show modal ####
                  observeEvent(input$getObsIndex, {
                    obsIndexUI(session, summary$sppList)
                  })
                  
-                 #When ok button klicked in modal
+                 ### ok button klicked in modal ####
                  observeEvent(input$okObsIndexUI, {
 
                    bools <- c("visits", "fs.rm", "norm") %in% input$oiBools
@@ -277,7 +293,7 @@ expParam_mod_server <- function(id, summary){
                    removeModal()
                  })
                  
-                 ##community matrix
+                 ## community matrix ####
                  
                  #When button clicked - show modal
                  observeEvent(input$getComMatrix, {
@@ -307,7 +323,7 @@ expParam_mod_server <- function(id, summary){
                    removeModal()
                  })
                  
-                 ##expose ignorance
+                 ## expose ignorance ####
                  
                  #When button clicked - show modal
                  observeEvent(input$getIgnorance, {

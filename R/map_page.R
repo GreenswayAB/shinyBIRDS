@@ -12,15 +12,6 @@ map_page_ui <- function(id) {
   
   fluidRow(
     shinyalert::useShinyalert(),
-    # column(8, map_mod_ui(ns("map_part"))),
-    # column(4, 
-    #        fluidRow(
-    #          h3("Grid layers"),
-    #          grid_mod_ui(ns("gridding")),
-    #          br(),br(),
-    #          layer_mod_ui(ns("layers"))
-    #          )
-    #        )
     map_mod_ui(ns("map_part")),
     absolutePanel(id = "grid.controls", class = "panel panel-default", fixed = TRUE,
                   draggable = TRUE, top = 80, left = "auto", right = 20, bottom = "auto",
@@ -73,6 +64,15 @@ map_page_server <- function(id, pbd_data){
                    drawn$polygon <- d()
                  })
                  
+                 # ### clean the layer when new data is uploaded
+                 # observeEvent( pbd_data$data , {
+                 #   proxy <- leafletProxy(mapId="map")
+                 #   proxy %>% 
+                 #     clearBounds() %>% 
+                 #     clearShapes() %>% 
+                 #     clearMarkers() %>%
+                 #     removeLayersControl()
+                 # })
                  return(layerList)
                  
                })
