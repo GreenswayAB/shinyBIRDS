@@ -23,7 +23,7 @@ vignettes/*.pdf
 *.utf8.md
 *.knit.md
 # Shiny token, see https://shiny.rstudio.com/articles/shinyapps.html
-R/shinyBIRDS/rsconnect/
+inst/shinyBIRDS/rsconnect
 shinyBIRDS.Rproj
 .Rproj.user
 .idea/
