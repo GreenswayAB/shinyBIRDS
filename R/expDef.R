@@ -29,7 +29,7 @@ getExportBirds <- function(sb, dim, tr, var, mtd){
     dim
   }
   
-  tr <- if(tr == ""){
+  tr <- if(tr == "none"){
     NULL
   }else{
     tr
@@ -90,11 +90,6 @@ expDef_mod_ui <- function(id){
         # actionBttn(ns("exportGo"), HTML("&nbsp;View"), style = "simple",
         #            color = "success", icon = icon("box"), size="xs"),
         br(),br(),
-        # selectInput(inputId = ns("dnlCRS"),
-        #             label = h5(tags$p("Coordinate Reference Systems", 
-        #                               tags$span("Projection system of the layers. Source EPSG.org"), class="bubble")),
-        #             choices = epsg.choices(), #structure(EPSG.code, names=EPSG.name), 
-        #             multiple = FALSE, selected = 4326, width = 200),
         downloadBttn(ns("downloadData"), "Download", style = "simple", 
                        color = "success", size="sm")
     )
@@ -277,7 +272,7 @@ expDef_mod_server <- function(id, summary, exportData){
                      
                      for(v in export){
                        if(any(class(v[[1]]) == "SpatialPolygonsDataFrame")){
-                         sf<-sf::st_as_sf(v[[1]])
+                         sf <- sf::st_as_sf(v[[1]])
                          sf <- sf::st_transform(sf, as.integer(input$dnlCRS))
                          sf::st_write(obj= sf, 
                                       dsn = paste0(dir,"/spatial.gpkg"), 

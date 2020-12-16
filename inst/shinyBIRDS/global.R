@@ -1,6 +1,8 @@
 # library(remotes)
 # remotes::install_github('Greensway/BIRDS')
+# remotes::install_github('Greensway/shinyBIRDS')
 library(BIRDS)
+library(shinyBIRDS)
 library(shiny)
 library(shinyjs)
 library(shinyalert)
@@ -13,7 +15,10 @@ library(DT)
 library(data.table)
 library(esquisse)
 library(httr)
-
+# if(!("dggridR" %in% rownames(installed.packages()))){
+#   remotes::install_github("r-barnes/dggridR")
+# }
+library(dggridR)
 
 options(stringsAsFactors = FALSE)
 

@@ -19,7 +19,7 @@ shinyServer(function(input, output, session) {
   updateTabsetPanel(session, "navBar", selected = "map")
   shinyalert::shinyalert(title = "Welcome to shinyBIRDS", 
                          text = "Start by creating a grid over the study area",
-                         type = "info")
+                         type = "info", closeOnEsc = TRUE, closeOnClickOutside = TRUE)
   # Sys.sleep(10)
   # updateTabsetPanel(session, "navBar", selected = "data")
   # removeUI("#splash")

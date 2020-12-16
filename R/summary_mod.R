@@ -27,8 +27,10 @@ summary_mod_ui <- function(id){
     ),
     br(),
     fluidRow(
-      htmlOutput(ns("summaryUI"))
-    )  
+      column(12,
+              htmlOutput(ns("summaryUI"))
+              )  
+    )
   )
   
   
@@ -73,19 +75,30 @@ summary_mod_server <- function(id, pbd, layersFromMap){
 
                    #Store which grid that is used for summary for it to be used in export. 
                    grid <- layersFromMap$layers$grids[[as.integer(input$gridInSummary)]]
-                   
-#TODO prevent Warning: Error in overlayBirds.OrganizedBirds: Observations don't overlap any grid cell
-                   res$summary <- tryCatch(BIRDS::summariseBirds(pbd$organised, 
-                                                 grid = grid, 
-                                                 spillOver = switch(input$spillOver != "Not", 
-                                                                    tolower(input$spillOver), 
-                                                                    NULL)),
-                                           error = function(e){
-                                             print(str(e))
-                                             shinyalert::shinyalert(title = "An error occured", text = e$message, type = "error")
-                                             return(NULL)})
-                   # res$sppList <- unique(pbd$organised$spdf$scientificName)
-                   res$sppList <- sppList(pbd$organised)
+                     withProgress( message = "Summarizing the observations" , {
+                       setProgress(.2)
+                       
+                       res$summary <- tryCatch(BIRDS::summariseBirds(pbd$organised, 
+                                                     grid = grid, 
+                                                     spillOver = switch(input$spillOver != "Not", 
+                                                                        tolower(input$spillOver), 
+                                                                        NULL)),
+                                               error = function(e){
+                                                 print(str(e))
+                                                 shinyalert::shinyalert(title = "An error occured", 
+                                                                        text = e$message, 
+                                                                        type = "error")
+                                                 return(NULL)})
+                                               # warning = function(w){
+                                               #   print(str(w))
+                                               #   shinyalert::shinyalert(title = "Warning", 
+                                               #                          text = w$message, 
+                                               #                          type = "info")
+                                               #   })
+                       # res$sppList <- unique(pbd$organised$spdf$scientificName)
+                       setProgress(.8)
+                       res$sppList <- listSpecies(pbd$organised)
+                     })
                  })
                  
                  output$summaryUI <- renderUI({

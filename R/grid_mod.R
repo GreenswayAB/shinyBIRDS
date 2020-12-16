@@ -28,6 +28,19 @@ grid_shp <- function(session){
 #' @import shiny
 grid_draw <- function(session){
   ns <- session$ns
+  gridchoice <- if("dggridR" %in% rownames(installed.packages())){
+    list("Egual area grid"= 
+           list("Square" = "sq",
+                "Hexagon" = "hx"), 
+         "Discrete global grid" = 
+           list("Hexagon" = "hexagon", 
+                "Diamond" = "diamond", 
+                "Triangle" = "triangle")) 
+  }else{
+    list("Egual area grid"= 
+           list("Square" = "sq",
+                "Hexagon" = "hx"))
+  }
   
   tagList(
     h4("Make a grid from the data extent \nor draw your own grid", class="panel-title"),
@@ -45,11 +58,7 @@ grid_draw <- function(session){
     div(style="display: inline-block; vertical-align:top; width: 200;",
       # column(width=6, 
              selectInput(ns("gridType"), "Type", 
-                         list("Square" = "sq", "Hexagon grid" = "hx", 
-                              "Equal size grid" = 
-                                list("Hexagon" = "hexagon", 
-                                     "Diamond" = "diamond", 
-                                     "Triangle" = "triangle")), 
+                         choices = gridchoice, 
                          selected = "Hexagon", width = 150, selectize = FALSE),
              actionBttn(ns("goExtent"), HTML("&nbsp;Get extent"), style = "simple", 
                         color = "royal", icon = icon("expand"), size="xs"),
@@ -82,7 +91,7 @@ getGridFromShp <- function(shapefiles){
   
   #Reading the grid
   grid <- rgdal::readOGR(dsn=getshp)
-  grid <- sp::spTransform(grid, CRSobj = sp::CRS("+init=epsg:4326"))
+  grid <- spTransform(grid, CRSobj = CRS("+init=epsg:4326"))
   
   if(! class(grid) == "SpatialPolygonsDataFrame"){
     stop("The loaded shape needs to be a polygon layer")
@@ -98,10 +107,8 @@ getGridFromShp <- function(shapefiles){
                       bboxMat[1,2], bboxMat[2,1],
                       bboxMat[1,1], bboxMat[2,1]), ncol = 2, nrow = 5, byrow = TRUE)
 
-  SpP <- sp::SpatialPolygons(list(
-    sp::Polygons(list(sp::Polygon(polygonSA)), 1)
-  ))
-  sp::proj4string(SpP) <- sp::CRS("+init=epsg:4326")
+  SpP <- SpatialPolygons(list(Polygons(list(Polygon(polygonSA)), 1) ))
+  proj4string(SpP) <- CRS("+init=epsg:4326")
 
   return(list("Working grid" = grid,
               "Study area" = SpP))
@@ -113,38 +120,35 @@ getGridFromShp <- function(shapefiles){
 #' @param gridsize The size of the grid in km
 #' @param type The type of the grid
 #' @param buffer Boolean if the grid should be bigger than the area
+#' @import BIRDS makeGrid makeDggrid
 #' @return
 getGridFromSettings <- function(area, gridsize, type, buffer){
   
-  gridSizeDg<-gridsize/111 #because on average 1 degree is 111 km
-  StudyBuff<-rgeos::gBuffer(area, width = ifelse(buffer, gridSizeDg, 0))
-
-  sp::proj4string(area)<-sp::CRS("+init=epsg:4326")
+  gridSizeDg <- gridsize/111 #because on average 1 degree is 111 km
   
-  if(type == "hx"){
-    points <- sp::spsample(StudyBuff, type = "hexagonal", offset = c(0, 0), cellsize = gridSizeDg)
-    sp::proj4string(points) <- sp::CRS("+init=epsg:4326")
-    grid <- sp::HexPoints2SpatialPolygons(points)
-    
-    return(grid)
-    
-  }else if(type == "sq"){
-    points <- sp::spsample(StudyBuff, type = "regular", offset = c(0.5, 0.5), cellsize = gridSizeDg)
-    sp::proj4string(points) <- sp::CRS("+init=epsg:4326")
-    grid <- sp::as.SpatialPolygons.GridTopology(sp::points2grid(points), proj4string = sp::CRS("+init=epsg:4326"))
-    
-    #reverse polygones for search in GBIF, must be counter clockwise
-    for(i in seq(length(grid))){
-      grid@polygons[i][[1]]@Polygons[[1]]@coords<-grid@polygons[i][[1]]@Polygons[[1]]@coords[5:1,]
-    }
-    
-    return(grid)
-  }else{
-    
-    return(BIRDS::makeDggrid(area, gridsize, buffer, type))
-    
-  }
+  suppressWarnings(proj4string(area) <-  CRS("+init=epsg:4326") )
+  StudyBuff <- rgeos::gBuffer(area, width = ifelse(buffer, gridSizeDg, 0))
 
+  if(type == "hx"){
+    # points <- spsample(StudyBuff, type = "hexagonal", offset = c(0, 0), cellsize = gridSizeDg)
+    # proj4string(points) <- CRS("+init=epsg:4326")
+    # grid <- sp::HexPoints2SpatialPolygons(points)
+    grid <- makeGrid(StudyBuff, gridSize = gridsize)
+  }else if(type == "sq"){
+    # points <- spsample(StudyBuff, type = "regular", offset = c(0.5, 0.5), cellsize = gridSizeDg)
+    # proj4string(points) <- CRS("+init=epsg:4326")
+    # grid <- as.SpatialPolygons.GridTopology(points2grid(points), proj4string = CRS("+init=epsg:4326"))
+    # 
+    # #reverse polygones for search in GBIF, must be counter clockwise
+    # for(i in seq(length(grid))){
+    #   grid@polygons[i][[1]]@Polygons[[1]]@coords<-grid@polygons[i][[1]]@Polygons[[1]]@coords[5:1,]
+    # }
+    # 
+    grid <- makeGrid(StudyBuff, hexGrid = FALSE, gridSize = gridsize)
+  }else{
+    grid <- makeDggrid(area, gridsize, topology=type)
+  }
+ return(grid)
 }
 
 ## Modules
@@ -259,7 +263,9 @@ grid_mod_server <- function(id, pbd, polygonDraw){
                                                     input$gridType,
                                                     input$buff),
                                 error = function(e){
-                                  shinyalert::shinyalert("Error", "Could not create a grid based on the inputs, try different ones.",
+                                  print(e$message)
+                                  shinyalert::shinyalert("Error", 
+                                                         "Could not create a grid based on the inputs, try different ones.",
                                                          "error")
                                   return(NULL)
                                 })

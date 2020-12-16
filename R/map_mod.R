@@ -89,8 +89,10 @@ map_mod_server <- function(id, layers, pbd_data){
                    if(! is.null(pbd_data$organised)){
                      nObs <- nrow(BIRDS::obsData(pbd_data$organised))
                      wPlot <- if (nObs > n) sample(nObs, n) else c(1:nObs)
-                     labelTxt <- if (nObs > n) "PBD: random subset of 500 obs." else "PBD: all observations"
-                     PBDpoints <- pbd_data$organised$spdf[wPlot,]
+                     # labelTxt <- if (nObs > n) "PBD: random subset of 500 obs." else "PBD: observations"
+                     labelTxt <- "PBD observations"
+                     # PBDpoints <- pbd_data$organised$spdf[wPlot,]
+                     PBDpoints <- pbd_data$organised$spdf
                      insert <- length(layersAll$layer)+1
                      names <- c(names(layersAll$layer), labelTxt)
                      layersAll$layer[[insert]] <-  list(geom = PBDpoints, type = "obsData") #lbl = labelTxt
@@ -166,7 +168,7 @@ print(names(layersAll$layer))
                   #### add layers to map ####
                  # observeEvent(layersAll$layer, {
                  observe({ 
-print(unlist(lapply(layersAll$layer, FUN = function(x) !is.null(x))))
+# print(unlist(lapply(layersAll$layer, FUN = function(x) !is.null(x))))
                    proxy <- leafletProxy(mapId="map")
                    # if(!any(unlist(lapply(layersAll$layer, FUN = function(x) !is.null(x))))) return()
                    if(any(unlist(lapply(layersAll$layer, FUN = function(x) !is.null(x))))){
@@ -191,22 +193,28 @@ print(unlist(lapply(layersAll$layer, FUN = function(x) !is.null(x))))
                          if(layersAll$layer[[i]]$type == "obsData"){
                            print("Drawing observations to map")
                            bb <- layersAll$layer[[i]]$geom@bbox
+                           data <- layersAll$layer[[i]]$geom@data
+                           label <- paste(as.character(data$scientificName),
+                                          paste0(data$year,"-", data$month,"-", data$day))
                            proxy %>%
                              addCircleMarkers(data = layersAll$layer[[i]]$geom, 
                                               group = names(layersAll$layer[i]),
                                               color = "black", stroke = FALSE, 
                                               fillOpacity = 0.5, radius = 5,
-                                              label = ~as.character(scientificName)) %>% 
+                                              clusterOptions = markerClusterOptions(),
+                                              label = label) %>% 
                              fitBounds(lng1 = bb[1,1], lat1 = bb[2,1], lng2 = bb[1,2], lat2 = bb[2,2])
                            
                          }else if(layersAll$layer[[i]]$type == "visits"){
                            print("Drawing visits to map")
+                           data <- layersAll$layer[[i]]$geom@data
+                           label <- paste("Visit:", data$visitUID)
                            proxy %>%
                              addPolygons(data = layersAll$layer[[i]]$geom, 
                                         group = names(layersAll$layer[i]), 
                                         color = "red", stroke = TRUE,
                                         weight = 5, fillOpacity = 0.1,
-                                        label = ~visitUID)
+                                        label = label)
                          }else if(layersAll$layer[[i]]$type == "grid"){
                            proxy %>%
                              addPolygons(data = layersAll$layer[[i]]$geom,

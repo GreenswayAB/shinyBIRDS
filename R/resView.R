@@ -3,11 +3,8 @@
 #' @param data A numeric vector
 #' @param max The maximum value of the vector
 getColor <- function(data, max){
-  
   palRWB <- leaflet::colorNumeric(c("blue", "red"), c(0,1), na.color = "transparent")
-  
   return(palRWB(data/max))
-  
 }
 
 #' Result view UI

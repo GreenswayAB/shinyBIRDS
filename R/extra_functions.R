@@ -24,12 +24,14 @@ palGWR <- function(){return(colorNumeric(c("red","lightpink", "green4"), c(0,1),
 #' Time resolution codes
 #'
 #' @return A vector with \code{c("", "yearly", "month","monthly", "daily")}
-TimeResCode<-function(){return(c("", "yearly", "month","monthly", "daily"))}
+TimeResCode<-function(){return(c("none","yearly", "month","monthly", "daily"))}
+# TimeResCode<-function(){return(c("yearly", "month","monthly", "daily"))}
 
 #' Time resolution
 #'
 #' @return A vector with \code{c("NULL", "Yearly", "Month","Monthly", "Daily")})}
-TimeRes<-function(){return(c("NULL", "Yearly", "Month","Monthly", "Daily"))}
+TimeRes<-function(){return(c("NONE", "Yearly", "Month","Monthly", "Daily"))}
+# TimeRes<-function(){return(c("Yearly", "Month","Monthly", "Daily"))}
 
 #' Variable codes
 #'

@@ -18,12 +18,13 @@ map_page_ui <- function(id) {
                   width = 450, height = "auto",
                   fluidRow(
                     column(12,
-                      h3("Grid layers"),
-                      # h6("drag me"),
-                      grid_mod_ui(ns("gridding")),
-                      br(),br(),
-                      layer_mod_ui(ns("layers")),
-                      br(),br()
+                           br(),
+                           h3("Grid layers"),
+                           # h6("drag me"),
+                           grid_mod_ui(ns("gridding")),
+                           br(),br(),
+                           layer_mod_ui(ns("layers")),
+                           br()
                     )
                   ) 
     )
