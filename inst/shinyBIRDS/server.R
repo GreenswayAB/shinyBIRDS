@@ -68,6 +68,24 @@ shinyServer(function(input, output, session) {
     file <- input$csvFile$datapath
     readTable$preview <- NULL
 
+    ext <- strsplit(basename(file), split="\\.")[[1]]
+    ext <- ext[length(ext)]
+    # print(ext)
+    if(ext == "scsv"){
+      updateRadioButtons(session, "csvSep", selected = ";")
+      print(input$csvSep)
+      disable("csvSep")
+      updateCheckboxInput(session, "csvUTF", value = FALSE)
+      updateRadioButtons(session, "csvQuote", selected = "\"")
+    }
+    if(ext == "tsv"){
+      updateRadioButtons(session, "csvSep", selected = "\t")
+      disable("csvSep")
+    }
+    if(! ext %in% c("tsv", "scsv")){
+      enable("csvSep")
+    }
+      
     ##### TODO issue#6 is too slow to upload a file to internet, maybe add possibility to get from url
     preTable <- tryCatch(fread(file=file, #getcsv, 
                                stringsAsFactors = FALSE, encoding = ifelse(input$csvUTF,"UTF-8","unknown"), 
@@ -75,9 +93,7 @@ shinyServer(function(input, output, session) {
                                quote = input$csvQuote, na.strings = "", data.table = FALSE, fill = TRUE), 
                          error = function(e){
                            shinyalert::shinyalert(title = "An error occured", text = e$message, type = "error")
-                           return(NULL)}, 
-                         warning = function(w){
-                           return(NULL)})
+                           return(NULL)})     # warning = function(w){      return(NULL)}
     
     readTable$data <- preTable
     
@@ -100,6 +116,8 @@ shinyServer(function(input, output, session) {
     readTable$preview <- preTable
   })
 
+  
+  
   output$TablePreview <- DT::renderDataTable({
     if (is.null(readTable$preview)) return()
     if (!is.data.frame(readTable$preview)){
@@ -126,7 +144,10 @@ shinyServer(function(input, output, session) {
     }  
     
     if(okCSV){
-      colnames(PBDin) <- tolower(colnames(PBDin))
+      if(!any(grepl('[^[:punct:]]', colnames(PBDin)))){
+        colnames(PBDin) <- tolower(colnames(PBDin))  
+      }
+      
       # presenceCol=NULL
       
       

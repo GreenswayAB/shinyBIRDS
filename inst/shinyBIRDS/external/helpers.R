@@ -22,12 +22,10 @@ loadDataUI<-function(){
                           column(6,
                                  h4("Upload the observations", class="panel-title"),
                                  fileInput("csvFile", 
-                                           label = tooltipHTML("Choose a .csv file with the PBD",
-                                                               "Max file size 300 MB."),
-                                           # label = h5(tags$p("Choose a .csv file with the PBD", 
-                                           #                              tags$span("Max file size 300 MB."), 
-                                           #                              class="bubble")),
-                                           accept=c('.csv'), multiple=FALSE, width = "100%"),
+                                           label = tooltipHTML("Choose a column-based file with the PBD",
+                                                               "Max file size 300 MB. Accepts .csv, .txt, .tsv, .scsv"),
+                                           accept=c('.csv', '.txt','.scsv', '.tsv'), 
+                                           multiple=FALSE, width = "100%"),
                                  fluidRow(
                                    column(6,
                                           checkboxInput("csvHeader", "Header", TRUE),
@@ -35,15 +33,15 @@ loadDataUI<-function(){
                                                        choices = c("Comma" = ",",
                                                                    "Semicolon" = ";",
                                                                    "Tab" = "\t"),
-                                                       selected = "\t")
+                                                       selected = ";")
                                    ),
                                    column(6, 
                                           checkboxInput("csvUTF", label = "Encoding = UTF-8", TRUE),
                                           radioButtons("csvQuote", "Quote",
                                                        choices = c("None" = "",
-                                                                   "Double Quote" = "\"",
-                                                                   "Single Quote" = "\'"),
-                                                       selected = "")
+                                                                   "Single Quote" = "\'",
+                                                                   "Double Quote" = "\""),
+                                                       selected = "\"")
                                    )
                                  ),
                                  htmlOutput("csvInfo", inline=FALSE),
