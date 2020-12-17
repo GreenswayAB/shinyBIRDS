@@ -13,8 +13,10 @@ grid_shp <- function(session){
     h4("Upload a .shp file for the grid", class="panel-title"),
     # column(12,
       br(),
-      fileInput(ns("shapeFile"), label = h5(tags$p("Select files", tags$span("Include all files related to the .shp file (e.g. '.dbf', '.sbn', '.sbx', '.shx', '.prj')"), class="bubble")),
-                accept=c('.shp','.dbf','.sbn','.sbx','.shx',".prj"), multiple=TRUE, width = 400),
+      fileInput(ns("shapeFile"), 
+                label = tooltipHTML("Select files", 
+                                    "Include all files related to the .shp file (e.g. '.dbf', '.sbn', '.sbx', '.shx', '.prj')"),
+                accept = c('.shp','.dbf','.sbn','.sbx','.shx',".prj"), multiple=TRUE, width = 400),
       htmlOutput(ns("shapeMessage"), inline=FALSE)
     # )
   )
@@ -51,9 +53,12 @@ grid_draw <- function(session){
       # column(width=6,
              numericInput(inputId = ns("gridSize"),
                           # label = h5(tags$p("Grid cell width (Km)",tags$span("The grid cells must be narrower than the working area"), class="bubble")),
-                          label = "Grid cell width (Km)",
+                          label = tooltipHTML("Grid cell width (Km)",
+                                              "The grid cells must be narrower than the working area") ,
                           value = 1000, min = 1, max = 50000, width = 150),
-             checkboxInput(ns("buff"), "Inclusive", value = FALSE, width = 150)
+             checkboxInput(ns("buff"), 
+                           label = tooltipHTML("Inclusive", "To make sure grid cells cover all the study area"), 
+                           value = FALSE, width = 150)
     ),
     div(style="display: inline-block; vertical-align:top; width: 200;",
       # column(width=6, 
@@ -166,7 +171,7 @@ grid_mod_ui <- function(id){
       ## radio buttons with options
       prettyRadioButtons(ns("gridMethod"), label = "Make your grid by: ", 
                          choiceNames = c("loading a .shp file", 
-                                         "drawing your polygon"),
+                                         "drawing a polygon"),
                          choiceValues = list(1,2))
       )
     ),
@@ -179,10 +184,12 @@ grid_mod_ui <- function(id){
     fluidRow(
       column(12,
              textInput(ns("gridName"), "Name for new grid:"),
-             actionBttn(ns("clearButton"), HTML("&nbsp;Clear grid"), style = "simple", 
-                 color = "warning", icon = icon("trash"), size="xs"),
-             actionBttn(ns("addGrid"), HTML("&nbsp;Add grid"), style = "simple", 
-                 color = "success", icon = icon("check"), size="xs")
+             actionBttn(ns("clearButton"), HTML("&nbsp;Clear grid"), 
+                        style = "simple", color = "warning", 
+                        icon = icon("trash"), size="xs"),
+             actionBttn(ns("addGrid"), HTML("&nbsp;Add grid"), 
+                        style = "simple", color = "success", 
+                        icon = icon("check"), size="xs")
       )
     )
   )
@@ -275,8 +282,7 @@ grid_mod_server <- function(id, pbd, polygonDraw){
                  })
                  
                  observeEvent(input$goExtent, {
-                   ### TODO use  OB2Polygon(df, shape = "bBox") for more shapes
-                   
+### TODO use  OB2Polygon(df, shape = "bBox") for more shapes
                    if (! is.null(pbd[["organised"]])){
                      bboxMat <- as.matrix(pbd$organised$spdf@bbox)
                      polygonSA <- matrix(c(bboxMat[1,1], bboxMat[2,1],
@@ -285,10 +291,9 @@ grid_mod_server <- function(id, pbd, polygonDraw){
                                            bboxMat[1,2], bboxMat[2,1],
                                            bboxMat[1,1], bboxMat[2,1]), ncol = 2, nrow = 5, byrow = TRUE)
                      
-                     SpP <- sp::SpatialPolygons(list(
-                       sp::Polygons(list(sp::Polygon(polygonSA)), 1)
+                     SpP <- SpatialPolygons(list(Polygons(list(Polygon(polygonSA)), 1)
                      ))
-                     sp::proj4string(SpP) <- sp::CRS("+init=epsg:4326")
+                     proj4string(SpP) <- CRS("+init=epsg:4326")
                      
                      layerList$layers$others[["Study area"]] <- SpP
                        

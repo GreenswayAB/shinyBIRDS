@@ -14,15 +14,15 @@ shinyServer(function(input, output, session) {
   data_stat <- reactiveValues(data = NULL, name = "visitsData")
   # cleancoord <- reactiveValues(x=NULL, logs=NULL)
   
-    mapLayers <- map_page_server("mapPage", PBD)
+  mapLayers <- map_page_server("mapPage", PBD)
   
-  updateTabsetPanel(session, "navBar", selected = "map")
-  shinyalert::shinyalert(title = "Welcome to shinyBIRDS", 
-                         text = "Start by creating a grid over the study area",
-                         type = "info", closeOnEsc = TRUE, closeOnClickOutside = TRUE)
-  # Sys.sleep(10)
-  # updateTabsetPanel(session, "navBar", selected = "data")
-  # removeUI("#splash")
+  #### Welcome ####
+  # updateTabsetPanel(session, "navBar", selected = "map")
+  # shinyalert::shinyalert(title = "Welcome to shinyBIRDS", 
+  #                        text = "Start by creating a grid over the study area",
+  #                        type = "info", closeOnEsc = TRUE, closeOnClickOutside = TRUE)
+
+  updateTabsetPanel(session, "navBar", selected = "data")
   
   observe({
     if(! is.null(PBD$data)){
@@ -35,7 +35,6 @@ shinyServer(function(input, output, session) {
   observe({
     if (!is.null (PBD$organised)){
       enable("expVisits")
-      # updateTabsetPanel(session, "pbd_output", selected = "org")
     } else {
       disable("expVisits")
     }
@@ -55,24 +54,8 @@ shinyServer(function(input, output, session) {
   output$csvInfo    <- renderUI( div(HTML(csvInfo$msg ), class="infotext"))
   
 
-  #### Clean coordinates
-  ### Check how the function works, it removes everything
-  # observeEvent(input$cleanCoord, {
-  #   req(PBD$data)
-  #   cleanPBD <- cleanCoordinates(PBD$data, lon = input$csvLon, lat = input$csvLat, species = input$csvSpp) 
-  #   # print(cleanPBD)
-  #   PBD$data <- cleanPBD$x
-  #   cleancoord$logs <- cleanPBD$logs
-  # })
-  # 
-  # output$CleanCoordInfo<-renderUI( div(HTML(cleancoord$logs), class="infotext")  )
-  
-  
-  
   ########################################### Data Tab #############################
-  
-  ### load data ####
-  
+  ### Load data ####
   #When button clicked - show modal
   observeEvent(input$loadData, {
     loadDataUI()
@@ -176,9 +159,6 @@ shinyServer(function(input, output, session) {
       
       readTable$preview <- NULL
       readTable$data <- NULL
-      # is it ok to reload a server?
-      # mapLayers <- map_page_server("mapPage", PBD)
-      
     } 
     
     removeModal()
@@ -193,8 +173,6 @@ shinyServer(function(input, output, session) {
   
   output$TablePBD <- DT::renderDataTable({
     if (is.null(PBD$data)) return()
-    # req(PBD$data)
-    
     table<-PBD$data
     table<-as.data.frame(table, row.names = c(1:nrow(table)))
     
@@ -204,13 +182,26 @@ shinyServer(function(input, output, session) {
               autoHideNavigation = TRUE,
               options = list(
                 dom = 'tp',
-                pageLength = 15,
-                scrollX=TRUE)
+                # dom = 't',
+                pageLength = 10,
+                scrollX = TRUE,
+                scrollY = "73vh")
     )
   }, server = TRUE) #end render DataTable
   
-  ### Define visits ####
+  #### Clean coordinates ####
+  ### Check how the function works, it removes everything
+  # observeEvent(input$cleanCoord, {
+  #   req(PBD$data)
+  #   cleanPBD <- cleanCoordinates(PBD$data, lon = input$csvLon, lat = input$csvLat, species = input$csvSpp) 
+  #   # print(cleanPBD)
+  #   PBD$data <- cleanPBD$x
+  #   cleancoord$logs <- cleanPBD$logs
+  # })
+  # 
+  # output$CleanCoordInfo<-renderUI( div(HTML(cleancoord$logs), class="infotext")  )
   
+  ### Define visits ####
   #When button clicked - show modal
   observeEvent(input$defVisits, {
     defineVisitsUI(colnames(PBD$data), mapLayers$layers$grids)
@@ -226,7 +217,7 @@ shinyServer(function(input, output, session) {
     epsgInfo$proj4<-NULL
     
     if(input$csvCRS != ""){
-      searchWeb<-gsub("\ ", "%20", input$csvCRS)
+      searchWeb <- gsub("\ ", "%20", input$csvCRS)
       getEPSG <- tryCatch(GET(urlEPGS, path=paste0("/?q=", searchWeb, "&format=json")),
                           error = function(e){
                             print(e)
@@ -239,7 +230,7 @@ shinyServer(function(input, output, session) {
       )
       
       if(getEPSG$status_code == 200) {
-        contEPSG <<- content(getEPSG, encoding = "UTF-8")
+        contEPSG <- content(getEPSG, encoding = "UTF-8")
         if (contEPSG$number_result==0){
           epsgInfo$wng <- "Nothing found"
         } else {
@@ -275,21 +266,31 @@ shinyServer(function(input, output, session) {
     if (input$csvTaxonEnable) {
       PBDcolnames <- colnames(PBD$data)
       tagList(
-        selectInput("csvTaxon", label = tooltipHTML("Taxon rank column",
-                                                    "The name of the column containing the taxonomic rank for 
-                                                    the observation. That is the minimum taxonomic identification 
-                                                    level"), 
+        selectInput("csvTaxon", 
+                    label = tooltipHTML("Taxon rank column",
+                    "The name of the column containing the taxonomic rank for 
+                    the observation. That is the minimum taxonomic identification 
+                    level"), 
                     choices = PBDcolnames, 
                     selected = ifelse("taxonrank" %in% PBDcolnames, "taxonrank", PBDcolnames[1]) ),
-        # pickerInput("taxonRankVal", label = "Taxon rank to keep", choices = stdTaxonRank,
-        #             selected = stdTaxonRank[1],
-        #             multiple = TRUE,  options = list(`actions-box` = TRUE))
         selectInput("taxonRankVal", label = "Taxon rank to keep", choices = stdTaxonRank,
                     selected = stdTaxonRank[1], multiple = TRUE)
       )
     } else {
       return()
     }  
+  })
+  
+  observe({
+    req(PBD$data)
+    req(input$csvTaxonEnable)
+    rep(input$csvTaxon)
+    if (input$csvTaxonEnable && !is.null(input$csvTaxon)) {
+      stdTaxonRankUpd <- unique(PBD$data[, input$csvTaxon])  
+      updateSelectInput(session, "taxonRankVal", 
+                        choices = stdTaxonRankUpd,
+                        selected = stdTaxonRankUpd[1])
+    }
   })
   
   #When ok button clicked in modal
@@ -346,11 +347,6 @@ shinyServer(function(input, output, session) {
     withProgress( message = "Organizing the observations" , {
       setProgress(.2)
       print("Organizing...")
-      #print(orgVars$dataCRS)
-      
-      # print(c(orgVars$sppCol, orgVars$xyCols[1], orgVars$xyCols[2],
-      #         orgVars$timeCols, orgVars$idCols, orgVars$csvTaxon, orgVars$presenceCol))
-      
       PBDdata <- PBD$data[,c(orgVars$sppCol, orgVars$xyCols[1], orgVars$xyCols[2],
                              orgVars$timeCols, orgVars$idCols, orgVars$csvTaxon, orgVars$presenceCol)]
       
@@ -372,11 +368,8 @@ shinyServer(function(input, output, session) {
                                                          text = e$message, type = "error")
                                   return(NULL)}
                                 ) 
-      
-      #str(PBD$organised)
       setProgress(.8)
-      # updateTabsetPanel(session, "pbd_output", selected = "org")
-      # updateTabsetPanel(session, "navBar", selected = "map")
+      updateTabsetPanel(session, "pbd_output", selected = "org")
     })
    
   })
@@ -420,14 +413,9 @@ shinyServer(function(input, output, session) {
         PBD$visits$day <- as.numeric(PBD$visits$day)
         PBD$visits$month <- as.numeric(PBD$visits$month)
         PBD$visits$year <- as.numeric(PBD$visits$year)
-        # PBD$visits$effortDiam <- PBD$visits$effortDiam/1000
-        # PBD$visits$medianDist <- PBD$visits$medianDist/1000
         data_stat$data <- PBD$visits
         # colnames(data_stat$data)<-c("Projekt Skapare", "Projekt", "Datum Projekt", "Objekt", "Inventerare", "Start Enkät", "Stop Enkät", "Status")
       }
-      
-      # str(data_stat$data)
-      # str(PBD$visits)
       setProgress(.9)
     })
   })
@@ -445,7 +433,7 @@ shinyServer(function(input, output, session) {
   
   
 
-  ### remove Obs #####
+  ### Remove Obs #####
   #Enable or disable the button based on condition
   observe({
     if(is.null(PBD$visits)){

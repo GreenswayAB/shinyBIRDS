@@ -2,6 +2,7 @@ navbarPage(title=div(img(src="./img/BirdsLogo.png", alt="", style="vertical-alig
                      span(strong(em("shinyBIRDS")), style="display: inline-block;  vertical-align: middle;"),
                      style="display:inline-block;"),
            id="navBar", position = "static-top", #"fixed-top",
+           selected = "map",
            inverse = FALSE, theme = shinytheme("cosmo"),# shinythemes::themeSelector(),
            collapsible = TRUE, windowTitle = "shinyBIRDS",
            header = list(
@@ -17,10 +18,6 @@ navbarPage(title=div(img(src="./img/BirdsLogo.png", alt="", style="vertical-alig
              useShinyjs(),
              useShinydashboard(),
              useShinyalert()
-             # ###Splash screen
-             # tags$div(id="splash",
-             #          HTML('<img src="./img/BirdsLogo.png" alt="" style="vertical-align:bottom;float:middle;height:150px;">')
-             # )
            ),
            
           

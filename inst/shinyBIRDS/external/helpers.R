@@ -21,9 +21,12 @@ loadDataUI<-function(){
                         fluidRow(
                           column(6,
                                  h4("Upload the observations", class="panel-title"),
-                                 fileInput("csvFile", label = h5(tags$p("Choose a .csv file with the PBD", 
-                                                                        tags$span("Max file size 300 MB."), 
-                                                                        class="bubble")),
+                                 fileInput("csvFile", 
+                                           label = tooltipHTML("Choose a .csv file with the PBD",
+                                                               "Max file size 300 MB."),
+                                           # label = h5(tags$p("Choose a .csv file with the PBD", 
+                                           #                              tags$span("Max file size 300 MB."), 
+                                           #                              class="bubble")),
                                            accept=c('.csv'), multiple=FALSE, width = "100%"),
                                  fluidRow(
                                    column(6,
@@ -91,9 +94,11 @@ defineVisitsUI<-function(colnames, grids){
                                         selectInput("csvSpp", label = tooltipHTML("Scientific species name", "The column with the species names"),
                                                     choices = PBDcolnames, selected = wColSpp),
                                         checkboxInput("simplifySpp", 
-                                                      label = h5(tags$p("Simplify the species name", 
-                                                                        tags$span("i.e. remove infraspecific epithets and authors name"), 
-                                                                        class="bubble")),
+                                                      label = tooltipHTML("Simplify the species name",
+                                                                          "i.e. remove infraspecific epithets and authors name"),
+                                                      # label = h5(tags$p("Simplify the species name", 
+                                                      #                   tags$span("i.e. remove infraspecific epithets and authors name"), 
+                                                      #                   class="bubble")),
                                                       FALSE),
                                         ## TODO dynamically show example of how the name would look like simplified
                                         fluidRow(style='padding-left:0px; margin-left: 0px;',
@@ -114,9 +119,12 @@ defineVisitsUI<-function(colnames, grids){
                                         fluidRow(
                                           column(4,
                                                  # selectInput("csvCRS", label = "Coordinate Reference System (CRS)", choices = epsg.choices),    
-                                                 textInput("csvCRS", label = h5(tags$p("CRS EPSG number",
-                                                                                       tags$span("EPSG number for a Coordinate Reference System"), class="bubble")),
-                                                           value = 4326, placeholder = "Search for a EPSG number of CRS name")
+                                                 textInput("csvCRS", 
+                                                           label = tooltipHTML("CRS EPSG number",
+                                                                               "EPSG number for a Coordinate Reference System"),
+                                                           # label = h5(tags$p("CRS EPSG number",
+                                                           #                             tags$span("EPSG number for a Coordinate Reference System"), class="bubble")),
+                                                           value = 4326, placeholder = "EPSG number")
                                           ),
                                           column(8,
                                                  htmlOutput("epsgInfoUI", inline = FALSE)
@@ -128,8 +136,8 @@ defineVisitsUI<-function(colnames, grids){
                                           # )
                                         )
                         ),
-                        column(1,br()),
-                        column(5,
+                        # column(1,br()),
+                        column(5, offset = 1,
                                h4("Visits", class="panel-title"),
                                selectizeInput("timeCols", label = tooltipHTML("Time columns", 
                                                                               "The column(s) holding the observation dates. Make sure to order them like year, month, day."), 
@@ -157,8 +165,10 @@ defineVisitsUI<-function(colnames, grids){
                         br(),
                         br(),
                         footer = tagList(
-                          actionBttn("cancelDefineVisitsUI", NULL, icon = icon("times"), style = "material-circle", color = "danger", size = "xs"),
-                          actionBttn("okDefineVisitsUI", NULL, icon = icon("check"), style = "material-circle", color = "success", size = "xs")
+                          actionBttn("cancelDefineVisitsUI", NULL, icon = icon("times"), 
+                                     style = "material-circle", color = "danger", size = "xs"),
+                          actionBttn("okDefineVisitsUI", NULL, icon = icon("check"), 
+                                     style = "material-circle", color = "success", size = "xs")
                         ), 
                         easyClose = FALSE, fade = TRUE, size = "l") 
   )
@@ -168,23 +178,32 @@ removeObsUI<-function(){
   showModal(modalDialog(title = "Remove observations",
                         fluidRow(
                           column(6,
-                                 selectInput("criteria", "Criteria", choices = c("SLL", "nObs", "effortDiam", "medianDist")),
-                                 radioButtons("percentOrMinCrit", label = "Percent or Minimum Criteria",
+                                 selectInput("criteria", "Criteria", 
+                                             choices = c("SLL", "nObs", "effortDiam", "medianDist")),
+                                 radioButtons("percentOrMinCrit", 
+                                              label = "Percent or Minimum Criteria",
                                               choices = list("Percent" = 1, "Minimum Criteria" = 2), selected = 1),
                                  conditionalPanel(condition = "input.percentOrMinCrit == 1",
-                                                  sliderInput("percent", "Percent", value = 75, min = 0, max = 100, post  = " %"),
-                                                  numericInput("stepChunk", "Step chunks", value = 0.05, min = 0, max = 1, step = 0.05)
+                                                  sliderInput("percent", "Percent", 
+                                                              value = 75, min = 0, max = 100, post  = " %"),
+                                                  numericInput("stepChunk", "Step chunks", 
+                                                               value = 0.05, min = 0, max = 1, step = 0.05)
                                  ),
                                  conditionalPanel(condition = "input.percentOrMinCrit == 2",
-                                                  numericInput("minCrit", "Minimum accepted of a given criteria in the data set", value = 1)
+                                                  numericInput("minCrit", 
+                                                               tooltipHTML("Minimum",
+                                                                           "Minimum accepted of a given criteria in the data set"), 
+                                                               value = 1, width = 100)
                                  )),
                           column(6,includeHTML("ui/removeObservations.html"))
                         ),
                         br(),
                         br(),
                         footer = tagList(
-                          actionBttn("cancelRemoveObsUI", NULL, icon = icon("times"), style = "material-circle", color = "danger", size = "xs"),
-                          actionBttn("okRemoveObsUI", NULL, icon = icon("check"), style = "material-circle", color = "success", size = "xs")
+                          actionBttn("cancelRemoveObsUI", NULL, icon = icon("times"),
+                                     style = "material-circle", color = "danger", size = "xs"),
+                          actionBttn("okRemoveObsUI", NULL, icon = icon("check"),
+                                     style = "material-circle", color = "success", size = "xs")
                         ), 
                         easyClose = FALSE, fade = TRUE, size = "l") 
   )
@@ -228,8 +247,10 @@ obsIndexUI<-function(session, spList){
                         br(),
                         br(),
                         footer = tagList(
-                          actionBttn(ns("cancelObsIndexUI"), NULL, icon = icon("times"), style = "material-circle", color = "danger", size = "xs"),
-                          actionBttn(ns("okObsIndexUI"), NULL, icon = icon("check"), style = "material-circle", color = "success", size = "xs")
+                          actionBttn(ns("cancelObsIndexUI"), NULL, icon = icon("times"), 
+                                     style = "material-circle", color = "danger", size = "xs"),
+                          actionBttn(ns("okObsIndexUI"), NULL, icon = icon("check"), 
+                                     style = "material-circle", color = "success", size = "xs")
                         ), 
                         easyClose = FALSE, fade = TRUE, size = "l") 
   )
@@ -257,8 +278,10 @@ comMatrixUI<-function(session){
                         br(),
                         br(),
                         footer = tagList(
-                          actionBttn(ns("cancelComMatrixUI"), NULL, icon = icon("times"), style = "material-circle", color = "danger", size = "xs"),
-                          actionBttn(ns("okComMatrixUI"), NULL, icon = icon("check"), style = "material-circle", color = "success", size = "xs")
+                          actionBttn(ns("cancelComMatrixUI"), NULL, icon = icon("times"), 
+                                     style = "material-circle", color = "danger", size = "xs"),
+                          actionBttn(ns("okComMatrixUI"), NULL, icon = icon("check"), 
+                                     style = "material-circle", color = "success", size = "xs")
                         ), 
                         easyClose = FALSE, fade = TRUE, size = "l") 
   )
@@ -294,8 +317,10 @@ ignoranceUI<-function(session){
                         br(),
                         br(),
                         footer = tagList(
-                          actionBttn(ns("cancelIgnoranceUI"), NULL, icon = icon("times"), style = "material-circle", color = "danger", size = "xs"),
-                          actionBttn(ns("okIgnoranceUI"), NULL, icon = icon("check"), style = "material-circle", color = "success", size = "xs")
+                          actionBttn(ns("cancelIgnoranceUI"), NULL, icon = icon("times"), 
+                                     style = "material-circle", color = "danger", size = "xs"),
+                          actionBttn(ns("okIgnoranceUI"), NULL, icon = icon("check"), 
+                                     style = "material-circle", color = "success", size = "xs")
                         ), 
                         easyClose = FALSE, fade = TRUE, size = "l") 
   )

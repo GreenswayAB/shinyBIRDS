@@ -75,8 +75,8 @@ expDef_mod_ui <- function(id){
              box(title=NULL, status="info", width = 12, solidHeader = FALSE,
                  h4("If spatial:"),
                  selectInput(inputId = ns("dnlCRS"),
-                             label = h5(tags$p("Coordinate Reference Systems", 
-                                               tags$span("Projection system of the layers. Source EPSG.org"), class="bubble")),
+                             label = tooltipHTML("Coordinate Reference Systems", 
+                                               "Projection system of the layers. Source EPSG.org"),
                              choices = epsg.choices(), #structure(EPSG.code, names=EPSG.name), 
                              multiple = FALSE, selected = 4326, width = "200px")
              )

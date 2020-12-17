@@ -89,13 +89,6 @@ summary_mod_server <- function(id, pbd, layersFromMap){
                                                                         text = e$message, 
                                                                         type = "error")
                                                  return(NULL)})
-                                               # warning = function(w){
-                                               #   print(str(w))
-                                               #   shinyalert::shinyalert(title = "Warning", 
-                                               #                          text = w$message, 
-                                               #                          type = "info")
-                                               #   })
-                       # res$sppList <- unique(pbd$organised$spdf$scientificName)
                        setProgress(.8)
                        res$sppList <- listSpecies(pbd$organised)
                      })
