@@ -67,9 +67,9 @@ expParam_mod_ui <- function(id){
 #' @return
 #' @import shiny
 #' @import shinyjs
-expParam_mod_server <- function(id, summary){
+expParam_mod_server <- function(id, summary, code){
   
-  moduleServer(id,
+  moduleServer(id, 
                function(input, output, session){
                  
                  validExport <- reactiveValues(state=FALSE, msg=NULL)
@@ -271,5 +271,4 @@ expParam_mod_server <- function(id, summary){
                              update = reactive({export$update})))
                  
                })
-  
 }

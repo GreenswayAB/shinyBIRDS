@@ -98,7 +98,7 @@ map_mod_server <- function(id, layers, pbd_data){
                      layersAll$layer[[insert]] <-  list(geom = PBDpoints, type = "obsData") #lbl = labelTxt
                      names(layersAll$layer) <- names
                    }
-print(names(layersAll$layer))
+# print(names(layersAll$layer))
                  })
                  
                  #### observer visits ####

@@ -4,6 +4,8 @@ shinyServer(function(input, output, session) {
   csvInfo <- reactiveValues(msg=NULL, wng=NULL)
   epsgInfo <- reactiveValues(msg=NULL, wng=NULL, code=NULL, proj4=NULL)
   
+  inputArg <- reactiveValues(file=NULL)
+  
   readTable <- reactiveValues(data=NULL, preview=NULL)
   PBD <- reactiveValues(data=NULL, organised=NULL, visits = NULL)
   orgVars <- reactiveValues(sppCol = NULL, idCols = NULL, timeCols = NULL, timeInVisits = NULL, 
@@ -66,6 +68,7 @@ shinyServer(function(input, output, session) {
   # observeEvent(input$csvFile$datapath,{
     if(is.null(input$csvFile$datapath)) return()
     file <- input$csvFile$datapath
+    inputArg$file <- input$csvFile$name
     readTable$preview <- NULL
 
     ext <- strsplit(basename(file), split="\\.")[[1]]
@@ -73,7 +76,6 @@ shinyServer(function(input, output, session) {
     # print(ext)
     if(ext == "scsv"){
       updateRadioButtons(session, "csvSep", selected = ";")
-      print(input$csvSep)
       disable("csvSep")
       updateCheckboxInput(session, "csvUTF", value = FALSE)
       updateRadioButtons(session, "csvQuote", selected = "\"")
@@ -95,25 +97,38 @@ shinyServer(function(input, output, session) {
                            shinyalert::shinyalert(title = "An error occured", text = e$message, type = "error")
                            return(NULL)})     # warning = function(w){      return(NULL)}
     
-    readTable$data <- preTable
     
     if(is.data.frame(preTable)){
+
+      if (length(colnames(preTable)) > 1) {
+        colnames(preTable) <- iconv(colnames(preTable), 
+                                    from = (if(input$csvUTF) "UTF-8" else ""), 
+                                    sub = "byte")
+        
+        # if(!any(grepl('[^[:punct:]]', colnames(preTable)))){
+        colnames(preTable) <- tolower(colnames(preTable))  
+        # }
+        
+        readTable$data <- preTable
+        
+        colnames(preTable) <- sapply(colnames(preTable), 
+                                     function(x){if(nchar(x) > 25) paste0(substr(x,1,25),"...") else x })
+      }
+      
       if(nrow(preTable) > 5){
         preTable <- preTable[1:5, ,drop = FALSE] #,drop = FALSE
       }
-
-      if (length(colnames(preTable)) > 1) {
-      colnames(preTable) <- iconv(colnames(preTable), 
-                                  from = (if(input$csvUTF) "UTF-8" else ""), sub = "byte")
-      colnames(preTable) <- sapply(colnames(preTable), 
-                                   function(x){if(nchar(x) > 25) paste0(substr(x,1,25),"...") else x })
-      }
-      
     }else{
       preTable <- "No valid data for preview"
+      readTable$data <- NULL
     }
 
     readTable$preview <- preTable
+    
+    inputArg$csvUTF <- input$csvUTF
+    inputArg$csvHeader <- input$csvHeader
+    inputArg$csvSep <- input$csvSep
+    inputArg$csvQuote <- input$csvQuote
   })
 
   
@@ -144,9 +159,10 @@ shinyServer(function(input, output, session) {
     }  
     
     if(okCSV){
-      if(!any(grepl('[^[:punct:]]', colnames(PBDin)))){
-        colnames(PBDin) <- tolower(colnames(PBDin))  
-      }
+### TODO warning if symbols in columnnames
+      # if(!any(grepl('[^[:punct:]]', colnames(PBDin)))){
+      #   colnames(PBDin) <- tolower(colnames(PBDin))  
+      # }
       
       # presenceCol=NULL
       
@@ -516,6 +532,6 @@ shinyServer(function(input, output, session) {
   
   
   #### Summarise ######
-  shinyBIRDS::summary_page_server("summaryPage", PBD, mapLayers)
+  shinyBIRDS::summary_page_server("summaryPage", PBD, mapLayers, inputArg, orgVars)
   
 }) # end server function

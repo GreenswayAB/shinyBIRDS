@@ -59,7 +59,9 @@ summary_mod_server <- function(id, pbd, layersFromMap){
                    }else{
                      gridAlts <- NULL
                    }
-                   updateSelectizeInput(session = session, inputId =  "gridInSummary", choices = gridAlts)
+                   updateSelectizeInput(session = session, 
+                                        inputId =  "gridInSummary",
+                                        choices = gridAlts)
                  })
                  
                  observe({
