@@ -67,26 +67,6 @@ code_mod_server <- function(id, inputArg, orgVars){
                      
                  })
                  
-                 # observe({
-                 #   #### ADD organise ###
-                 #   if(is.null(orgVars$sppCol)) return()
-                 #   
-                 #   code(paste0(code(),"library(BIRDS)\n\n"))
-                 #   code(paste0(code(),
-                 #              'ob <- organizeBirds(pbd,\n',
-                 #              '  sppCol = "', orgVars$sppCol, ',\n',
-                 #              '  idCols = "', orgVars$idCols,',\n',
-                 #              '  timeCols = "',orgVars$timeCols,',\n',
-                 #              '  timeInVisits = "', orgVars$timeInVisits,',\n',
-                 #              '  grid = "', orgVars$grid,',\n',
-                 #              '  presenceCol = "', orgVars$presenceCol,',\n',
-                 #              '  xyCols = "', orgVars$xyCols,',\n',
-                 #              '  dataCRS = "', orgVars$dataCRS, ',\n',
-                 #              '  taxonRankCol = "', orgVars$taxonRankCol,',\n',
-                 #              '  taxonRank = "', orgVars$taxonRank,',\n',
-                 #              '  simplifySppName = ', orgVars$simplifySppName,',\n'
-                 #              ))
-                 # })
                  # makeGrid()
                  # 
                  # exploreVisits()

@@ -67,7 +67,7 @@ expParam_mod_ui <- function(id){
 #' @return
 #' @import shiny
 #' @import shinyjs
-expParam_mod_server <- function(id, summary, code){
+expParam_mod_server <- function(id, summary){
   
   moduleServer(id, 
                function(input, output, session){

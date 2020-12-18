@@ -532,6 +532,6 @@ shinyServer(function(input, output, session) {
   
   
   #### Summarise ######
-  shinyBIRDS::summary_page_server("summaryPage", PBD, mapLayers, inputArg, orgVars)
+  summary_page_server("summaryPage", PBD, mapLayers, inputArg, orgVars)
   
 }) # end server function

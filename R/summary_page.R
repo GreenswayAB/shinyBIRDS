@@ -61,7 +61,7 @@ summary_page_server <- function(id, pbd, layers, inputArg, orgVars){
                  summary <- summary_mod_server("summary", pbd, layers)
                  #### code ####
                  code <- code_mod_server("code", inputArg, orgVars)
-                 params <- expParam_mod_server("expParam", summary, code)
+                 params <- expParam_mod_server("expParam", summary)
                  toView <- expDef_mod_server("expDef",summary, params)
                  # resView_mod_server("resultView", toView)
                  
