@@ -29,9 +29,9 @@ code_mod_server <- function(id, inputArg, orgVars){
                  code <- reactiveVal("")
                  
                  observe({
-                   code("")
-                   res <- "library(data.table)\nlibrary(BIRDS)\n"
-print(res)
+                   # code("")
+                   res <- "library(data.table)\n\nlibrary(BIRDS)\n\n"
+print(length(res))
                    ### Load data ####
                    if(!is.null(inputArg$file)){
                      res <- paste0(res,
@@ -43,28 +43,28 @@ print(res)
                                    '  quote = "',  inputArg$csvQuote, '",\n',
                                    '  na.strings = "",\n  data.table = FALSE,\n  fill = TRUE) \n\n'
                                    )
-print(res)
+print(length(res))
 print("load")
-                     #### ADD organise ###
-                       if(!is.null(orgVars$sppCol)){
-                         res <- paste0(res,
-                                    'ob <- organizeBirds(pbd,\n',
-                                    '  sppCol = "', orgVars$sppCol, ',\n',
-                                    '  idCols = "', orgVars$idCols,',\n',
-                                    '  timeCols = "',orgVars$timeCols,',\n',
-                                    '  timeInVisits = "', orgVars$timeInVisits,',\n',
-                                    '  grid = "', orgVars$grid,',\n',
-                                    '  presenceCol = "', orgVars$presenceCol,',\n',
-                                    '  xyCols = "', orgVars$xyCols,',\n',
-                                    '  dataCRS = "', orgVars$dataCRS, ',\n',
-                                    '  taxonRankCol = "', orgVars$taxonRankCol,',\n',
-                                    '  taxonRank = "', orgVars$taxonRank,',\n',
-                                    '  simplifySppName = ', orgVars$simplifySppName,',\n'
-                                    )
-print(res) 
-print("org")
-                       }
                     } 
+                   #### ADD organise ###
+                     if(!is.null(orgVars$sppCol)){
+                       res <- paste0(res, 
+                                  'ob <- organizeBirds(pbd,\n',
+                                  '  sppCol = "', orgVars$sppCol, '",\n',
+                                  '  idCols = c("', paste0(orgVars$idCols, sep='","'),'"),\n',
+                                  '  timeCols = c("', paste0(orgVars$timeCols, sep='","'),'"),\n',
+                                  '  timeInVisits = "', orgVars$timeInVisits,',\n',
+                                  '  grid = "', orgVars$grid,'",\n',
+                                  '  presenceCol = "', orgVars$presenceCol,'",\n',
+                                  '  xyCols = c("', paste0(orgVars$xyCols, sep='","'),'"),\n',
+                                  '  dataCRS = "', orgVars$dataCRS, '",\n',
+                                  '  taxonRankCol = "', orgVars$taxonRankCol,'",\n',
+                                  '  taxonRank = c("', paste0(orgVars$taxonRank, sep='","'),'"),\n',
+                                  '  simplifySppName = ', orgVars$simplifySppName,') \n\n'
+                                  )
+print(length(res)) 
+print("org")
+                     }
                   code(res)
                      
                  })
