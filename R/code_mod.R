@@ -31,7 +31,7 @@ code_mod_server <- function(id, inputArg, orgVars){
                  observe({
                    # code("")
                    res <- "library(data.table)\nlibrary(BIRDS)\n"
-print(length(res))
+# print(length(res))
                    ### Load data ###
                    if(!is.null(inputArg$file)){
                      res <- paste0(res,
@@ -43,8 +43,8 @@ print(length(res))
                                    '  quote = "',  inputArg$csvQuote, '",\n',
                                    '  na.strings = "",\n  data.table = FALSE,\n  fill = TRUE) \n\n'
                                    )
-print(length(res))
-print("load")
+# print(length(res))
+# print("load")
                     } 
                    #### ADD organise ###
                      if(!is.null(orgVars$sppCol)){
@@ -62,8 +62,8 @@ print("load")
                                   '  taxonRank = c("', paste0(orgVars$taxonRank, collapse='","'),'"),\n',
                                   '  simplifySppName = ', orgVars$simplifySppName,') \n\n'
                                   )
-print(length(res)) 
-print("org")
+# print(length(res)) 
+# print("org")
                      }
                   code(res)
                      

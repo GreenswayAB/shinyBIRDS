@@ -241,14 +241,17 @@ shinyServer(function(input, output, session) {
   ### Define visits ####
   #When button clicked - show modal
   observeEvent(input$defVisits, {
-    defineVisitsUI(colnames(PBD$data), mapLayers$layers$grids)
-    disable("presenceCol")
+    PBDcolnames <- colnames(PBD$data)
+    defineVisitsUI(PBDcolnames, mapLayers$layers$grids)
+    # disable("presenceCol")
     updateSelectInput(session, "csvSpp", selected = orgVars$sppCol)
     updateCheckboxInput(session, "simplifySpp", value = orgVars$simplifySppName)
     updateCheckboxInput(session, "usePresence", value = ifelse(is.null(orgVars$presenceCol), FALSE, TRUE) )
     # updateSelectInput(session, "presenceCol", selected = orgVars$presenceCol)
     updateCheckboxInput(session, "csvTaxonEnable", value = ifelse(is.null(orgVars$taxonRank), FALSE, TRUE) )
     
+
+    #                                     
     # selectInput("csvLat",            selectInput("csvLon", c(input$csvLon, input$csvLat)
     # textInput("csvCRS", 
     #           orgVars$dataCRS <- paste0("+init=epsg:", epsgInfo$code)
@@ -264,8 +267,6 @@ shinyServer(function(input, output, session) {
   ### Update presence
   observeEvent(input$usePresence,{
     req(PBD$data)
-    # req(input$usePresence)
-
     if(input$usePresence){
       updateSelectInput(session, "presenceCol", 
                         choices = colnames(PBD$data),
@@ -280,49 +281,40 @@ shinyServer(function(input, output, session) {
   })
   
   ### Update taxonrank, used in defineVisitsUI
-  output$taxonRankUI <- renderUI({
+  observeEvent(input$csvTaxonEnable,{
     req(PBD$data)
-    if (input$csvTaxonEnable) {
+    if(input$csvTaxonEnable){
       PBDcolnames <- colnames(PBD$data)
-      stdTaxonRankUpd <- ifelse(!is.null(orgVars$taxonRankCol),
-                                unique(PBD$data[, orgVars$taxonRankCol]),
-                                stdTaxonRank)
-      stdTaxonRankSel <- ifelse(!is.null(orgVars$taxonRankVal),
-                                orgVars$taxonRankVal,
-                                stdTaxonRankUpd[1])
-print(orgVars$taxonRankVal)
-print(stdTaxonRankSel)
-      tagList(
-        selectInput("csvTaxonRankCol", 
-                    label = tooltipHTML("Taxon rank column",
-                    "The name of the column containing the taxonomic rank for 
-                    the observation. That is the minimum taxonomic identification 
-                    level"), 
-                    choices = PBDcolnames, 
-                    selected =  switch(as.character(!is.null(orgVars$taxonRankCol)), 
-                                       "TRUE" = orgVars$taxonRankCol, NULL)),
-        selectInput("csvTaxonRankVal", label = "Taxon rank to keep", 
-                    choices = stdTaxonRankUpd,
-                    selected = stdTaxonRankSel, 
-                    multiple = TRUE)
-      )
-    } else {
-      return()
-    }  
+
+      updateSelectInput(session, "csvTaxonRankCol", 
+                        choices = PBDcolnames,
+                        selected = switch(as.character(!is.null(orgVars$taxonRankCol)), 
+                                          "TRUE" = orgVars$taxonRankCol, NULL) )
+      enable("csvTaxonRankCol") 
+      enable("csvTaxonRankVal") 
+    } else{
+      # updateSelectInput(session, "presenceCol", 
+      # choices = NULL)
+      disable("csvTaxonRankCol") 
+      disable("csvTaxonRankVal") 
+    }
   })
+  
+
   
   observeEvent(input$csvTaxonRankCol,{
     if (!is.null(input$csvTaxonRankCol)) {
-      stdTaxonRankUpd <- unique(PBD$data[, input$csvTaxonRankCol])  
-      # stdTaxonRankUpd <- ifelse(!is.null(orgVars$taxonRankCol),
-      #                           unique(PBD$data[, orgVars$taxonRankCol]),
-      #                           stdTaxonRank)
-      # stdTaxonRankSel <- ifelse(!is.null(orgVars$taxonRankVal),
-      #                           orgVars$taxonRankVal,
-      #                           stdTaxonRankUpd[1])
+      PBDcolnames <- colnames(PBD$data)
+      if(!is.null(orgVars$taxonRankCol) && (orgVars$taxonRankCol %in% PBDcolnames) ){
+        stdTaxonRankUpd <- unique(PBD$data[, orgVars$taxonRankCol])
+      }else{
+        stdTaxonRankUpd <- unique(PBD$data[, input$csvTaxonRankCol])
+      }
+
       updateSelectInput(session, "csvTaxonRankVal", 
-                        choices = stdTaxonRankUpd,
-                        selected = stdTaxonRankUpd)
+                  choices = stdTaxonRankUpd,
+                  selected = switch(as.character(!is.null(orgVars$taxonRankVal)), 
+                                    "TRUE" = orgVars$taxonRankVal, NULL))
     }
   })
   
@@ -382,6 +374,9 @@ print(stdTaxonRankSel)
   
   #When ok button clicked in modal
   observeEvent(input$okDefineVisitsUI, {
+    
+    removeModal()
+    
     withProgress( message = "Creating visits" , {
     
       timeCol.selected <- c(input$timeCols)
@@ -408,8 +403,8 @@ print(stdTaxonRankSel)
       orgVars$xyCols <- c(input$csvLon, input$csvLat)
       orgVars$dataCRS <- paste0("+init=epsg:", epsgInfo$code)
       orgVars$taxonRank <- input$csvTaxonEnable
-print("check after ok")
-print(orgVars$taxonRankCol)
+# print("check after ok")
+# print(orgVars$taxonRankCol)
       setProgress(.8)
       if(orgVars$taxonRank){
         orgVars$taxonRankCol <- input$csvTaxonRankCol
@@ -418,13 +413,14 @@ print(orgVars$taxonRankCol)
         orgVars$taxonRankCol <- NULL
         orgVars$taxonRankVal <- NULL
       }
-print(orgVars$taxonRankCol)
+# print(orgVars$taxonRankVal)
       orgVars$simplifySppName <- input$simplifySpp
       setProgress(.9)
       orgVars$defined <- TRUE
       setProgress(1)
     })
-    removeModal()
+# 
+#     removeModal()
   })
   
   #When cancel button clicked in modal

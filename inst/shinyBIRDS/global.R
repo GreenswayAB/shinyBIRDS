@@ -41,6 +41,7 @@ stdTaxonRank <- c("SPECIES","SUBSPECIES","VARIETY", "GENUS")
 coordLatOpt <- c("decimallatitude", "y", "coordinatey")
 coordLonOpt <- c("decimallongitude", "x", "coordinatex")
 presOptions <- c("presence")
+taxROptions <- c("taxonRank")
 
 urlGBIF <- "http://api.gbif.org"
 urlEPGS <- "http://epsg.io"

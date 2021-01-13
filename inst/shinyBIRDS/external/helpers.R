@@ -69,12 +69,15 @@ defineVisitsUI<-function(colnames, grids){
   PBDcolnames <- colnames
   wColSpp <- switch("scientificname" %in% PBDcolnames, 
                     "scientificname", NULL)
+  wColPre <- switch(any(presOptions %in% PBDcolnames), 
+                    presOptions[which(presOptions %in% PBDcolnames)[1]], NULL)
+  wColTax <- switch(any(taxROptions %in% PBDcolnames), 
+                    taxROptions[which(taxROptions %in% PBDcolnames)[1]], NULL)
+  
   wColLat <- switch(any(coordLatOpt %in% PBDcolnames), 
                     coordLatOpt[which(coordLatOpt %in% PBDcolnames)[1]], NULL)
   wColLon <- switch(any(coordLonOpt %in% PBDcolnames), 
                     coordLonOpt[which(coordLonOpt %in% PBDcolnames)[1]], NULL)
-  wColPre <- switch(any(presOptions %in% PBDcolnames), 
-                    presOptions[which(presOptions %in% PBDcolnames)[1]], NULL)
   #To keep the time column index in the right order:
   wColT <- c(which(PBDcolnames == stdTimeCol[1]), 
              which(PBDcolnames == stdTimeCol[2]), 
@@ -114,7 +117,17 @@ defineVisitsUI<-function(colnames, grids){
                                                                  choices = PBDcolnames, 
                                                                  selected = wColPre))),
                                   checkboxInput("csvTaxonEnable", "Select taxon ranks", FALSE),
-                                  uiOutput("taxonRankUI"), 
+                                  selectInput("csvTaxonRankCol", 
+                                              label = tooltipHTML("Taxon rank column",
+                                                                  "The name of the column containing the taxonomic rank for 
+                                                      the observation. That is the minimum taxonomic identification 
+                                                      level"), 
+                                              choices = PBDcolnames, 
+                                              selected =  wColTax),
+                                  selectInput("csvTaxonRankVal", label = "Taxon rank to keep", 
+                                              choices = stdTaxonRank,
+                                              selected = stdTaxonRank[1], 
+                                              multiple = TRUE),
                                   br(),
                                   fluidRow(
                                     column(6, style='padding-left:0px;',
