@@ -367,7 +367,7 @@ shinyServer(function(input, output, session) {
       
       ## CHeck preliminary result
       if(!is.null(input$csvLat) && !is.null(input$csvLon) && !is.null(epsgInfo$proj4) && epsgInfo$wng == ""){
-        xtest<-PBD$data
+        xtest<-PBD$data[1:min(nrow(PBD$data), 10), ]
         xyCols <- c(input$csvLon, input$csvLat)
         xyColsl.df <- unlist(BIRDS:::findCols(xyCols, xtest, exact=TRUE))
         testCoord<-tryCatch({
@@ -376,8 +376,7 @@ shinyServer(function(input, output, session) {
         }, error = function(e){
           # print(str(e$message))
           return(e$message)
-        }
-        )
+        })
         
         if(class(testCoord)=="CRS"){
           epsgInfo$msg <- paste0( epsgInfo$msg,
