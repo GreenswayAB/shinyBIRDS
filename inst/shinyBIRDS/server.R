@@ -2,6 +2,7 @@ shinyServer(function(input, output, session) {
   StudyArea <- reactiveValues(data=NULL)
   gridR <- reactiveValues(data=NULL)
   csvInfo <- reactiveValues(msg=NULL, wng=NULL)
+  defInfo <- reactiveValues(msg=NULL, wng=NULL)
   epsgInfo <- reactiveValues(msg=NULL, wng=NULL, code=NULL, proj4=NULL)
   
   inputArg <- reactiveValues(file=NULL)
@@ -243,7 +244,8 @@ shinyServer(function(input, output, session) {
   observeEvent(input$defVisits, {
     PBDcolnames <- colnames(PBD$data)
     defineVisitsUI(PBDcolnames, mapLayers$layers$grids)
-    # disable("presenceCol")
+    disable("presenceCol")
+
     updateSelectInput(session, "csvSpp", selected = orgVars$sppCol)
     updateCheckboxInput(session, "simplifySpp", value = orgVars$simplifySppName)
     updateCheckboxInput(session, "usePresence", value = ifelse(is.null(orgVars$presenceCol), FALSE, TRUE) )
@@ -256,7 +258,6 @@ shinyServer(function(input, output, session) {
     updateTextInput(session, "csvCRS", value = epsgInfo$code)
     updateSelectInput(session, "visitCols", selected = orgVars$idCols)
     updateSelectInput(session, "timeCols", selected = orgVars$timeCols)
-    print(orgVars$timeInVisits)
     updateSelectInput(session, "timeInVis", selected = orgVars$timeInVisits)
     updateSelectInput(session, "gridInVis", choices = names(mapLayers$layers$grids), selected = names(orgVars$grid))
   })
@@ -269,11 +270,11 @@ shinyServer(function(input, output, session) {
                         choices = colnames(PBD$data),
                         selected = switch(as.character(!is.null(orgVars$presenceCol)), 
                                           "TRUE" = orgVars$presenceCol, NULL) )
-      enable("presenceCol") 
+      enable("presenceCol")
     } else{
       # updateSelectInput(session, "presenceCol", 
                         # choices = NULL)
-      disable("presenceCol") 
+      disable("presenceCol")
     }
   })
   
@@ -287,14 +288,7 @@ shinyServer(function(input, output, session) {
                         choices = PBDcolnames,
                         selected = switch(as.character(!is.null(orgVars$taxonRankCol)), 
                                           "TRUE" = orgVars$taxonRankCol, NULL) )
-      enable("csvTaxonRankCol") 
-      enable("csvTaxonRankVal") 
-    } else{
-      # updateSelectInput(session, "presenceCol", 
-      # choices = NULL)
-      disable("csvTaxonRankCol") 
-      disable("csvTaxonRankVal") 
-    }
+    } 
   })
   
   observeEvent(input$csvTaxonRankCol,{
@@ -313,9 +307,24 @@ shinyServer(function(input, output, session) {
     }
   })
   
+  observe({
+    if(!is.numeric(PBD$data[,input$csvLat]) || !is.numeric(PBD$data[,input$csvLon])){
+      defInfo$wng <-"On or both of the columns chosen for coordinate are not numeric<br/>"
+    }else{
+      defInfo$wng <-""
+    }
+  })
+  
+  output$defInfoUI<-renderUI( 
+    tagList(
+      br(),
+      div(HTML(defInfo$msg), class="infotext"),
+      div(HTML(defInfo$wng), class="message")
+    )
+  )
   #### Search and update CRS, used in defineVisitsUI
+  
   observeEvent(input$csvCRS, {
-    # observe({
     req(PBD$data)
     epsgInfo$msg<-""
     epsgInfo$wng<-""
@@ -338,7 +347,7 @@ shinyServer(function(input, output, session) {
       if(getEPSG$status_code == 200) {
         contEPSG <- content(getEPSG, encoding = "UTF-8")
         if (contEPSG$number_result==0){
-          epsgInfo$wng <- "Nothing found"
+          epsgInfo$wng <- paste0(epsgInfo$wng,"Nothing found")
         } else {
           if (contEPSG$number_result==1){
             epsgInfo$code <- contEPSG$results[[1]]$code
@@ -350,11 +359,34 @@ shinyServer(function(input, output, session) {
             epsgList <- paste(unlist(
               lapply(contEPSG$results, function(x) paste0(x$name," : ", x$code))),
               collapse = ",<br/>")
-            epsgInfo$wng <-paste0("Refine your search, there are ", contEPSG$number_result, " potential matchs.<br/>
+            epsgInfo$wng <-paste0(epsgInfo$wng, "Refine your search, there are ", contEPSG$number_result, " potential matchs.<br/>
                                  Candidates are: <br/>", epsgList)
           }
         }
       } else {epsgInfo$wng <- "Bad request"}
+      
+      ## CHeck preliminary result
+      if(!is.null(input$csvLat) && !is.null(input$csvLon) && !is.null(epsgInfo$proj4) && epsgInfo$wng == ""){
+        xtest<-PBD$data
+        xyCols <- c(input$csvLon, input$csvLat)
+        xyColsl.df <- unlist(BIRDS:::findCols(xyCols, xtest, exact=TRUE))
+        testCoord<-tryCatch({
+          sp::coordinates(xtest) <- xyColsl.df
+          sp::proj4string(xtest) <- CRS(epsgInfo$proj4)  
+        }, error = function(e){
+          # print(str(e$message))
+          return(e$message)
+        }
+        )
+        
+        if(class(testCoord)=="CRS"){
+          epsgInfo$msg <- paste0( epsgInfo$msg,
+                                  "<br /> Seems like a matching CRS")
+        } else {
+          epsgInfo$wng <- "Given coordinates and CRS doesn´t match. \nTry other columns or CRS"
+        }
+
+      }
     }
   })
   
@@ -366,7 +398,7 @@ shinyServer(function(input, output, session) {
     )
   )
   
-  
+ 
   #When ok button clicked in modal
   observeEvent(input$okDefineVisitsUI, {
     withProgress( message = "Creating visits" , {

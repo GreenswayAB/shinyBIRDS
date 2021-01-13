@@ -98,7 +98,7 @@ defineVisitsUI<-function(colnames, grids){
                         fluidRow(
                           column(6,
                                  ### TODO something else than just column names like dataset parameters... 
-                                  h4("Column names", class="panel-title"),
+                                  h4("Species", class="panel-title"),
                                   selectInput("csvSpp", 
                                               label = tooltipHTML("Scientific species name", 
                                                                   "The column with the species names"),
@@ -117,28 +117,21 @@ defineVisitsUI<-function(colnames, grids){
                                                                  choices = PBDcolnames, 
                                                                  selected = wColPre))),
                                   checkboxInput("csvTaxonEnable", "Select taxon ranks", FALSE),
-                                  selectInput("csvTaxonRankCol", 
-                                              label = tooltipHTML("Taxon rank column",
-                                                                  "The name of the column containing the taxonomic rank for 
-                                                      the observation. That is the minimum taxonomic identification 
-                                                      level"), 
-                                              choices = PBDcolnames, 
-                                              selected =  wColTax),
-                                  selectInput("csvTaxonRankVal", label = "Taxon rank to keep", 
-                                              choices = stdTaxonRank,
-                                              selected = stdTaxonRank[1], 
-                                              multiple = TRUE),
-                                  br(),
-                                  fluidRow(
-                                    column(6, style='padding-left:0px;',
-                                           selectInput("csvLat", label = "Latitud", 
-                                                       choices = PBDcolnames, selected = wColLat)         
-                                    ),
-                                    column(6,
-                                           selectInput("csvLon", label = "Longitud", 
-                                                       choices = PBDcolnames, selected = wColLon)         
+                                  conditionalPanel(condition = "input.csvTaxonEnable", 
+                                    tagList(
+                                      selectInput("csvTaxonRankCol", 
+                                                  label = tooltipHTML("Taxon rank column",
+                                                                      "The name of the column containing the taxonomic rank for 
+                                                          the observation. That is the minimum taxonomic identification 
+                                                          level"), 
+                                                  choices = PBDcolnames, 
+                                                  selected =  wColTax),
+                                      selectInput("csvTaxonRankVal", label = "Taxon rank to keep", 
+                                                  choices = stdTaxonRank,
+                                                  selected = stdTaxonRank[1], 
+                                                  multiple = TRUE)
                                     )
-                                  )#,
+                                  )
                           ),
                           # column(1,br()),
                           column(5, offset = 1,
@@ -162,19 +155,35 @@ defineVisitsUI<-function(colnames, grids){
                                  selectInput("gridInVis", tooltipHTML("Define visits by grid",
                                                                          "Indetifier of the visits spatial extent"), 
                                                 choices = gridAlts),
-                                 br()#,
                           )
                       ), #end fluid row
+                      
                       br(),
                       fluidRow(
-                        column(4,
+                        column(6,
+                          h4("Coordinates", class="panel-title"),
+                          column(6, style='padding-left:0px;',
+                                 selectInput("csvLat", label = "Latitud", 
+                                             choices = PBDcolnames, selected = wColLat)         
+                          ),
+                          column(6,
+                                 selectInput("csvLon", label = "Longitud", 
+                                             choices = PBDcolnames, selected = wColLon)         
+                          )
+                        ),
+                        column(6,
+                               htmlOutput("defInfoUI", inline = FALSE)
+                        )
+                      ),
+                      fluidRow(
+                        column(6,
                                # selectInput("csvCRS", label = "Coordinate Reference System (CRS)", choices = epsg.choices),    
                                textInput("csvCRS", 
                                          label = tooltipHTML("CRS EPSG number",
                                                              "EPSG number for a Coordinate Reference System"),
-                                         value = 4326, placeholder = "EPSG number")
+                                         value = 4326, placeholder = "EPSG number or search text")
                         ),
-                        column(8,
+                        column(6,
                                htmlOutput("epsgInfoUI", inline = FALSE)
                         )#,
                         # column(4, 
