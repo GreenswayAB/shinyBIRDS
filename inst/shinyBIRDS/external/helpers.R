@@ -85,7 +85,7 @@ defineVisitsUI<-function(colnames, grids){
   wColV <- which(stdVisitCol %in% PBDcolnames)
   wColV <- wColV[-match(PBDcolnames[wColT], stdVisitCol)] 
   visitCol.selected <- if (length(wColV)>0) stdVisitCol[wColV] else NULL
-  timeVisOpt <- c("None", "Day", "Month", "Year")
+  timeVisOpt <- structure(c("none", "day", "month", "year"), names=c("None", "Day", "Month", "Year"))
   
   if(length(grids) > 0){
     gridAlts <- c("", 1:length(grids)) 
@@ -157,8 +157,8 @@ defineVisitsUI<-function(colnames, grids){
                                              choices = PBDcolnames, multiple = TRUE, 
                                              selected = visitCol.selected),
                                  selectInput("timeInVis", tooltipHTML("Define visits by time resolution",
-                                                                      "Indicating whether visits are defined by the time definition or not, and to which resolution")
-                                             , choices = timeVisOpt, selected = "Day"),
+                                                                      "Indicating whether visits are defined by the time definition or not, and to which resolution"),
+                                             choices = timeVisOpt, selected = "day"),
                                  selectInput("gridInVis", tooltipHTML("Define visits by grid",
                                                                          "Indetifier of the visits spatial extent"), 
                                                 choices = gridAlts),
@@ -172,8 +172,6 @@ defineVisitsUI<-function(colnames, grids){
                                textInput("csvCRS", 
                                          label = tooltipHTML("CRS EPSG number",
                                                              "EPSG number for a Coordinate Reference System"),
-                                         # label = h5(tags$p("CRS EPSG number",
-                                         #                             tags$span("EPSG number for a Coordinate Reference System"), class="bubble")),
                                          value = 4326, placeholder = "EPSG number")
                         ),
                         column(8,

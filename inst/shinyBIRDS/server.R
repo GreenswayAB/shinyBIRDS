@@ -248,23 +248,20 @@ shinyServer(function(input, output, session) {
     updateCheckboxInput(session, "simplifySpp", value = orgVars$simplifySppName)
     updateCheckboxInput(session, "usePresence", value = ifelse(is.null(orgVars$presenceCol), FALSE, TRUE) )
     # updateSelectInput(session, "presenceCol", selected = orgVars$presenceCol)
-    updateCheckboxInput(session, "csvTaxonEnable", value = ifelse(is.null(orgVars$taxonRank), FALSE, TRUE) )
-    
-
-    #                                     
-    # selectInput("csvLat",            selectInput("csvLon", c(input$csvLon, input$csvLat)
-    # textInput("csvCRS", 
-    #           orgVars$dataCRS <- paste0("+init=epsg:", epsgInfo$code)
-    # selectizeInput("timeCols",
-    # selectInput("timeInVis",
-    # selectInput("gridInVis",
-    # 
-    #             orgVars$dataCRS <- paste0("+init=epsg:", epsgInfo$code)
-                
-                
-                
+    updateCheckboxInput(session, "csvTaxonEnable", value = ifelse(is.null(orgVars$taxonRank), FALSE, orgVars$taxonRank ))
+    updateSelectInput(session, "csvLon", selected = switch(as.character(!is.null(orgVars$xyCols)), 
+                                                           "TRUE" = orgVars$xyCols[1], NULL))
+    updateSelectInput(session, "csvLat", selected = switch(as.character(!is.null(orgVars$xyCols)), 
+                                                           "TRUE" = orgVars$xyCols[2], NULL))
+    updateTextInput(session, "csvCRS", value = epsgInfo$code)
+    updateSelectInput(session, "visitCols", selected = orgVars$idCols)
+    updateSelectInput(session, "timeCols", selected = orgVars$timeCols)
+    print(orgVars$timeInVisits)
+    updateSelectInput(session, "timeInVis", selected = orgVars$timeInVisits)
+    updateSelectInput(session, "gridInVis", choices = names(mapLayers$layers$grids), selected = names(orgVars$grid))
   })
-  ### Update presence
+
+    ### Update presence
   observeEvent(input$usePresence,{
     req(PBD$data)
     if(input$usePresence){
@@ -299,8 +296,6 @@ shinyServer(function(input, output, session) {
       disable("csvTaxonRankVal") 
     }
   })
-  
-
   
   observeEvent(input$csvTaxonRankCol,{
     if (!is.null(input$csvTaxonRankCol)) {
@@ -374,9 +369,6 @@ shinyServer(function(input, output, session) {
   
   #When ok button clicked in modal
   observeEvent(input$okDefineVisitsUI, {
-    
-    removeModal()
-    
     withProgress( message = "Creating visits" , {
     
       timeCol.selected <- c(input$timeCols)
@@ -384,17 +376,14 @@ shinyServer(function(input, output, session) {
       orgVars$sppCol <- input$csvSpp
       orgVars$idCols <- input$visitCols
       orgVars$timeCols <- timeCol.selected
-      orgVars$timeInVisits <- if(input$timeInVis == "None"){
+      orgVars$timeInVisits <- if(input$timeInVis == "none"){
         NULL
       }else{
-        tolower(input$timeInVis)
+        input$timeInVis
       }
       setProgress(.3)
       
-      orgVars$grid <- mapLayers$layers$grids[[as.integer(input$gridInVis)]]  ### TODO THis should be variable and optional
-      
       orgVars$presenceCol <- if(input$usePresence){ ## could have been a switch
-        #print(input$presenceCol)
         input$presenceCol
       }else{
         NULL
@@ -403,8 +392,6 @@ shinyServer(function(input, output, session) {
       orgVars$xyCols <- c(input$csvLon, input$csvLat)
       orgVars$dataCRS <- paste0("+init=epsg:", epsgInfo$code)
       orgVars$taxonRank <- input$csvTaxonEnable
-# print("check after ok")
-# print(orgVars$taxonRankCol)
       setProgress(.8)
       if(orgVars$taxonRank){
         orgVars$taxonRankCol <- input$csvTaxonRankCol
@@ -413,14 +400,14 @@ shinyServer(function(input, output, session) {
         orgVars$taxonRankCol <- NULL
         orgVars$taxonRankVal <- NULL
       }
-# print(orgVars$taxonRankVal)
       orgVars$simplifySppName <- input$simplifySpp
+      orgVars$grid <- mapLayers$layers$grids[[as.integer(input$gridInVis)]]  ### TODO THis should be variable and optional
       setProgress(.9)
       orgVars$defined <- TRUE
       setProgress(1)
     })
 # 
-#     removeModal()
+     removeModal()
   })
   
   #When cancel button clicked in modal
@@ -429,7 +416,6 @@ shinyServer(function(input, output, session) {
   })
   
   ############ Organise #######
-  
   ## organise it and make it spatial and plot it in the map
   observeEvent(input$orgData, {
     req(PBD$data)
