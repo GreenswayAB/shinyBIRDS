@@ -17,7 +17,7 @@ navbarPage(title=div(img(src="./img/BirdsLogo.png", alt="", style="vertical-alig
                        crossorigin="anonymous"),
              useShinyjs(),
              useShinydashboard(),
-             useShinyalert()
+             useShinyalert() ## deprecated
            ),
            
           

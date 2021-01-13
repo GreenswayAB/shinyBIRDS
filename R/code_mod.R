@@ -30,13 +30,13 @@ code_mod_server <- function(id, inputArg, orgVars){
                  
                  observe({
                    # code("")
-                   res <- "library(data.table)\n\nlibrary(BIRDS)\n\n"
+                   res <- "library(data.table)\nlibrary(BIRDS)\n"
 print(length(res))
-                   ### Load data ####
+                   ### Load data ###
                    if(!is.null(inputArg$file)){
                      res <- paste0(res,
-                                   'pbd <- fread(', inputArg$file, ',\n',
-                                   '  stringsAsFactors = FALSE',',\n',
+                                   'pbd <- fread("', inputArg$file, '",\n',
+                                   '  stringsAsFactors = FALSE,\n',
                                    '  encoding = "', ifelse(inputArg$csvUTF,"UTF-8","unknown"), '",\n',
                                    '  header = ',  inputArg$csvHeader, ',\n',
                                    '  sep = "', inputArg$csvSep,'",\n',
@@ -51,15 +51,15 @@ print("load")
                        res <- paste0(res, 
                                   'ob <- organizeBirds(pbd,\n',
                                   '  sppCol = "', orgVars$sppCol, '",\n',
-                                  '  idCols = c("', paste0(orgVars$idCols, sep='","'),'"),\n',
-                                  '  timeCols = c("', paste0(orgVars$timeCols, sep='","'),'"),\n',
-                                  '  timeInVisits = "', orgVars$timeInVisits,',\n',
+                                  '  idCols = c("', paste0(orgVars$idCols, collapse='","'),'"),\n',
+                                  '  timeCols = c("', paste0(orgVars$timeCols, collapse='","'),'"),\n',
+                                  '  timeInVisits = "', orgVars$timeInVisits,'",\n',
                                   '  grid = "', orgVars$grid,'",\n',
                                   '  presenceCol = "', orgVars$presenceCol,'",\n',
-                                  '  xyCols = c("', paste0(orgVars$xyCols, sep='","'),'"),\n',
+                                  '  xyCols = c("', paste0(orgVars$xyCols, collapse='","'),'"),\n',
                                   '  dataCRS = "', orgVars$dataCRS, '",\n',
                                   '  taxonRankCol = "', orgVars$taxonRankCol,'",\n',
-                                  '  taxonRank = c("', paste0(orgVars$taxonRank, sep='","'),'"),\n',
+                                  '  taxonRank = c("', paste0(orgVars$taxonRank, collapse='","'),'"),\n',
                                   '  simplifySppName = ', orgVars$simplifySppName,') \n\n'
                                   )
 print(length(res)) 

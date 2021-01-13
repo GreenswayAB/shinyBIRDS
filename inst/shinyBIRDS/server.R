@@ -10,7 +10,7 @@ shinyServer(function(input, output, session) {
   PBD <- reactiveValues(data=NULL, organised=NULL, visits = NULL)
   orgVars <- reactiveValues(sppCol = NULL, idCols = NULL, timeCols = NULL, timeInVisits = NULL, 
                            grid = NULL, presenceCol = NULL, xyCols = NULL, dataCRS = NULL,
-                           csvTaxon = NULL, taxonRankCol = NULL, taxonRank = NULL, 
+                           taxonRank = NULL, taxonRankCol = NULL, taxonRankVal = NULL, 
                            simplifySppName = NULL, defined = FALSE)
     
   data_stat <- reactiveValues(data = NULL, name = "visitsData")
@@ -97,7 +97,7 @@ shinyServer(function(input, output, session) {
                            shinyalert::shinyalert(title = "An error occured", text = e$message, type = "error")
                            return(NULL)})     # warning = function(w){      return(NULL)}
     
-    
+# print(preTable)
     if(is.data.frame(preTable)){
 
       if (length(colnames(preTable)) > 1) {
@@ -188,10 +188,10 @@ shinyServer(function(input, output, session) {
       orgVars$presenceCol <- NULL
       orgVars$xyCols <- NULL
       orgVars$dataCRS <- NULL
-      orgVars$taxonRankCol <- NULL
       orgVars$taxonRank <- NULL
+      orgVars$taxonRankCol <- NULL
+      orgVars$taxonRankVal <- NULL
       orgVars$simplifySppName <- NULL
-      orgVars$csvTaxon <- NULL
       orgVars$defined <- FALSE
       
       readTable$preview <- NULL
@@ -242,6 +242,88 @@ shinyServer(function(input, output, session) {
   #When button clicked - show modal
   observeEvent(input$defVisits, {
     defineVisitsUI(colnames(PBD$data), mapLayers$layers$grids)
+    disable("presenceCol")
+    updateSelectInput(session, "csvSpp", selected = orgVars$sppCol)
+    updateCheckboxInput(session, "simplifySpp", value = orgVars$simplifySppName)
+    updateCheckboxInput(session, "usePresence", value = ifelse(is.null(orgVars$presenceCol), FALSE, TRUE) )
+    # updateSelectInput(session, "presenceCol", selected = orgVars$presenceCol)
+    updateCheckboxInput(session, "csvTaxonEnable", value = ifelse(is.null(orgVars$taxonRank), FALSE, TRUE) )
+    
+    # selectInput("csvLat",            selectInput("csvLon", c(input$csvLon, input$csvLat)
+    # textInput("csvCRS", 
+    #           orgVars$dataCRS <- paste0("+init=epsg:", epsgInfo$code)
+    # selectizeInput("timeCols",
+    # selectInput("timeInVis",
+    # selectInput("gridInVis",
+    # 
+    #             orgVars$dataCRS <- paste0("+init=epsg:", epsgInfo$code)
+                
+                
+                
+  })
+  ### Update presence
+  observeEvent(input$usePresence,{
+    req(PBD$data)
+    # req(input$usePresence)
+
+    if(input$usePresence){
+      updateSelectInput(session, "presenceCol", 
+                        choices = colnames(PBD$data),
+                        selected = switch(as.character(!is.null(orgVars$presenceCol)), 
+                                          "TRUE" = orgVars$presenceCol, NULL) )
+      enable("presenceCol") 
+    } else{
+      # updateSelectInput(session, "presenceCol", 
+                        # choices = NULL)
+      disable("presenceCol") 
+    }
+  })
+  
+  ### Update taxonrank, used in defineVisitsUI
+  output$taxonRankUI <- renderUI({
+    req(PBD$data)
+    if (input$csvTaxonEnable) {
+      PBDcolnames <- colnames(PBD$data)
+      stdTaxonRankUpd <- ifelse(!is.null(orgVars$taxonRankCol),
+                                unique(PBD$data[, orgVars$taxonRankCol]),
+                                stdTaxonRank)
+      stdTaxonRankSel <- ifelse(!is.null(orgVars$taxonRankVal),
+                                orgVars$taxonRankVal,
+                                stdTaxonRankUpd[1])
+print(orgVars$taxonRankVal)
+print(stdTaxonRankSel)
+      tagList(
+        selectInput("csvTaxonRankCol", 
+                    label = tooltipHTML("Taxon rank column",
+                    "The name of the column containing the taxonomic rank for 
+                    the observation. That is the minimum taxonomic identification 
+                    level"), 
+                    choices = PBDcolnames, 
+                    selected =  switch(as.character(!is.null(orgVars$taxonRankCol)), 
+                                       "TRUE" = orgVars$taxonRankCol, NULL)),
+        selectInput("csvTaxonRankVal", label = "Taxon rank to keep", 
+                    choices = stdTaxonRankUpd,
+                    selected = stdTaxonRankSel, 
+                    multiple = TRUE)
+      )
+    } else {
+      return()
+    }  
+  })
+  
+  observeEvent(input$csvTaxonRankCol,{
+    if (!is.null(input$csvTaxonRankCol)) {
+      stdTaxonRankUpd <- unique(PBD$data[, input$csvTaxonRankCol])  
+      # stdTaxonRankUpd <- ifelse(!is.null(orgVars$taxonRankCol),
+      #                           unique(PBD$data[, orgVars$taxonRankCol]),
+      #                           stdTaxonRank)
+      # stdTaxonRankSel <- ifelse(!is.null(orgVars$taxonRankVal),
+      #                           orgVars$taxonRankVal,
+      #                           stdTaxonRankUpd[1])
+      updateSelectInput(session, "csvTaxonRankVal", 
+                        choices = stdTaxonRankUpd,
+                        selected = stdTaxonRankUpd)
+    }
   })
   
   #### Search and update CRS, used in defineVisitsUI
@@ -297,38 +379,6 @@ shinyServer(function(input, output, session) {
     )
   )
   
-  ### Update taxonrank, used in defineVisitsUI
-  output$taxonRankUI <- renderUI({
-    req(PBD$data)
-    if (input$csvTaxonEnable) {
-      PBDcolnames <- colnames(PBD$data)
-      tagList(
-        selectInput("csvTaxon", 
-                    label = tooltipHTML("Taxon rank column",
-                    "The name of the column containing the taxonomic rank for 
-                    the observation. That is the minimum taxonomic identification 
-                    level"), 
-                    choices = PBDcolnames, 
-                    selected = ifelse("taxonrank" %in% PBDcolnames, "taxonrank", PBDcolnames[1]) ),
-        selectInput("taxonRankVal", label = "Taxon rank to keep", choices = stdTaxonRank,
-                    selected = stdTaxonRank[1], multiple = TRUE)
-      )
-    } else {
-      return()
-    }  
-  })
-  
-  observe({
-    req(PBD$data)
-    req(input$csvTaxonEnable)
-    rep(input$csvTaxon)
-    if (input$csvTaxonEnable && !is.null(input$csvTaxon)) {
-      stdTaxonRankUpd <- unique(PBD$data[, input$csvTaxon])  
-      updateSelectInput(session, "taxonRankVal", 
-                        choices = stdTaxonRankUpd,
-                        selected = stdTaxonRankUpd[1])
-    }
-  })
   
   #When ok button clicked in modal
   observeEvent(input$okDefineVisitsUI, {
@@ -348,7 +398,7 @@ shinyServer(function(input, output, session) {
       
       orgVars$grid <- mapLayers$layers$grids[[as.integer(input$gridInVis)]]  ### TODO THis should be variable and optional
       
-      orgVars$presenceCol <- if(input$usePresence){
+      orgVars$presenceCol <- if(input$usePresence){ ## could have been a switch
         #print(input$presenceCol)
         input$presenceCol
       }else{
@@ -357,10 +407,18 @@ shinyServer(function(input, output, session) {
       setProgress(.5)
       orgVars$xyCols <- c(input$csvLon, input$csvLat)
       orgVars$dataCRS <- paste0("+init=epsg:", epsgInfo$code)
-      orgVars$csvTaxon <- input$csvTaxon
+      orgVars$taxonRank <- input$csvTaxonEnable
+print("check after ok")
+print(orgVars$taxonRankCol)
       setProgress(.8)
-      orgVars$taxonRankCol <- switch(input$csvTaxonEnable, input$csvTaxon, NULL)
-      orgVars$taxonRank <- switch(input$csvTaxonEnable, input$taxonRankVal, stdTaxonRank)
+      if(orgVars$taxonRank){
+        orgVars$taxonRankCol <- input$csvTaxonRankCol
+        orgVars$taxonRankVal <- input$csvTaxonRankVal
+      }else{
+        orgVars$taxonRankCol <- NULL
+        orgVars$taxonRankVal <- NULL
+      }
+print(orgVars$taxonRankCol)
       orgVars$simplifySppName <- input$simplifySpp
       setProgress(.9)
       orgVars$defined <- TRUE
@@ -385,8 +443,10 @@ shinyServer(function(input, output, session) {
       setProgress(.2)
       print("Organizing...")
       PBDdata <- PBD$data[,c(orgVars$sppCol, orgVars$xyCols[1], orgVars$xyCols[2],
-                             orgVars$timeCols, orgVars$idCols, orgVars$csvTaxon, orgVars$presenceCol)]
-      
+                             orgVars$timeCols, orgVars$idCols, 
+                             orgVars$taxonRankCol, #orgVars$taxonRankVal, 
+                             orgVars$presenceCol)]
+print(head(PBDdata))
       PBD$organised <- tryCatch(BIRDS::organizeBirds(PBDdata, 
                                               sppCol = orgVars$sppCol, 
                                               idCols = orgVars$idCols,
@@ -397,7 +457,7 @@ shinyServer(function(input, output, session) {
                                               xyCols = orgVars$xyCols, 
                                               dataCRS = orgVars$dataCRS, ## alt: epsgInfo$proj4
                                               taxonRankCol = orgVars$taxonRankCol,
-                                              taxonRank = orgVars$taxonRank,
+                                              taxonRank = orgVars$taxonRankVal,
                                               simplifySppName = orgVars$simplifySppName), 
                                 error = function(e){
                                   print(str(e))
