@@ -245,10 +245,7 @@ shinyServer(function(input, output, session) {
   observeEvent(input$defVisits, {
     PBDcolnames <- colnames(PBD$data)
     grids <- mapLayers$layers$grids
-    print(names(grids))
-    print(input$gridInVis)
-    print(orgVars$gridName )
-    
+
     defineVisitsUI(PBDcolnames, grids)
     disable("presenceCol")
 
