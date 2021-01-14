@@ -80,6 +80,9 @@ summary_mod_server <- function(id, pbd, layersFromMap){
                      withProgress( message = "Summarizing the observations" , {
                        setProgress(.2)
                        
+print(str(pbd$organised))
+print(switch(input$spillOver != "Not", tolower(input$spillOver), NULL))
+
                        res$summary <- tryCatch(BIRDS::summariseBirds(pbd$organised, 
                                                      grid = grid, 
                                                      spillOver = switch(input$spillOver != "Not", 
@@ -92,9 +95,11 @@ summary_mod_server <- function(id, pbd, layersFromMap){
                                                                         type = "error")
                                                  return(NULL)})
                        setProgress(.8)
-                       res$sppList <- listSpecies(pbd$organised)
+                       res$sppList <- table(pbd$organised$spdf@data$scientificName) #listSpecies(pbd$organised)
                      })
                  })
+                 
+                 output$sppTable <- renderTable( xtable::xtable(as.matrix(res$sppList)))
                  
                  output$summaryUI <- renderUI({
                    req(res$summary)
@@ -105,6 +110,8 @@ summary_mod_server <- function(id, pbd, layersFromMap){
                    years <- unique(year(zoo::index(x$temporal)))
                    vars <- c("number of observations", "number of visits", "number of species observed",
                              "average species list length among visits", "number of days")
+                   spp <- res$sppList
+print(xtable::xtable(as.matrix(res$sppList)))                   
                    tagList(
                      h3("Summary"),
                      p("The spatial element is a SpatialPolygonsDataFrame with ", strong(nGrid), " gridcells/polygons."),
@@ -119,6 +126,9 @@ summary_mod_server <- function(id, pbd, layersFromMap){
                      p("The overlayd element is a list with a organised data frames for
           each polygon. Note that if spill over = TRUE, there might be
           observations duplicated among the polygons."),
+                     p("Species found are:"),
+                     tableOutput("sppTable"),
+                     br(),
                      p(strong("Attributes for the summary")),
                      p(HTML(paste0("visitCol = ", attrX$visitCol), 
                             paste0("<br />spillOver = ", attrX$spillOver), 

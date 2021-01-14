@@ -88,11 +88,11 @@ defineVisitsUI<-function(colnames, grids){
   timeVisOpt <- structure(c("none", "day", "month", "year"), names=c("None", "Day", "Month", "Year"))
   
   if(length(grids) > 0){
-    gridAlts <- c("", 1:length(grids)) 
-    names(gridAlts) <- c("", names(grids))
+    gridAlts <- structure(c("", 1:length(grids)), names=c("", names(grids)))
   }else{
     gridAlts <- NULL
   }
+# print(gridAlts)
   
   showModal(modalDialog(title = "Define visits",
                         fluidRow(
@@ -141,6 +141,9 @@ defineVisitsUI<-function(colnames, grids){
                                                 choices = PBDcolnames,
                                                 multiple = TRUE,
                                                 options = list(items = if (length(wColT)>0) PBDcolnames[wColT] else NULL)),
+                                 selectInput("timeInVis", tooltipHTML("Define visits by time resolution",
+                                                                      "Indicating whether visits are defined by the time definition or not, and to which resolution"),
+                                             choices = timeVisOpt, selected = "day"),
                                  selectInput("visitCols", label = tooltipHTML("Visit identifier columns", 
                                                                               "The columns that are holding the information that identifies a visit. 
                                                                                 What a visit should be is not always clearly defined and extractable 
@@ -149,11 +152,8 @@ defineVisitsUI<-function(colnames, grids){
                                                                                 or site."),
                                              choices = PBDcolnames, multiple = TRUE, 
                                              selected = visitCol.selected),
-                                 selectInput("timeInVis", tooltipHTML("Define visits by time resolution",
-                                                                      "Indicating whether visits are defined by the time definition or not, and to which resolution"),
-                                             choices = timeVisOpt, selected = "day"),
                                  selectInput("gridInVis", tooltipHTML("Define visits by grid",
-                                                                         "Indetifier of the visits spatial extent"), 
+                                                                      "Define the visits spatial extent"), 
                                                 choices = gridAlts),
                           )
                       ), #end fluid row

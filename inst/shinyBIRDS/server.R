@@ -10,7 +10,7 @@ shinyServer(function(input, output, session) {
   readTable <- reactiveValues(data=NULL, preview=NULL)
   PBD <- reactiveValues(data=NULL, organised=NULL, visits = NULL)
   orgVars <- reactiveValues(sppCol = NULL, idCols = NULL, timeCols = NULL, timeInVisits = NULL, 
-                           grid = NULL, presenceCol = NULL, xyCols = NULL, dataCRS = NULL,
+                           gridName = NULL, grid = NULL, presenceCol = NULL, xyCols = NULL, dataCRS = NULL,
                            taxonRank = NULL, taxonRankCol = NULL, taxonRankVal = NULL, 
                            simplifySppName = NULL, defined = FALSE)
     
@@ -185,6 +185,7 @@ shinyServer(function(input, output, session) {
       orgVars$idCols <- NULL
       orgVars$timeCols <- NULL
       orgVars$timeInVisits <-NULL
+      orgVars$gridName <- NULL
       orgVars$grid <- NULL
       orgVars$presenceCol <- NULL
       orgVars$xyCols <- NULL
@@ -243,7 +244,12 @@ shinyServer(function(input, output, session) {
   #When button clicked - show modal
   observeEvent(input$defVisits, {
     PBDcolnames <- colnames(PBD$data)
-    defineVisitsUI(PBDcolnames, mapLayers$layers$grids)
+    grids <- mapLayers$layers$grids
+    print(names(grids))
+    print(input$gridInVis)
+    print(orgVars$gridName )
+    
+    defineVisitsUI(PBDcolnames, grids)
     disable("presenceCol")
 
     updateSelectInput(session, "csvSpp", selected = orgVars$sppCol)
@@ -259,7 +265,15 @@ shinyServer(function(input, output, session) {
     updateSelectInput(session, "visitCols", selected = orgVars$idCols)
     updateSelectInput(session, "timeCols", selected = orgVars$timeCols)
     updateSelectInput(session, "timeInVis", selected = orgVars$timeInVisits)
-    updateSelectInput(session, "gridInVis", choices = names(mapLayers$layers$grids), selected = names(orgVars$grid))
+    
+    if(length(grids) > 0){
+      gridAlts <- structure(c("", 1:length(grids)), names=c("", names(grids)))
+    }else{
+      gridAlts <- NULL
+    }
+    updateSelectInput(session, "gridInVis", 
+                      choices = gridAlts, 
+                      selected = which(names(grids) == orgVars$gridName))
   })
 
     ### Update presence
@@ -432,6 +446,11 @@ shinyServer(function(input, output, session) {
         orgVars$taxonRankVal <- NULL
       }
       orgVars$simplifySppName <- input$simplifySpp
+      grids <- mapLayers$layers$grids
+# print(names(grids))
+# print(input$gridInVis)
+      orgVars$gridName <- names(grids)[as.integer(input$gridInVis)]
+# print(orgVars$gridName )
       orgVars$grid <- mapLayers$layers$grids[[as.integer(input$gridInVis)]]  ### TODO THis should be variable and optional
       setProgress(.9)
       orgVars$defined <- TRUE
@@ -459,7 +478,6 @@ shinyServer(function(input, output, session) {
                              orgVars$timeCols, orgVars$idCols, 
                              orgVars$taxonRankCol, #orgVars$taxonRankVal, 
                              orgVars$presenceCol)]
-print(head(PBDdata))
       PBD$organised <- tryCatch(BIRDS::organizeBirds(PBDdata, 
                                               sppCol = orgVars$sppCol, 
                                               idCols = orgVars$idCols,

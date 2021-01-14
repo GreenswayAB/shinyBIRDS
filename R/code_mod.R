@@ -54,12 +54,17 @@ code_mod_server <- function(id, inputArg, orgVars){
                                   '  idCols = c("', paste0(orgVars$idCols, collapse='","'),'"),\n',
                                   '  timeCols = c("', paste0(orgVars$timeCols, collapse='","'),'"),\n',
                                   '  timeInVisits = "', orgVars$timeInVisits,'",\n',
-                                  '  grid = "', orgVars$grid,'",\n',
-                                  '  presenceCol = "', orgVars$presenceCol,'",\n',
+                                  '  grid = ', ifelse(is.null(orgVars$gridName),
+                                                      'NULL', 
+                                                      paste0('"', orgVars$gridName,'"')),',\n',
+                                  '  presenceCol = ', ifelse(is.null(orgVars$presenceCol),
+                                                              'NULL', 
+                                                              paste0('"',orgVars$presenceCol,'"')),',\n',
                                   '  xyCols = c("', paste0(orgVars$xyCols, collapse='","'),'"),\n',
                                   '  dataCRS = "', orgVars$dataCRS, '",\n',
-                                  '  taxonRankCol = "', orgVars$taxonRankCol,'",\n',
-                                  '  taxonRank = c("', paste0(orgVars$taxonRank, collapse='","'),'"),\n',
+                                  '  taxonRankCol = "', ifelse(!orgVars$taxonRank,'NULL',
+                                                               orgVars$taxonRankCol),'",\n',
+                                  '  taxonRank = c("', paste0(orgVars$taxonRankVal, collapse='","'),'"),\n',
                                   '  simplifySppName = ', orgVars$simplifySppName,') \n\n'
                                   )
 # print(length(res)) 
