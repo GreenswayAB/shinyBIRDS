@@ -63,16 +63,17 @@ expDef_mod_ui <- function(id){
   tagList(
     hr(),
     fluidRow(
-      column(5,
+      column(10,
         h4("Export definitions"),
         DT::dataTableOutput(ns("exportDefs"), width = "98%"),
-      ),
-      column(5,
         h4("Other statistics to export"),
         DT::dataTableOutput(ns("otherDefs"), width = "98%")
       ),
+      # column(5,
+      #  
+      # ),
       column(2,
-             box(title=NULL, status="info", width = 12, solidHeader = FALSE,
+             box(title=NULL, status="success", width = 12, solidHeader = FALSE,
                  h4("If spatial:"),
                  selectInput(inputId = ns("dnlCRS"),
                              label = tooltipHTML("Coordinate Reference Systems", 
