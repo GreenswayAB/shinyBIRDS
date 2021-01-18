@@ -28,7 +28,9 @@ summary_mod_ui <- function(id){
     br(),
     fluidRow(
       column(12,
-              htmlOutput(ns("summaryUI"))
+              uiOutput(ns("summaryUI")),
+              # p(paste0("The species found were:")),
+              DT::dataTableOutput(ns("sppTable"))
               )  
     )
   )
@@ -100,7 +102,20 @@ summary_mod_server <- function(id, pbd, layersFromMap){
                      })
                  })
                  
-                 output$sppTable <- renderTable( xtable::xtable(as.matrix(res$sppList)))
+                 output$sppTable <- DT::renderDataTable({
+                   req(res$sppList)
+                   # if(is.null(res$sppList)) return()
+                   table <- as.matrix(res$sppList)
+                   colnames(table) <- "N.obs"
+
+                   datatable(table, 
+                             rownames = TRUE,
+                             autoHideNavigation = FALSE,
+                             options = list(dom = "t",
+                                            scrollX = FALSE,
+                                            scrollY = "30vh")
+                             )
+                   }, server = TRUE)
                  
                  output$summaryUI <- renderUI({
                    req(res$summary)
@@ -112,7 +127,7 @@ summary_mod_server <- function(id, pbd, layersFromMap){
                    vars <- c("number of observations", "number of visits", "number of species observed",
                              "average species list length among visits", "number of days")
                    spp <- res$sppList
-print(xtable::xtable(as.matrix(res$sppList)))                   
+
                    tagList(
                      h3("Summary"),
                      p("The spatial element is a SpatialPolygonsDataFrame with ", strong(nGrid), " gridcells/polygons."),
@@ -127,13 +142,16 @@ print(xtable::xtable(as.matrix(res$sppList)))
                      p("The overlayd element is a list with a organised data frames for
           each polygon. Note that if spill over = TRUE, there might be
           observations duplicated among the polygons."),
-                     p("Species found are:"),
-                     tableOutput("sppTable"),
+                     
                      br(),
                      p(strong("Attributes for the summary")),
                      p(HTML(paste0("visitCol = ", attrX$visitCol), 
                             paste0("<br />spillOver = ", attrX$spillOver), 
-                            paste0("<br />spatial = ", attrX$spatial)))
+                            paste0("<br />spatial = ", attrX$spatial))),
+                     
+                     br(),
+                     p(strong("The species found were:"))
+                     
                    )
                    
                  }) #end render Summary UI

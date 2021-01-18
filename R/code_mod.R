@@ -80,13 +80,13 @@ code_mod_server <- function(id, inputArg, orgVars, visDat, remVars, layers, summ
                   if(!is.null(remVars$criteria)){
                     res <- paste0(res,
                                   'ob <- removeObs(ob, vis,\n',
-                                  '  criteria = "', remVar$criteria,'",\n',
-                                  '  percent = ', ifelse(is.null(remVar$percent),
-                                                         'NULL', remVar$percent),',\n',
-                                  '  stepChunk = ', ifelse(is.null(remVar$stepChunk),
-                                                           'NULL', remVar$stepChunk),',\n',
-                                  '  minCrit = ', ifelse(is.null(remVar$minCrit),
-                                                         'NULL', remVar$minCrit),') \n\n')
+                                  '  criteria = "', remVars$criteria,'",\n',
+                                  '  percent = ', ifelse(is.null(remVars$percent),
+                                                         'NULL', remVars$percent),',\n',
+                                  '  stepChunk = ', ifelse(is.null(remVars$stepChunk),
+                                                           'NULL', remVars$stepChunk),',\n',
+                                  '  minCrit = ', ifelse(is.null(remVars$minCrit),
+                                                         'NULL', remVars$minCrit),') \n\n')
                   }
                  
                    #### ADD Summary ###

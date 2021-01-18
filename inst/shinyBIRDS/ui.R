@@ -20,29 +20,7 @@ navbarPage(title=div(img(src="./img/BirdsLogo.png", alt="", style="vertical-alig
              useShinyalert() ## deprecated
            ),
            
-          
-           
-           # tabPanel(title = "", icon = icon("home"), value = "home",
-           #          useShinyjs(),
-           #          useShinyalert(),
-           #          # tags$head(
-           #          #   tags$link(rel="shortcut icon", href="img/favicon.ico"),
-           #          # 
-           #          #   # Include our custom CSS
-           #          #   includeCSS("styles.css"),
-           #          #   tags$style(".container-drag-source, .box-dad {font-size: 18px;}"),
-           #          #   tags$style("tab-content {padding-top: 70px;}"),
-           #          #   tags$link(rel="stylesheet", href="https://use.fontawesome.com/releases/v5.1.0/css/all.css", integrity="sha384-lKuwvrZot6UHsBSfcMvOkWwlCMgc0TaWr+30HWe3a4ltaBwTZhyTEggF5tJv8tbt", crossorigin="anonymous")
-           #          # ),
-           #          HTML('
-           #                    <center>
-           #                    <h1><img src="./img/BirdsLogo.png" alt="" style="vertical-align:bottom;float:middle;height:150px;">&nbsp;</h1>
-           #                    <br>
-           #                    <h1><strong>Birds</strong>&nbsp;</h1>
-           #                    </center>
-           #                    <br>'
-           #          )
-           # ),
+
            tabPanel(title = "Data", icon = icon("binoculars"), value = "data",
                     load_ui_content("ui/tabPanel_data.R"),# end of TABbox
                     # fluidRow(map_page_ui("mapPage")),

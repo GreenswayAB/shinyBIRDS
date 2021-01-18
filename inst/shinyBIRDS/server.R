@@ -474,18 +474,11 @@ shinyServer(function(input, output, session) {
     withProgress( message = "Organizing the observations" , {
       setProgress(.2)
       print("Organizing...")
-print(class(orgVars$grid))
       PBDdata <- PBD$data[,c(orgVars$sppCol, orgVars$xyCols[1], orgVars$xyCols[2],
                              orgVars$timeCols, orgVars$idCols, 
                              orgVars$taxonRankCol, #orgVars$taxonRankVal, 
                              orgVars$presenceCol)]
   
-  x <- as.data.frame(PBDdata)
-
-  sp::coordinates(x) <- ~ orgVars$xyCols[1] + orgVars$xyCols[2]
-  sp::proj4string(x) <- orgVars$dataCRS
-  x <- spTransform(x, CRS("+init=epsg:4326"))
-print(identicalCRS(x, orgVars$grid))
       PBD$organised <- tryCatch(BIRDS::organizeBirds(PBDdata, 
                                               sppCol = orgVars$sppCol, 
                                               idCols = orgVars$idCols,
