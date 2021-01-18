@@ -67,8 +67,8 @@ loadDataUI<-function(){
 defineVisitsUI<-function(colnames, grids){
   
   PBDcolnames <- colnames
-  wColSpp <- switch("scientificname" %in% PBDcolnames, 
-                    "scientificname", NULL)
+  wColSpp <- switch(any(stdSppName %in% PBDcolnames), 
+                    stdSppName[which(stdSppName %in% PBDcolnames)[1]], NULL)
   wColPre <- switch(any(presOptions %in% PBDcolnames), 
                     presOptions[which(presOptions %in% PBDcolnames)[1]], NULL)
   wColTax <- switch(any(taxROptions %in% PBDcolnames), 
@@ -79,12 +79,18 @@ defineVisitsUI<-function(colnames, grids){
   wColLon <- switch(any(coordLonOpt %in% PBDcolnames), 
                     coordLonOpt[which(coordLonOpt %in% PBDcolnames)[1]], NULL)
   #To keep the time column index in the right order:
-  wColT <- c(which(PBDcolnames == stdTimeCol[1]), 
-             which(PBDcolnames == stdTimeCol[2]), 
-             which(PBDcolnames == stdTimeCol[3]))
-  wColV <- which(stdVisitCol %in% PBDcolnames)
-  wColV <- wColV[-match(PBDcolnames[wColT], stdVisitCol)] 
-  visitCol.selected <- if (length(wColV)>0) stdVisitCol[wColV] else NULL
+  wColT <- switch(any(stdTimeCol %in% PBDcolnames), 
+                  stdTimeCol[which(stdTimeCol %in% PBDcolnames)], NULL)
+  # c(which(PBDcolnames == stdTimeCol[1]), 
+  #            which(PBDcolnames == stdTimeCol[2]), 
+  #            which(PBDcolnames == stdTimeCol[3]))
+  wColV <- switch(any(stdVisitCol %in% PBDcolnames), 
+                  stdVisitCol[which(stdVisitCol %in% PBDcolnames)], NULL)
+  wColTV <- match(wColT, wColV)
+  if (sum(!is.na(wColTV))>0){
+    wColV <- wColV[-wColTV]   
+  }
+  # visitCol.selected <- if (length(wColV)>0) stdVisitCol[wColV] else NULL
   timeVisOpt <- structure(c("none", "day", "month", "year"), names=c("None", "Day", "Month", "Year"))
   
   if(length(grids) > 0){
@@ -140,7 +146,7 @@ defineVisitsUI<-function(colnames, grids){
                                                                                 "The column(s) holding the observation dates. Make sure to order them like year, month, day."), 
                                                 choices = PBDcolnames,
                                                 multiple = TRUE,
-                                                options = list(items = if (length(wColT)>0) PBDcolnames[wColT] else NULL)),
+                                                selected = if (length(wColT)>0) wColT else NULL),
                                  selectInput("timeInVis", tooltipHTML("Define visits by time resolution",
                                                                       "Indicating whether visits are defined by the time definition or not, and to which resolution"),
                                              choices = timeVisOpt, selected = "day"),
@@ -150,8 +156,9 @@ defineVisitsUI<-function(colnames, grids){
                                                                                 in a dataset. A reasonable assumption is that a visit could be identified 
                                                                                 from the records made by one person on a certain day and at a specific location 
                                                                                 or site."),
-                                             choices = PBDcolnames, multiple = TRUE, 
-                                             selected = visitCol.selected),
+                                             choices = PBDcolnames, 
+                                             multiple = TRUE, 
+                                             selected = wColV),
                                  selectInput("gridInVis", tooltipHTML("Define visits by grid",
                                                                       "Define the visits spatial extent"), 
                                                 choices = gridAlts),

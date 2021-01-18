@@ -54,15 +54,15 @@ summary_page_ui <- function(id){
 #' @return
 #' @import shiny
 #' @export
-summary_page_server <- function(id, pbd, layers, inputArg, orgVars){
+summary_page_server <- function(id, pbd, layers, inputArg, orgVars, visDat, remVars){
   
   moduleServer(id,
                function(input, output, session){
                  summary <- summary_mod_server("summary", pbd, layers)
                  #### code ####
-                 code <- code_mod_server("code", inputArg, orgVars)
+                 code <- code_mod_server("code", inputArg, orgVars, visDat, remVars, layers, summary)
                  params <- expParam_mod_server("expParam", summary)
-                 toView <- expDef_mod_server("expDef",summary, params)
+                 toView <- expDef_mod_server("expDef", summary, params)
                  # resView_mod_server("resultView", toView)
                  
                })

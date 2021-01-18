@@ -49,13 +49,14 @@ summary_mod_server <- function(id, pbd, layersFromMap){
   moduleServer(id,
                function(input, output, session){
                  
-                 res <- reactiveValues(summary = NULL, sppList = NULL)
+                 res <- reactiveValues(summary = NULL, sppList = NULL, 
+                                       spillOver = NULL, grid = NULL)
                  
                  observeEvent(layersFromMap$layers, {
-                   opt <- names(layersFromMap$layers$grids)
-                   if(length(opt) > 0){
-                     gridAlts <- c("", 1:length(opt)) 
-                     names(gridAlts) <- c("", opt)
+                   grids <- names(layersFromMap$layers$grids)
+                   if(length(grids) > 0){
+                     gridAlts <- c("", 1:length(grids)) 
+                     names(gridAlts) <- c("", grids)
                    }else{
                      gridAlts <- NULL
                    }
@@ -77,17 +78,15 @@ summary_mod_server <- function(id, pbd, layersFromMap){
 
                    #Store which grid that is used for summary for it to be used in export. 
                    grid <- layersFromMap$layers$grids[[as.integer(input$gridInSummary)]]
-                     withProgress( message = "Summarizing the observations" , {
+                   spillOver <- switch(input$spillOver != "Not", 
+                                      tolower(input$spillOver), 
+                                      NULL)
+                   
+                   withProgress( message = "Summarizing the observations" , {
                        setProgress(.2)
-                       
-print(str(pbd$organised))
-print(switch(input$spillOver != "Not", tolower(input$spillOver), NULL))
-
                        res$summary <- tryCatch(BIRDS::summariseBirds(pbd$organised, 
                                                      grid = grid, 
-                                                     spillOver = switch(input$spillOver != "Not", 
-                                                                        tolower(input$spillOver), 
-                                                                        NULL)),
+                                                     spillOver = spillOver),
                                                error = function(e){
                                                  print(str(e))
                                                  shinyalert::shinyalert(title = "An error occured", 
@@ -96,6 +95,8 @@ print(switch(input$spillOver != "Not", tolower(input$spillOver), NULL))
                                                  return(NULL)})
                        setProgress(.8)
                        res$sppList <- table(pbd$organised$spdf@data$scientificName) #listSpecies(pbd$organised)
+                       res$spillOver <- input$spillOver
+                       res$grid <- names(layersFromMap$layers$grids)[as.integer(input$gridInSummary)]
                      })
                  })
                  
@@ -138,7 +139,8 @@ print(xtable::xtable(as.matrix(res$sppList)))
                  }) #end render Summary UI
                  
                  return(res)
-                 
+                
+                  
                })
   
 }

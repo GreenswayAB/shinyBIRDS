@@ -65,15 +65,6 @@ map_page_server <- function(id, pbd_data){
                    drawn$polygon <- d()
                  })
                  
-                 # ### clean the layer when new data is uploaded
-                 # observeEvent( pbd_data$data , {
-                 #   proxy <- leafletProxy(mapId="map")
-                 #   proxy %>% 
-                 #     clearBounds() %>% 
-                 #     clearShapes() %>% 
-                 #     clearMarkers() %>%
-                 #     removeLayersControl()
-                 # })
                  return(layerList)
                  
                })

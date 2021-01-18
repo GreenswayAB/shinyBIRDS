@@ -13,6 +13,8 @@ shinyServer(function(input, output, session) {
                            gridName = NULL, grid = NULL, presenceCol = NULL, xyCols = NULL, dataCRS = NULL,
                            taxonRank = NULL, taxonRankCol = NULL, taxonRankVal = NULL, 
                            simplifySppName = NULL, defined = FALSE)
+  
+  remVars <- reactiveValues(criteria = NULL, percent = NULL, stepChunk = NULL, minCrit = NULL)
     
   data_stat <- reactiveValues(data = NULL, name = "visitsData")
   # cleancoord <- reactiveValues(x=NULL, logs=NULL)
@@ -196,6 +198,11 @@ shinyServer(function(input, output, session) {
       orgVars$simplifySppName <- NULL
       orgVars$defined <- FALSE
       
+      remVars$criteria <- NULL
+      remVars$percent <- NULL
+      remVars$stepChunk <- NULL
+      remVars$minCrit <- NULL
+      
       readTable$preview <- NULL
       readTable$data <- NULL
     } 
@@ -318,13 +325,13 @@ shinyServer(function(input, output, session) {
     }
   })
   
-  observe({
-    if(!is.numeric(PBD$data[,input$csvLat]) || !is.numeric(PBD$data[,input$csvLon])){
-      defInfo$wng <-"On or both of the columns chosen for coordinate are not numeric<br/>"
-    }else{
-      defInfo$wng <-""
-    }
-  })
+  # observe({
+  #   if(!is.numeric(PBD$data[,input$csvLat]) || !is.numeric(PBD$data[,input$csvLon])){
+  #     defInfo$wng <-"On or both of the columns chosen for coordinate are not numeric<br/>"
+  #   }else{
+  #     defInfo$wng <-""
+  #   }
+  # })
   
   output$defInfoUI<-renderUI( 
     tagList(
@@ -450,8 +457,7 @@ shinyServer(function(input, output, session) {
       orgVars$defined <- TRUE
       setProgress(1)
     })
-# 
-     removeModal()
+      removeModal()
   })
   
   #When cancel button clicked in modal
@@ -501,7 +507,6 @@ print(identicalCRS(x, orgVars$grid))
       setProgress(.8)
       updateTabsetPanel(session, "pbd_output", selected = "org")
     })
-   
   })
   
   output$TablePBDOrg <- DT::renderDataTable({
@@ -556,7 +561,8 @@ print(identicalCRS(x, orgVars$grid))
     print("Calling esquisserServer...")
     withProgress( message = "Oppening the canvas..." , {
       setProgress(.2)
-      callModule(module = esquisserServer, id = "visitsEsquisse", data = data_stat)  
+      callModule(module = esquisserServer, 
+                 id = "visitsEsquisse", data = data_stat)  
       setProgress(.9)
     })
   })
@@ -576,12 +582,25 @@ print(identicalCRS(x, orgVars$grid))
   #When button clicked - show modal
   observeEvent(input$removeObs, {
     removeObsUI()
+    updateSelectInput(session, "criteria", selected = remVars$criteria)
+    updateSliderInput(session, "percent", value = remVars$percent)
+    updateNumericInput(session, "stepChunk", value = remVars$stepChunk)
+    updateNumericInput(session, "minCrit", value = remVars$minCrit)
   })
   
   #When ok button klicked in modal
   observeEvent(input$okRemoveObsUI, {
     
+    remVars$criteria <- NULL
+    remVars$percent <- NULL
+    remVars$stepChunk <- NULL
+    remVars$minCrit <- NULL
+    
     if(input$percentOrMinCrit == 1){
+      remVars$criteria <- input$criteria
+      remVars$percent <- input$percent
+      remVars$stepChunk <- input$stepChunk
+      
       
       OB <- tryCatch(BIRDS::removeObs(PBD$organised, PBD$visits,
                                       criteria = input$criteria,
@@ -597,6 +616,8 @@ print(identicalCRS(x, orgVars$grid))
       }
       
     }else{
+      remVars$criteria <- input$criteria
+      remVars$minCrit <- input$minCrit
       
       OB <- tryCatch(BIRDS::removeObs(PBD$organised, PBD$visits,
                                       criteria = input$criteria,
@@ -625,6 +646,6 @@ print(identicalCRS(x, orgVars$grid))
   
   
   #### Summarise ######
-  summary_page_server("summaryPage", PBD, mapLayers, inputArg, orgVars)
+  summary_page_server("summaryPage", PBD, mapLayers, inputArg, orgVars, data_stat, remVars)
   
 }) # end server function

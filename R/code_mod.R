@@ -23,15 +23,14 @@ code_mod_ui <- function(id){
 #' @param input Reactive value with the layers to show 
 #' @param ractiveValues A reactive value with primary biodiversity data
 #' @return
-code_mod_server <- function(id, inputArg, orgVars){
+code_mod_server <- function(id, inputArg, orgVars, visDat, remVars, layers, summary ){
   moduleServer(id,
                function(input, output, session){
                  code <- reactiveVal("")
                  
                  observe({
                    # code("")
-                   res <- "library(data.table)\nlibrary(BIRDS)\n"
-# print(length(res))
+                   res <- "  library(data.table)\nlibrary(BIRDS)\n"
                    ### Load data ###
                    if(!is.null(inputArg$file)){
                      res <- paste0(res,
@@ -43,45 +42,71 @@ code_mod_server <- function(id, inputArg, orgVars){
                                    '  quote = "',  inputArg$csvQuote, '",\n',
                                    '  na.strings = "",\n  data.table = FALSE,\n  fill = TRUE) \n\n'
                                    )
-# print(length(res))
-# print("load")
-                    } 
+                   } 
+                   
                    #### ADD organise ###
-                     if(!is.null(orgVars$sppCol)){
-                       res <- paste0(res, 
-                                  'ob <- organizeBirds(pbd,\n',
-                                  '  sppCol = "', orgVars$sppCol, '",\n',
-                                  '  idCols = c("', paste0(orgVars$idCols, collapse='","'),'"),\n',
-                                  '  timeCols = c("', paste0(orgVars$timeCols, collapse='","'),'"),\n',
-                                  '  timeInVisits = "', orgVars$timeInVisits,'",\n',
-                                  '  grid = ', ifelse(is.null(orgVars$gridName),
-                                                      'NULL', 
-                                                      paste0('"', orgVars$gridName,'"')),',\n',
-                                  '  presenceCol = ', ifelse(is.null(orgVars$presenceCol),
-                                                              'NULL', 
-                                                              paste0('"',orgVars$presenceCol,'"')),',\n',
-                                  '  xyCols = c("', paste0(orgVars$xyCols, collapse='","'),'"),\n',
-                                  '  dataCRS = "', orgVars$dataCRS, '",\n',
-                                  '  taxonRankCol = "', ifelse(!orgVars$taxonRank,'NULL',
-                                                               orgVars$taxonRankCol),'",\n',
-                                  '  taxonRank = c("', paste0(orgVars$taxonRankVal, collapse='","'),'"),\n',
-                                  '  simplifySppName = ', orgVars$simplifySppName,') \n\n'
-                                  )
-# print(length(res)) 
-# print("org")
-                     }
+                   if(!is.null(orgVars$sppCol)){
+                     res <- paste0(res, 
+                                'ob <- organizeBirds(pbd,\n',
+                                '  sppCol = "', orgVars$sppCol, '",\n',
+                                '  idCols = c("', paste0(orgVars$idCols, collapse='","'),'"),\n',
+                                '  timeCols = c("', paste0(orgVars$timeCols, collapse='","'),'"),\n',
+                                '  timeInVisits = "', orgVars$timeInVisits,'",\n',
+                                '  grid = ', ifelse(is.null(orgVars$gridName),
+                                                    'NULL', 
+                                                    paste0('"', orgVars$gridName,'"')),',\n',
+                                '  presenceCol = ', ifelse(is.null(orgVars$presenceCol),
+                                                            'NULL', 
+                                                            paste0('"',orgVars$presenceCol,'"')),',\n',
+                                '  xyCols = c("', paste0(orgVars$xyCols, collapse='","'),'"),\n',
+                                '  dataCRS = "', orgVars$dataCRS, '",\n',
+                                '  taxonRankCol = ', ifelse(!orgVars$taxonRank,
+                                                            'NULL',
+                                                            paste0('"',orgVars$presenceCol,'"')),',\n',
+                                '  taxonRank = c("', paste0(orgVars$taxonRankVal, collapse='","'),'"),\n',
+                                '  simplifySppName = ', orgVars$simplifySppName,') \n\n'
+                                )
+                   }
+                   
+                 # makeGrid()
+                 # 
+                 # exploreVisits()
+                 if(!is.null(visDat$data)){
+                   res <- paste0(res,
+                                 'vis <- exploreVisits(ob)\n\n')
+                 }
+
+                  # removeObs()
+                  if(!is.null(remVars$criteria)){
+                    res <- paste0(res,
+                                  'ob <- removeObs(ob, vis,\n',
+                                  '  criteria = "', remVar$criteria,'",\n',
+                                  '  percent = ', ifelse(is.null(remVar$percent),
+                                                         'NULL', remVar$percent),',\n',
+                                  '  stepChunk = ', ifelse(is.null(remVar$stepChunk),
+                                                           'NULL', remVar$stepChunk),',\n',
+                                  '  minCrit = ', ifelse(is.null(remVar$minCrit),
+                                                         'NULL', remVar$minCrit),') \n\n')
+                  }
+                 
+                   #### ADD Summary ###
+                   if(!is.null(summary$summary)){
+                     grid <- ifelse(is.null(summary$grid),
+                                    'NULL', 
+                                    paste0('"', summary$grid,'"'))
+                     spillOver <- ifelse(summary$spillOver != "Not", 
+                                         paste0('"',tolower(summary$spillOver),'"'), 
+                                         'NULL')
+                     res <- paste0(res, 
+                                   'sm <- summarizeBirds(ob,\n',
+                                   '  grid = ', grid,',\n',
+                                   '  spillover = ', spillOver, ') \n\n'
+                                   )
+                   }
                   code(res)
                      
                  })
                  
-                 # makeGrid()
-                 # 
-                 # exploreVisits()
-                 # 
-                 # removeObs()
-                 # 
-                 # summarizeBirds()
-                 # 
                  # exportBirds()
                  # 
                  # communityMatrix()
