@@ -19,7 +19,7 @@ substrRight <- function(x, n){
 loadDataUI<-function(){
   showModal(modalDialog(title = "Load PBD data",
                         fluidRow(
-                          column(6,
+                          column(8,
                                  h4("Upload the observations", class="panel-title"),
                                  fileInput("csvFile", 
                                            label = tooltipHTML("Choose a column-based file with the PBD",
@@ -27,27 +27,40 @@ loadDataUI<-function(){
                                            accept=c('.csv', '.txt','.scsv', '.tsv'), 
                                            multiple=FALSE, width = "100%"),
                                  fluidRow(
-                                   column(6,
-                                          checkboxInput("csvHeader", "Header", TRUE),
+                                   column(3,
                                           radioButtons("csvSep", "Separator",
                                                        choices = c("Comma" = ",",
                                                                    "Semicolon" = ";",
                                                                    "Tab" = "\t"),
-                                                       selected = ";")
+                                                       selected = ";"),
+                                          checkboxInput("csvHeader", "Header", TRUE)
                                    ),
-                                   column(6, 
-                                          checkboxInput("csvUTF", label = "Encoding = UTF-8", TRUE),
+                                   column(3, 
+                                          # checkboxInput("csvUTF", label = "Encoding = UTF-8", TRUE),
                                           radioButtons("csvQuote", "Quote",
                                                        choices = c("None" = "",
                                                                    "Single Quote" = "\'",
                                                                    "Double Quote" = "\""),
                                                        selected = "\"")
+                                   ),
+                                   column(3, 
+                                          radioButtons("csvDec", "Decimal",
+                                                       choices = c("Point" = ".",
+                                                                   "Comma" = ","),
+                                                       selected = ".")
+                                   ),
+                                   column(3, 
+                                          radioButtons("csvUTF", "Encoding",
+                                                       choices = c("UTF-8" = "UTF-8",
+                                                                   "Latin-1" = "Latin-1",
+                                                                   "Unknown" = "unknown"),
+                                                       selected = "unknown")
                                    )
                                  ),
                                  htmlOutput("csvInfo", inline=FALSE),
                                  htmlOutput("csvMessage", inline=FALSE)
                           ),
-                          column(6,includeHTML("ui/loadData.html"))
+                          column(4, includeHTML("ui/loadData.html"))
                         ),
                         br(),
                         h4("Data preview"),

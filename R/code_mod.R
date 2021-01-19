@@ -36,10 +36,11 @@ code_mod_server <- function(id, inputArg, orgVars, visDat, remVars, layers, summ
                      res <- paste0(res,
                                    'pbd <- fread("', inputArg$file, '",\n',
                                    '  stringsAsFactors = FALSE,\n',
-                                   '  encoding = "', ifelse(inputArg$csvUTF,"UTF-8","unknown"), '",\n',
+                                   '  encoding = "', inputArg$csvUTF, '",\n',
                                    '  header = ',  inputArg$csvHeader, ',\n',
                                    '  sep = "', inputArg$csvSep,'",\n',
                                    '  quote = "',  inputArg$csvQuote, '",\n',
+                                   '  dec = "', inputArg$csvDec,'",\n',
                                    '  na.strings = "",\n  data.table = FALSE,\n  fill = TRUE) \n\n'
                                    )
                    } 

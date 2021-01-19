@@ -80,7 +80,8 @@ shinyServer(function(input, output, session) {
     if(ext == "scsv"){
       updateRadioButtons(session, "csvSep", selected = ";")
       disable("csvSep")
-      updateCheckboxInput(session, "csvUTF", value = FALSE)
+      # updateCheckboxInput(session, "csvUTF", value = FALSE)
+      updateRadioButtons(session, "csvUTF", selected = "unknown")
       updateRadioButtons(session, "csvQuote", selected = "\"")
     }
     if(ext == "tsv"){
@@ -90,12 +91,20 @@ shinyServer(function(input, output, session) {
     if(! ext %in% c("tsv", "scsv")){
       enable("csvSep")
     }
+    
+    if(input$csvSep == ",") updateRadioButtons(session, "csvDec", selected = ".")
       
     ##### TODO issue#6 is too slow to upload a file to internet, maybe add possibility to get from url
     preTable <- tryCatch(fread(file=file, #getcsv, 
-                               stringsAsFactors = FALSE, encoding = ifelse(input$csvUTF,"UTF-8","unknown"), 
-                               header = input$csvHeader, sep = input$csvSep, 
-                               quote = input$csvQuote, na.strings = "", data.table = FALSE, fill = TRUE), 
+                               stringsAsFactors = FALSE, 
+                               encoding = input$csvUTF, 
+                               header = input$csvHeader, 
+                               sep = input$csvSep, 
+                               dec = input$csvDec,
+                               quote = input$csvQuote, 
+                               na.strings = "", 
+                               data.table = FALSE, 
+                               fill = TRUE), 
                          error = function(e){
                            shinyalert::shinyalert(title = "An error occured", text = e$message, type = "error")
                            return(NULL)})     # warning = function(w){      return(NULL)}
@@ -105,7 +114,8 @@ shinyServer(function(input, output, session) {
 
       if (length(colnames(preTable)) > 1) {
         colnames(preTable) <- iconv(colnames(preTable), 
-                                    from = (if(input$csvUTF) "UTF-8" else ""), 
+                                    # from = (if(input$csvUTF) "UTF-8" else ""), 
+                                    from = ifelse(input$csvUTF == "unknown", "", "UTF-8"), 
                                     sub = "byte")
         
         # if(!any(grepl('[^[:punct:]]', colnames(preTable)))){
@@ -132,6 +142,7 @@ shinyServer(function(input, output, session) {
     inputArg$csvHeader <- input$csvHeader
     inputArg$csvSep <- input$csvSep
     inputArg$csvQuote <- input$csvQuote
+    inputArg$csvDec <- input$csvDec
   })
 
   
@@ -325,13 +336,13 @@ shinyServer(function(input, output, session) {
     }
   })
   
-  # observe({
-  #   if(!is.numeric(PBD$data[,input$csvLat]) || !is.numeric(PBD$data[,input$csvLon])){
-  #     defInfo$wng <-"On or both of the columns chosen for coordinate are not numeric<br/>"
-  #   }else{
-  #     defInfo$wng <-""
-  #   }
-  # })
+  observeEvent(input$csvLat,{
+    if(!is.numeric(PBD$data[,input$csvLat]) || !is.numeric(PBD$data[,input$csvLon])){
+      defInfo$wng <-"On or both of the columns chosen for coordinate are not numeric<br/>"
+    }else{
+      defInfo$wng <-""
+    }
+  })
   
   output$defInfoUI<-renderUI( 
     tagList(

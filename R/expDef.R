@@ -63,24 +63,25 @@ expDef_mod_ui <- function(id){
   tagList(
     hr(),
     fluidRow(
-      column(10,
+      column(8,
         h4("Export definitions"),
         DT::dataTableOutput(ns("exportDefs"), width = "98%"),
+        br(),
         h4("Other statistics to export"),
         DT::dataTableOutput(ns("otherDefs"), width = "98%")
       ),
       # column(5,
       #  
       # ),
-      column(2,
-             box(title=NULL, status="success", width = 12, solidHeader = FALSE,
-                 h4("If spatial:"),
+      column(4,
+             # box(title=NULL, status="success", width = 12, solidHeader = FALSE,
+                 # h4("If spatial:"),
                  selectInput(inputId = ns("dnlCRS"),
-                             label = tooltipHTML("Coordinate Reference Systems", 
-                                               "Projection system of the layers. Source EPSG.org"),
+                             label = tooltipHTML("CRS", 
+                                               "Coordinate Reference Systems of the spatial exported layers. Source EPSG.org"),
                              choices = epsg.choices(), #structure(EPSG.code, names=EPSG.name), 
                              multiple = FALSE, selected = 4326, width = "200px")
-             )
+             # )
       ),
     # ),
     # fluidRow(
@@ -118,13 +119,9 @@ expDef_mod_server <- function(id, summary, exportData){
                  
                  dataTables <- reactiveValues(export = table1,
                                               other = table2) # Data for datatables
+                 rm(table1, table2)
                  
                  res <- reactiveValues(res = NULL)
-                 
-                 dtProxyExport = DT::dataTableProxy("exportDefs")
-                 dtProxyOther = DT::dataTableProxy("otherDefs")
-                 
-                 rm(table1, table2)
                  
                  other <- reactiveValues(data = list()) #Stores calculated values for "other variables". 
 
@@ -153,8 +150,8 @@ expDef_mod_server <- function(id, summary, exportData){
                        ofType <- grepl(paste0(name, " \\["), names)
                        if(any(ofType)){
                          highestNumberNow <- max(
-                           as.integer(substr(names, nchar(names)-1, nchar(names)-1))
-                           , na.rm = TRUE
+                           as.integer(substr(names, nchar(names)-1, nchar(names)-1)),
+                           na.rm = TRUE
                          )
                          name <- paste0(name, " [", highestNumberNow + 1, "]")
                        }else{
@@ -195,6 +192,9 @@ expDef_mod_server <- function(id, summary, exportData){
                    )
                  })
                  
+                 dtProxyExport <- DT::dataTableProxy("exportDefs")
+                 dtProxyOther <- DT::dataTableProxy("otherDefs")
+                 
                  observeEvent(input$exportDefs_rows_selected, {
                    dtProxyOther %>% DT::selectRows(NULL)
                  })
@@ -218,7 +218,7 @@ expDef_mod_server <- function(id, summary, exportData){
                    }
                  })
                  
-                 # ### this is "view"... not neded
+                 # ### this is "view"... not needed
                  # observeEvent(input$exportGo, {
                  #   tbl1Sel <- input$exportDefs_rows_selected
                  #   tbl2Sel <- input$otherDefs_rows_selected

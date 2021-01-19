@@ -37,7 +37,7 @@ navbarPage(title=div(img(src="./img/BirdsLogo.png", alt="", style="vertical-alig
                                   ))
            ),
            tabPanel(title = "Summary and Export", icon = icon("box-open"), value = "sumandexp",
-                    fluidRow(shinyBIRDS::summary_page_ui("summaryPage")),
+                    fluidRow(summary_page_ui("summaryPage")),
                     absolutePanel(fixed = TRUE, top = "50%", left = "50%", width = '195px',
                                   conditionalPanel(condition="$('html').hasClass('shiny-busy')",
                                                    tags$img(src="./img/loader-hex.gif")
