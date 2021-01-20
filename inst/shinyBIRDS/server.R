@@ -81,8 +81,9 @@ shinyServer(function(input, output, session) {
       updateRadioButtons(session, "csvSep", selected = ";")
       disable("csvSep")
       # updateCheckboxInput(session, "csvUTF", value = FALSE)
-      updateRadioButtons(session, "csvUTF", selected = "unknown")
-      updateRadioButtons(session, "csvQuote", selected = "\"")
+      # updateRadioButtons(session, "csvUTF", selected = "unknown")
+      # disable("csvUTF")
+      # updateRadioButtons(session, "csvQuote", selected = "\"")
     }
     if(ext == "tsv"){
       updateRadioButtons(session, "csvSep", selected = "\t")
@@ -90,6 +91,7 @@ shinyServer(function(input, output, session) {
     }
     if(! ext %in% c("tsv", "scsv")){
       enable("csvSep")
+      # enable("csvUTF")
     }
     
     if(input$csvSep == ",") updateRadioButtons(session, "csvDec", selected = ".")
@@ -107,6 +109,9 @@ shinyServer(function(input, output, session) {
                                fill = TRUE), 
                          error = function(e){
                            shinyalert::shinyalert(title = "An error occured", text = e$message, type = "error")
+                           return(NULL)},
+                         warning = function(w){
+                           shinyalert::shinyalert(title = "An error occured", text = w$message, type = "warning")
                            return(NULL)})     # warning = function(w){      return(NULL)}
     
 # print(preTable)

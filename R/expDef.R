@@ -249,6 +249,8 @@ expDef_mod_server <- function(id, summary, exportData){
 ## TODO add observations and visits to export 
 ## pbd_data$organised$spdf
 ## BIRDS::spatialVisits(pbd_data$visits[wPlot,])
+                     # export <- c(export, pbd = pbd_data$pbd,
+                     #                     ob = pbd_data$organised$spdf)
                      if(nrow(dataTables$export) > 0){
                        for(i in 1:nrow(dataTables$export)){
                          name <- tolower(paste(dataTables$export[i, 2],

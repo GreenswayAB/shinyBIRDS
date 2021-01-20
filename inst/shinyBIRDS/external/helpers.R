@@ -94,9 +94,6 @@ defineVisitsUI<-function(colnames, grids){
   #To keep the time column index in the right order:
   wColT <- switch(any(stdTimeCol %in% PBDcolnames), 
                   stdTimeCol[which(stdTimeCol %in% PBDcolnames)], NULL)
-  # c(which(PBDcolnames == stdTimeCol[1]), 
-  #            which(PBDcolnames == stdTimeCol[2]), 
-  #            which(PBDcolnames == stdTimeCol[3]))
   wColV <- switch(any(stdVisitCol %in% PBDcolnames), 
                   stdVisitCol[which(stdVisitCol %in% PBDcolnames)], NULL)
   wColTV <- match(wColT, wColV)

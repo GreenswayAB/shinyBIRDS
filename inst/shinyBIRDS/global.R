@@ -1,5 +1,3 @@
-# library(remotes)
-# remotes::install_github('Greensway/BIRDS')
 library(BIRDS)
 library(shinyBIRDS)
 library(shiny)
