@@ -11,7 +11,7 @@ expDef_mod_server(id, summary, exportData)
 
 \item{summary}{A reactive value with the summary data}
 
-\item{exportData}{A reacive value with data to export}
+\item{exportData}{A reactive value with data to export}
 }
 \value{
 

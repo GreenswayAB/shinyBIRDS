@@ -4,7 +4,7 @@
 \alias{summary_page_server}
 \title{Summary page server}
 \usage{
-summary_page_server(id, pbd, layers)
+summary_page_server(id, pbd, layers, inputArg, orgVars, visDat, remVars)
 }
 \arguments{
 \item{id}{The \code{input} that refers to the UI.}
