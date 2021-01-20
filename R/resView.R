@@ -41,6 +41,8 @@ resView_mod_ui <- function(id){
 #' @return
 #' @import shiny 
 #' @import plot.matrix
+#' @import ggplot2 
+#' @import reshape2
 resView_mod_server <- function(id, toView){
   
   moduleServer(id,
