@@ -20,7 +20,7 @@ code_mod_ui <- function(id){
 #' Code server
 #' 
 #' @param id The \code{input} that refers to the UI.
-#' @param inputArgs Reactive value with the input values 
+#' @param inputArg Reactive value with the input values 
 #' @param orgVars A reactive value with parameters to organise the data
 #' @param visDat A reactive value with data on the visits
 #' @param remVars A reactive value with parameters to remove observations

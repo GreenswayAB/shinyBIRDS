@@ -11,7 +11,15 @@ summary_page_server(id, pbd, layers, inputArg, orgVars, visDat, remVars)
 
 \item{pbd}{A reactive value with primary biodiversity data}
 
-\item{layers}{A reactive value with the layers to show.}
+\item{layers}{A reactive value with names of the layers to be used}
+
+\item{inputArg}{Reactive value with the input values}
+
+\item{orgVars}{A reactive value with parameters to organise the data}
+
+\item{visDat}{A reactive value with data on the visits}
+
+\item{remVars}{A reactive value with parameters to remove observations}
 }
 \value{
 

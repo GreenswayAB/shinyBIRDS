@@ -9,6 +9,8 @@ code_mod_server(id, inputArg, orgVars, visDat, remVars, layers, summary)
 \arguments{
 \item{id}{The \code{input} that refers to the UI.}
 
+\item{inputArg}{Reactive value with the input values}
+
 \item{orgVars}{A reactive value with parameters to organise the data}
 
 \item{visDat}{A reactive value with data on the visits}
@@ -18,8 +20,6 @@ code_mod_server(id, inputArg, orgVars, visDat, remVars, layers, summary)
 \item{layers}{A reactive value with names of the layers to be used}
 
 \item{summary}{A reactive value with parameters to summaryse}
-
-\item{inputArgs}{Reactive value with the input values}
 }
 \value{
 
