@@ -125,7 +125,7 @@ getGridFromShp <- function(shapefiles){
 #' @param gridsize The size of the grid in km
 #' @param type The type of the grid
 #' @param buffer Boolean if the grid should be bigger than the area
-#' @import BIRDS makeGrid makeDggrid
+#' @importFrom BIRDS makeGrid makeDggrid
 #' @return
 getGridFromSettings <- function(area, gridsize, type, buffer){
   
