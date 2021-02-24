@@ -287,11 +287,12 @@ expDef_mod_server <- function(id, summary, exportData){
                        }
                      }
                     
-                     zip::zipr(file, dir)
+                     # zip::zipr(file, dir)
+                     utils::zip(file, dir)
                      unlink(dir, recursive = TRUE)
                      
-                   }
-                 )
+                   }, 
+                    contentType = "application/zip")
                  
                  observe({
                    return(reactive(res$res))

@@ -65,8 +65,7 @@ expParam_mod_ui <- function(id){
 #' @param id The \code{input} that refers to the UI.
 #' @param summary A reactive value with the summary data
 #' @return
-#' @import shiny
-#' @import shinyjs
+#' @importFrom shinyjs useShinyjs
 expParam_mod_server <- function(id, summary){
   
   moduleServer(id, 

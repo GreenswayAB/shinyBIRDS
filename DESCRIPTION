@@ -39,7 +39,6 @@ Imports:
     shinyWidgets,
     sf,
     sp (>= 1.3),
-    zip,
     zoo
 Suggests: 
     knitr,
