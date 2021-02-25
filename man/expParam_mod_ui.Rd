@@ -10,7 +10,7 @@ expParam_mod_ui(id)
 \item{id}{The \code{input} slot that will be used to access the value.}
 }
 \value{
-
+export params ui
 }
 \description{
 Export parameters UI

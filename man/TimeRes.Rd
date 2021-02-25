@@ -7,7 +7,7 @@
 TimeRes()
 }
 \value{
-
+A vector with \code{c("NULL", "Yearly", "Month","Monthly", "Daily")}
 }
 \description{
 Time resolution

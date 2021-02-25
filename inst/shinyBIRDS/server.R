@@ -19,7 +19,7 @@ shinyServer(function(input, output, session) {
   data_stat <- reactiveValues(data = NULL, name = "visitsData")
   # cleancoord <- reactiveValues(x=NULL, logs=NULL)
   
-  mapLayers <- map_page_server("mapPage", PBD)
+  mapLayers <- map_page_server("mapPage", PBD, n)
   
   #### Welcome ####
   # updateTabsetPanel(session, "navBar", selected = "map")

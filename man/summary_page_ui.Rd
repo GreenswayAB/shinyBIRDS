@@ -10,7 +10,7 @@ summary_page_ui(id)
 \item{id}{The \code{input} slot that will be used to access the value.}
 }
 \value{
-
+summary page ui
 }
 \description{
 Create th summary page UI

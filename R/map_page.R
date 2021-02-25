@@ -4,8 +4,7 @@
 #' Map page UI
 #' 
 #' @param id The \code{input} slot that will be used to access the value.
-#' @return
-#' @import shiny
+#' @return map page UI
 #' @export
 map_page_ui <- function(id) {
   ns <- NS(id)
@@ -42,7 +41,7 @@ map_page_ui <- function(id) {
 #'
 #' @param id Same as id for grid_mod_ui(id)
 #' @param pbd_data A reactiveValue
-#' 
+#' @param n Integer, number of observation to plot in the map. Global Variable
 #' @import shiny
 #' @return A reactiveValue with the structure \code{reactiveValues(layers = list(others = list(), grids = list()))}
 #'   Each object in the other and grid lists are named with the name they should have in the application and the the list should hold the \code{SpatialPolygons}.
@@ -50,7 +49,7 @@ map_page_ui <- function(id) {
 #'   \code{grids} are grids.
 #'   
 #' @export
-map_page_server <- function(id, pbd_data){
+map_page_server <- function(id, pbd_data, n){
   
   moduleServer(id,
                function(input, output, session){
@@ -59,7 +58,7 @@ map_page_server <- function(id, pbd_data){
                  
                  layerList <- grid_mod_server("gridding", pbd_data, drawn)
                  layerList <- layer_mod_server("layers", layerList)
-                 d <- map_mod_server("map_part", layerList, pbd_data)
+                 d <- map_mod_server("map_part", layerList, pbd_data, n)
 
                  observeEvent(d(), {
                    drawn$polygon <- d()

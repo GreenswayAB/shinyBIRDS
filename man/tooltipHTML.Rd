@@ -12,7 +12,7 @@ tooltipHTML(text, tip)
 \item{tip}{Tip to show}
 }
 \value{
-
+an HTML string for class bubble
 }
 \description{
 Create tooltip

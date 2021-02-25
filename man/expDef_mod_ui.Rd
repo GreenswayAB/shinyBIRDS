@@ -10,7 +10,7 @@ expDef_mod_ui(id)
 \item{id}{The \code{input} slot that will be used to access the value.}
 }
 \value{
-
+export definitions ui
 }
 \description{
 Export definitions UI

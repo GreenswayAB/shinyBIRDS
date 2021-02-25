@@ -10,7 +10,7 @@ comMatrixUI(session)
 \item{session}{The server session}
 }
 \value{
-
+community matrix UI
 }
 \description{
 Community matrix UI

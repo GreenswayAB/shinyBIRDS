@@ -12,7 +12,7 @@ obsIndexUI(session, spList)
 \item{spList}{A species list}
 }
 \value{
-
+obs index UI
 }
 \description{
 Observation index UI

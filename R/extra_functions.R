@@ -29,7 +29,7 @@ TimeResCode<-function(){return(c("none","yearly", "month","monthly", "daily"))}
 
 #' Time resolution
 #'
-#' @return A vector with \code{c("NULL", "Yearly", "Month","Monthly", "Daily")})}
+#' @return A vector with \code{c("NULL", "Yearly", "Month","Monthly", "Daily")}
 TimeRes<-function(){return(c("NONE", "Yearly", "Month","Monthly", "Daily"))}
 # TimeRes<-function(){return(c("Yearly", "Month","Monthly", "Daily"))}
 
@@ -62,7 +62,7 @@ Method<-function(){return(c("Sum", "Median", "Mean"))}
 #' @param text Text to show
 #' @param tip Tip to show
 #'
-#' @return
+#' @return an HTML string for class bubble
 #' @export
 tooltipHTML <- function(text, tip){
   shiny::HTML(paste0('<span class="bubble">', text, '
@@ -79,7 +79,7 @@ tooltipHTML <- function(text, tip){
 #' @param lat latitude
 #' @param species species name
 #'
-#' @return
+#' @return list of cleaned coordinates
 #' @export
 cleanCoordinates <- function(x,
                              lon="decimallongitude",
@@ -127,4 +127,57 @@ cleanCoordinates <- function(x,
   return(list(x, logs))
 }
 
-
+#' Escape HTML entities
+#'
+#' Escape HTML entities contained in a character vector so that it can be safely
+#' included as text or an attribute value within an HTML document
+#' Copied from htmlTools v 0.5.1.1 
+#' @source htmlTools v 0.5.1.1 
+#'
+#' @param text Text to escape
+#' @param attribute Escape for use as an attribute value
+#'
+#' @return Character vector with escaped text.
+#'
+#' @export
+htmlEscape <- local({
+  
+  .htmlSpecials <- list(
+    `&` = '&amp;',
+    `<` = '&lt;',
+    `>` = '&gt;'
+  )
+  .htmlSpecialsPattern <- paste(names(.htmlSpecials), collapse='|')
+  .htmlSpecialsAttrib <- c(
+    .htmlSpecials,
+    `'` = '&#39;',
+    `"` = '&quot;',
+    `\r` = '&#13;',
+    `\n` = '&#10;'
+  )
+  .htmlSpecialsPatternAttrib <- paste(names(.htmlSpecialsAttrib), collapse='|')
+  
+  function(text, attribute=FALSE) {
+    pattern <- if(attribute)
+      .htmlSpecialsPatternAttrib
+    else
+      .htmlSpecialsPattern
+    
+    text <- enc2utf8(as.character(text))
+    # Short circuit in the common case that there's nothing to escape
+    if (!any(grepl(pattern, text, useBytes = TRUE)))
+      return(text)
+    
+    specials <- if(attribute)
+      .htmlSpecialsAttrib
+    else
+      .htmlSpecials
+    
+    for (chr in names(specials)) {
+      text <- gsub(chr, specials[[chr]], text, fixed = TRUE, useBytes = TRUE)
+    }
+    Encoding(text) <- "UTF-8"
+    
+    return(text)
+  }
+})

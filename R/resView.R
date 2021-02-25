@@ -10,7 +10,7 @@ getColor <- function(data, max){
 #' Result view UI
 #' 
 #' @param id The \code{input} slot that will be used to access the value.
-#' @return
+#' @return results view ui
 #' @import shiny
 resView_mod_ui <- function(id){
   ns <- NS(id)
@@ -38,17 +38,20 @@ resView_mod_ui <- function(id){
 #' 
 #' @param id The \code{input} that refers to the UI.
 #' @param toView  Reactive value with the layers to show
-#' @return
+#' @return results output
 #' @import shiny 
-#' @import plot.matrix
-#' @import ggplot2 
+#' @import ggplot2
 #' @import reshape2
+#' @importFrom rlang .data
 resView_mod_server <- function(id, toView){
   
   moduleServer(id,
                function(input, output, session){
                  
-                 data <- reactiveValues(data = NULL, type = "map", colname = NULL, sliderShow = FALSE) 
+                 data <- reactiveValues(data = NULL, 
+                                        type = "map", 
+                                        colname = NULL, 
+                                        sliderShow = FALSE) 
                  
                  output$sliderShow <- reactive({
                    data$sliderShow
@@ -93,7 +96,7 @@ resView_mod_server <- function(id, toView){
                          addPolygons(data = dta,
                                      group = "layer",
                                      weight = 2, fillColor = color,
-                                     label = ~htmltools::htmlEscape(values)) %>%
+                                     label = ~htmlEscape(values)) %>%
                          fitBounds(lng1 = bb[1,1], lat1 = bb[2,1], lng2 = bb[1,2], lat2 = bb[2,2]) 
                      }
                      
@@ -123,7 +126,7 @@ resView_mod_server <- function(id, toView){
 
                      data$data <- sp
                      data$type <- "map"
-                     print(utils::str(data$data@data))
+                     message(utils::str(data$data@data))
 
                      data$colname <- colnames(data$data@data[1])
                      
@@ -142,8 +145,6 @@ resView_mod_server <- function(id, toView){
                      
                      s <- toView()
                      
-                     save(s, file = "C:/Users/Anton.GREENSWAY/Documents/R/test/matrix.rdata")
-                     
                      g <- data.frame(reshape2::melt(toView()))
                      
                      g <- data.frame(reshape2::melt(s))
@@ -152,8 +153,8 @@ resView_mod_server <- function(id, toView){
                      g$Var1 <- as.character(g$Var1)
                      g$Var2 <- as.character(g$Var2)
                      
-                     data$data <- ggplot2::ggplot(g, ggplot2::aes(x = Var2, y = Var1)) +
-                       ggplot2::geom_tile(ggplot2::aes(fill = value)) +
+                     data$data <- ggplot2::ggplot(g, ggplot2::aes(x = .data$Var2, y = .data$Var1)) +
+                       ggplot2::geom_tile(ggplot2::aes(fill = .data$value)) +
                        ggplot2::scale_fill_gradient(low = "blue", high = "red", na.value = "transparent") +
                        ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust=1))
                      

@@ -10,7 +10,7 @@ grid_shp(session)
 \item{session}{The server session}
 }
 \value{
-
+grid shapes
 }
 \description{
 UI for shape upload

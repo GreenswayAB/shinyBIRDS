@@ -5,8 +5,9 @@
 #' @param session The server session
 #' @param spList A species list
 #'
-#' @return
+#' @return obs index UI
 #' @import shiny
+#' @importFrom shinyWidgets actionBttn
 obsIndexUI<-function(session, spList){
   ns <- session$ns
   
@@ -50,8 +51,9 @@ obsIndexUI<-function(session, spList){
 #'
 #' @param session The server session
 #'
-#' @return
+#' @return community matrix UI
 #' @import shiny
+#' @importFrom shinyWidgets actionBttn
 comMatrixUI<-function(session){
   ns <- session$ns
   showModal(session = session,
@@ -79,9 +81,9 @@ comMatrixUI<-function(session){
 #' Ignorance UI
 #'
 #' @param session The server session
-#'
-#' @return
+#' @return ignorance UI
 #' @import shiny
+#' @importFrom shinyWidgets actionBttn
 ignoranceUI<-function(session){
   ns <- session$ns
   

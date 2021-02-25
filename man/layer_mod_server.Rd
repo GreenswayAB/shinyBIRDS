@@ -12,7 +12,7 @@ layer_mod_server(id, layers)
 \item{layers}{Reactive value with the layers to show}
 }
 \value{
-
+layers outputs
 }
 \description{
 Layer handling server

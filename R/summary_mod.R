@@ -1,6 +1,7 @@
 #' Summary UI
 #' 
 #' @param id The \code{input} slot that will be used to access the value.
+#' @importFrom shinyWidgets actionBttn
 #' @return summary ui
 #'
 summary_mod_ui <- function(id){
@@ -44,6 +45,8 @@ summary_mod_ui <- function(id){
 #'  
 #' @return summary outputs
 #' @import shiny
+#' @importFrom shinyjs enable disable
+#' @importFrom lubridate year
 summary_mod_server <- function(id, pbd, layersFromMap){
   
   moduleServer(id,
@@ -106,7 +109,7 @@ summary_mod_server <- function(id, pbd, layersFromMap){
                    table <- as.matrix(res$sppList)
                    colnames(table) <- "N.obs"
 
-                   datatable(table, 
+                   DT::datatable(table, 
                              rownames = TRUE,
                              autoHideNavigation = FALSE,
                              options = list(dom = "t",

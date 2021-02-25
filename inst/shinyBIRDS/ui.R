@@ -3,7 +3,8 @@ navbarPage(title=div(img(src="./img/BirdsLogo.png", alt="", style="vertical-alig
                      style="display:inline-block;"),
            id="navBar", position = "static-top", #"fixed-top",
            selected = "map",
-           inverse = FALSE, theme = shinytheme("cosmo"),# shinythemes::themeSelector(),
+           inverse = FALSE, 
+           # theme = shinytheme("cosmo"),# shinythemes::themeSelector(),
            collapsible = TRUE, windowTitle = "shinyBIRDS",
            header = list(
              tags$link(rel="shortcut icon", href="./img/favicon.ico"),

@@ -2,7 +2,7 @@
 #' Map UI
 #'
 #' @param id The \code{input} slot that will be used to access the value.
-#' @return
+#' @return map modeule UI
 map_mod_ui <- function(id){
   ns <- shiny::NS(id)
   
@@ -15,11 +15,11 @@ map_mod_ui <- function(id){
 #' @param id The \code{input} that refers to the UI.
 #' @param layers Reactive value with the layers to show 
 #' @param pbd_data A reactive value with primary biodiversity data
-#' @return
-#' @import shiny 
+#' @param n Integer, number of observation to plot in the map. Global Variable
+#' @return map outputs
 #' @import leaflet
 #' @import leaflet.extras
-map_mod_server <- function(id, layers, pbd_data){
+map_mod_server <- function(id, layers, pbd_data, n){
   
   moduleServer(id,
                function(input, output, session){

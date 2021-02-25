@@ -3,8 +3,9 @@
 #' Export parameters UI
 #'
 #' @param id The \code{input} slot that will be used to access the value.
-#' @return
+#' @return export params ui
 #' @import shiny
+#' @importFrom shinyWidgets actionBttn
 expParam_mod_ui <- function(id){
   ns <- NS(id)
 
@@ -64,8 +65,9 @@ expParam_mod_ui <- function(id){
 #' 
 #' @param id The \code{input} that refers to the UI.
 #' @param summary A reactive value with the summary data
-#' @return
-#' @importFrom shinyjs useShinyjs
+#' @return export params outputs
+#' @importFrom shinyjs disable enable
+#' @importFrom shinyWidgets actionBttn
 expParam_mod_server <- function(id, summary){
   
   moduleServer(id, 

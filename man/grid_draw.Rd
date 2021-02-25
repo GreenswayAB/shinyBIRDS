@@ -10,7 +10,7 @@ grid_draw(session)
 \item{session}{The server session}
 }
 \value{
-
+grid draw
 }
 \description{
 UI for creating grid

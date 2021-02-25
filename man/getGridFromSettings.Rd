@@ -16,7 +16,7 @@ getGridFromSettings(area, gridsize, type, buffer)
 \item{buffer}{Boolean if the grid should be bigger than the area}
 }
 \value{
-
+grid from settings
 }
 \description{
 Get grid from settings

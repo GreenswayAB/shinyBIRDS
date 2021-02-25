@@ -4,12 +4,14 @@
 \alias{map_page_server}
 \title{Map page module server}
 \usage{
-map_page_server(id, pbd_data)
+map_page_server(id, pbd_data, n)
 }
 \arguments{
 \item{id}{Same as id for grid_mod_ui(id)}
 
 \item{pbd_data}{A reactiveValue}
+
+\item{n}{Integer, number of observation to plot in the map. Global Variable}
 }
 \value{
 A reactiveValue with the structure \code{reactiveValues(layers = list(others = list(), grids = list()))}

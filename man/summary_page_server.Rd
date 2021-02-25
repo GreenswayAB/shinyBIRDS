@@ -21,9 +21,6 @@ summary_page_server(id, pbd, layers, inputArg, orgVars, visDat, remVars)
 
 \item{remVars}{A reactive value with parameters to remove observations}
 }
-\value{
-
-}
 \description{
 Summary page server
 }

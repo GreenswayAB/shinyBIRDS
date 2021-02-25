@@ -18,7 +18,7 @@ getExportBirds(sb, dim, tr, var, mtd)
 \item{mtd}{method}
 }
 \value{
-
+exported variables from BIRDS::exportBirds
 }
 \description{
 Get export BIRDS

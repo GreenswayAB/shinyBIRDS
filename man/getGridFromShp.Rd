@@ -10,7 +10,7 @@ getGridFromShp(shapefiles)
 \item{shapefiles}{A shape file set}
 }
 \value{
-
+grids from shape
 }
 \description{
 Get grid from shape

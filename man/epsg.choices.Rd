@@ -7,7 +7,7 @@
 epsg.choices()
 }
 \value{
-
+EPSG choices
 }
 \description{
 epsg choices

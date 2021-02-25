@@ -10,7 +10,7 @@ map_page_ui(id)
 \item{id}{The \code{input} slot that will be used to access the value.}
 }
 \value{
-
+map page UI
 }
 \description{
 Map page UI

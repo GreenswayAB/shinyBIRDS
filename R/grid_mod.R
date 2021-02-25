@@ -4,7 +4,7 @@
 #' UI for shape upload
 #' 
 #' @param session The server session
-#' @return
+#' @return grid shapes
 #' @import shiny
 grid_shp <- function(session){
   ns <- session$ns
@@ -26,8 +26,9 @@ grid_shp <- function(session){
 #' UI for creating grid
 #'
 #' @param session The server session
-#' @return
+#' @return grid draw
 #' @import shiny
+#' @importFrom shinyWidgets actionBttn
 grid_draw <- function(session){
   ns <- session$ns
   gridchoice <- if("dggridR" %in% rownames(installed.packages())){
@@ -78,7 +79,7 @@ grid_draw <- function(session){
 #' Get grid from shape
 #' 
 #' @param shapefiles A shape file set
-#' @return
+#' @return grids from shape
 getGridFromShp <- function(shapefiles){
   inFile <- shapefiles
   dir<-dirname(inFile[1,4]) #Get the directory where the files are stored
@@ -126,7 +127,7 @@ getGridFromShp <- function(shapefiles){
 #' @param type The type of the grid
 #' @param buffer Boolean if the grid should be bigger than the area
 #' @importFrom BIRDS makeGrid makeDggrid
-#' @return
+#' @return grid from settings
 getGridFromSettings <- function(area, gridsize, type, buffer){
   
   gridSizeDg <- gridsize/111 #because on average 1 degree is 111 km
@@ -160,9 +161,10 @@ getGridFromSettings <- function(area, gridsize, type, buffer){
 #' Grid handling UI
 #'
 #' @param id The \code{input} slot that will be used to access the value.
-#' @return
-#' @import shiny 
-#' @import shinyWidgets
+#' @import shiny
+#' @importFrom shinyWidgets actionBttn prettyRadioButtons
+#' 
+#' @return grid UI
 grid_mod_ui <- function(id){
   ns <- NS(id)
   tagList(
@@ -208,6 +210,7 @@ grid_mod_ui <- function(id){
 #' @param polygonDraw A reactiveValue 
 #' 
 #' @import shiny
+#' @import sp
 #' @return A reactiveValue with the structure \code{reactiveValues(layers = list(others = list(), grids = list()))}
 #'   Each object in the other and grid lists are named with the name they should have in the application and the the list should hold the \code{SpatialPolygons}.
 #'   \code{others} are objects, such as study area, observations...

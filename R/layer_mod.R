@@ -3,8 +3,9 @@
 #' Layer handling UI
 #'
 #' @param id The \code{input} slot that will be used to access the value.
-#' @return
+#' @return layers UI
 #' @import shiny
+#' @importFrom shinyWidgets actionBttn
 layer_mod_ui <- function(id){
   ns <- NS(id)
   
@@ -26,7 +27,7 @@ layer_mod_ui <- function(id){
 #'
 #' @param id The \code{input} that refers to the UI.
 #' @param layers Reactive value with the layers to show
-#' @return
+#' @return layers outputs
 #' @import shiny
 layer_mod_server <- function(id, layers){
   

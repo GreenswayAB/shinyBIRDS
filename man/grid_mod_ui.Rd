@@ -10,7 +10,7 @@ grid_mod_ui(id)
 \item{id}{The \code{input} slot that will be used to access the value.}
 }
 \value{
-
+grid UI
 }
 \description{
 Grid handling UI

@@ -2,6 +2,7 @@
 #' 
 #' A function to run the app
 #' @export
+#' @importFrom utils installed.packages str
 shinyBirds<-function(){
   appDir <- system.file("shinyBIRDS", package="shinyBIRDS")
   if(appDir == ""){

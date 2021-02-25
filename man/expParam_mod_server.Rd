@@ -12,7 +12,7 @@ expParam_mod_server(id, summary)
 \item{summary}{A reactive value with the summary data}
 }
 \value{
-
+export params outputs
 }
 \description{
 Export parameters server

@@ -12,7 +12,7 @@ resView_mod_server(id, toView)
 \item{toView}{Reactive value with the layers to show}
 }
 \value{
-
+results output
 }
 \description{
 RESULTS server

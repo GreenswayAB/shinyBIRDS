@@ -14,7 +14,7 @@ expDef_mod_server(id, summary, exportData)
 \item{exportData}{A reactive value with data to export}
 }
 \value{
-
+export definitions outputs
 }
 \description{
 Export definitions server

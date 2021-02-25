@@ -22,7 +22,7 @@ code_mod_server(id, inputArg, orgVars, visDat, remVars, layers, summary)
 \item{summary}{A reactive value with parameters to summaryse}
 }
 \value{
-
+verbatim code
 }
 \description{
 Code server

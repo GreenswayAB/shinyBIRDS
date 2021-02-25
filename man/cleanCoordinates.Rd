@@ -21,7 +21,7 @@ cleanCoordinates(
 \item{species}{species name}
 }
 \value{
-
+list of cleaned coordinates
 }
 \description{
 Clean coordinates

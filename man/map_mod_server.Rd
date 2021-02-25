@@ -4,7 +4,7 @@
 \alias{map_mod_server}
 \title{Export parameters server}
 \usage{
-map_mod_server(id, layers, pbd_data)
+map_mod_server(id, layers, pbd_data, n)
 }
 \arguments{
 \item{id}{The \code{input} that refers to the UI.}
@@ -12,9 +12,11 @@ map_mod_server(id, layers, pbd_data)
 \item{layers}{Reactive value with the layers to show}
 
 \item{pbd_data}{A reactive value with primary biodiversity data}
+
+\item{n}{Integer, number of observation to plot in the map. Global Variable}
 }
 \value{
-
+map outputs
 }
 \description{
 Export parameters server

@@ -14,7 +14,7 @@ summary_mod_server(id, pbd, layersFromMap)
 \item{layersFromMap}{Reactive value with the layers from the map}
 }
 \value{
-
+summary outputs
 }
 \description{
 Summary server

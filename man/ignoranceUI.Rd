@@ -10,7 +10,7 @@ ignoranceUI(session)
 \item{session}{The server session}
 }
 \value{
-
+ignorance UI
 }
 \description{
 Ignorance UI

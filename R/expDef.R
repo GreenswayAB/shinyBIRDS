@@ -54,6 +54,7 @@ getExportBirds <- function(sb, dim, tr, var, mtd){
 #' Export definitions UI
 #'
 #' @param id The \code{input} slot that will be used to access the value.
+#' @importFrom shinyWidgets actionBttn downloadBttn
 #' @return export definitions ui
 expDef_mod_ui <- function(id){
   ns <- NS(id)
