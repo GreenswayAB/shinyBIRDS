@@ -1,6 +1,6 @@
 #' epsg choices
 #'
-#' @return
+#' @return EPSG choices
 epsg.choices <- function(){
   return(
     c("WGS84" = "4326",
@@ -19,8 +19,7 @@ epsg.choices <- function(){
 #' @param tr timeRes
 #' @param var variable
 #' @param mtd method
-#'
-#' @return
+#' @return exported variables from BIRDS::exportBirds
 getExportBirds <- function(sb, dim, tr, var, mtd){
   
   dim <- if(dim == ""){
@@ -55,9 +54,7 @@ getExportBirds <- function(sb, dim, tr, var, mtd){
 #' Export definitions UI
 #'
 #' @param id The \code{input} slot that will be used to access the value.
-#'
-#' @import shiny
-#' @return
+#' @return export definitions ui
 expDef_mod_ui <- function(id){
   ns <- NS(id)
   tagList(
@@ -70,27 +67,17 @@ expDef_mod_ui <- function(id){
         h4("Other statistics to export"),
         DT::dataTableOutput(ns("otherDefs"), width = "98%")
       ),
-      # column(5,
-      #  
-      # ),
       column(4,
-             # box(title=NULL, status="success", width = 12, solidHeader = FALSE,
-                 # h4("If spatial:"),
                  selectInput(inputId = ns("dnlCRS"),
                              label = tooltipHTML("CRS", 
                                                "Coordinate Reference Systems of the spatial exported layers. Source EPSG.org"),
                              choices = epsg.choices(), #structure(EPSG.code, names=EPSG.name), 
                              multiple = FALSE, selected = 4326, width = "200px")
-             # )
       ),
-    # ),
-    # fluidRow(
     column(12,
         br(),
         actionBttn(ns("exportClear"), HTML("&nbsp;Remove selected"), style = "simple", 
                    color = "warning", icon = icon("trash-alt"), size="xs"),
-        # actionBttn(ns("exportGo"), HTML("&nbsp;View"), style = "simple",
-        #            color = "success", icon = icon("box"), size="xs"),
         br(),br(),
         downloadBttn(ns("downloadData"), "Download", style = "simple", 
                        color = "success", size="sm")
@@ -105,9 +92,7 @@ expDef_mod_ui <- function(id){
 #' @param id The \code{input} that refers to the UI.
 #' @param summary A reactive value with the summary data
 #' @param exportData A reactive value with data to export
-#'
-#' @import shiny
-#' @return
+#' @return export definitions outputs
 expDef_mod_server <- function(id, summary, exportData){
   
   moduleServer(id,
@@ -301,5 +286,4 @@ expDef_mod_server <- function(id, summary, exportData){
                  return(reactive(res$res))
                  
                })
-  
 }

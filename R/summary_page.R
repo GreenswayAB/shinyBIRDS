@@ -2,7 +2,7 @@
 #'
 #' @param id The \code{input} slot that will be used to access the value.
 #'
-#' @return
+#' @return summary page ui
 #' @import shiny 
 #' @export
 #'
@@ -55,8 +55,6 @@ summary_page_ui <- function(id){
 #' @param visDat A reactive value with data on the visits
 #' @param remVars A reactive value with parameters to remove observations
 #' @param layers A reactive value with names of the layers to be used
-#'
-#' @return
 #' @import shiny
 #' @export
 summary_page_server <- function(id, pbd, layers, inputArg, orgVars, visDat, remVars){

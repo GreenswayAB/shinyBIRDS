@@ -2,7 +2,7 @@
 #' code UI
 #'
 #' @param id The \code{input} slot that will be used to access the value.
-#' @return
+#' @return UI for verbatim code
 code_mod_ui <- function(id){
   ns <- NS(id)
   tagList(
@@ -26,7 +26,7 @@ code_mod_ui <- function(id){
 #' @param remVars A reactive value with parameters to remove observations
 #' @param layers A reactive value with names of the layers to be used
 #' @param summary A reactive value with parameters to summaryse
-#' @return
+#' @return verbatim code
 code_mod_server <- function(id, inputArg, orgVars, visDat, remVars, layers, summary ){
   moduleServer(id,
                function(input, output, session){

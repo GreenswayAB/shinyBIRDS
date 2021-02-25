@@ -1,9 +1,7 @@
 #' Summary UI
 #' 
 #' @param id The \code{input} slot that will be used to access the value.
-#' 
-#' @return
-#' @import shiny
+#' @return summary ui
 #'
 summary_mod_ui <- function(id){
   ns <- NS(id)
@@ -44,7 +42,7 @@ summary_mod_ui <- function(id){
 #' @param pbd A reactive value with primary biodiversity data
 #' @param layersFromMap Reactive value with the layers from the map
 #'  
-#' @return
+#' @return summary outputs
 #' @import shiny
 summary_mod_server <- function(id, pbd, layersFromMap){
   
