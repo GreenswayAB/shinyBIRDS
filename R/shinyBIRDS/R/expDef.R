@@ -239,7 +239,8 @@ expDef_mod_server <- function(id, summary, exportData){
                        }
                      }
                     
-                     zipr(file, dir)
+                     # zipr(file, dir)
+                     zip(file, dir)
                      unlink(dir, recursive = TRUE)
                      
                    }
