@@ -1,0 +1,12 @@
+name: shinyBIRDS
+title: shinyBIRDS
+username:
+account: greensway
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 1370157
+bundleId: 2943734
+url: https://greensway.shinyapps.io/shinyBIRDS/
+when: 1585574419.09992
+asMultiple: FALSE
+asStatic: FALSE
