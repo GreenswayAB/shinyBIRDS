@@ -7,5 +7,5 @@
 shinyBirds()
 }
 \description{
-Run the app
+A function to run the app
 }
