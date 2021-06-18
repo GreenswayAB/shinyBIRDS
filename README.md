@@ -7,4 +7,7 @@ An interactive interface for the R :package: [BIRDS](https://greensway.github.io
 
 Install the the package and run the app 
 
+```
+remotes::install_github("Greensway/shinyBIRDS")  
 shinyBirds()
+```
