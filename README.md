@@ -4,3 +4,7 @@
 
 
 An interactive interface for the R :package: [BIRDS](https://greensway.github.io/BIRDS/index.html) (Biodiversity Information Review and Decision Support)
+
+Install the the package and run the app 
+
+shinyBirds()
