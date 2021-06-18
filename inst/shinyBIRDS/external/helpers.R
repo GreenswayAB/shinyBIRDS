@@ -113,7 +113,8 @@ defineVisitsUI<-function(colnames, grids){
   showModal(modalDialog(title = "Define visits",
                         fluidRow(
                           column(6,
-                                 ### TODO something else than just column names like dataset parameters... 
+### TODO something else than just column names like dataset parameters... 
+### TODO consider varSelectInput for column names
                                   h4("Species", class="panel-title"),
                                   selectInput("csvSpp", 
                                               label = tooltipHTML("Scientific species name", 
@@ -123,7 +124,7 @@ defineVisitsUI<-function(colnames, grids){
                                                 label = tooltipHTML("Simplify the species name",
                                                                     "i.e. remove infraspecific epithets and authors name"),
                                                 FALSE),
-## TODO dynamically show example of how the name would look like simplified ####
+### TODO dynamically show example of how the name would look like simplified
                                   fluidRow(style='padding-left:0px; margin-left: 0px;',
                                            column(6, style='padding-left:0px;',
                                                   checkboxInput("usePresence", 
@@ -142,7 +143,7 @@ defineVisitsUI<-function(colnames, grids){
                                                           level"), 
                                                   choices = PBDcolnames, 
                                                   selected =  wColTax),
-                                      selectInput("csvTaxonRankVal", label = "Taxon rank to keep", 
+                                      selectizeInput("csvTaxonRankVal", label = "Taxon rank to keep", 
                                                   choices = stdTaxonRank,
                                                   selected = stdTaxonRank[1], 
                                                   multiple = TRUE)

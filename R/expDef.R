@@ -156,7 +156,7 @@ expDef_mod_server <- function(id, summary, exportData){
                    DT::datatable(dataTables$export, class = 'cell-border stripe',
                              # caption = HTML("The table below shows the data for each observation."), 
                              rownames = FALSE,
-                             autoHideNavigation = TRUE,
+                             # autoHideNavigation = TRUE,
                              selection = 'single',
                              options = list(
                                dom = 't',
@@ -169,7 +169,7 @@ expDef_mod_server <- function(id, summary, exportData){
                    DT::datatable(dataTables$other, class = 'cell-border stripe',
                              # caption = HTML("The table below shows the data for each observation."), 
                              rownames = FALSE,
-                             autoHideNavigation = TRUE,
+                             # autoHideNavigation = TRUE,
                              selection = 'single',
                              options = list(
                                dom = 't',

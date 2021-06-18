@@ -11,10 +11,14 @@ library(DT)
 library(data.table)
 library(esquisse)
 library(httr)
-# if(!("dggridR" %in% rownames(installed.packages()))){
-#   remotes::install_github("r-barnes/dggridR")
-# }
-library(dggridR)
+library(gitlink)
+if(!("dggridR" %in% rownames(installed.packages()))){
+  remotes::install_github("r-barnes/dggridR")
+  library(dggridR)
+}else{
+  library(dggridR)
+}
+
 
 options(stringsAsFactors = FALSE)
 

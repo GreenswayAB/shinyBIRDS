@@ -97,14 +97,18 @@ getGridFromShp <- function(shapefiles){
   
   #Reading the grid
   grid <- rgdal::readOGR(dsn=getshp)
-  grid <- spTransform(grid, CRSobj = CRS("+init=epsg:4326"))
+  # grid <- spTransform(grid, CRSobj = CRS("+init=epsg:4326"))
+  crswkt <- sf::st_crs(4326)$wkt
+  grid <- sf::as_Spatial(
+    sf::st_transform(
+      sf::st_as_sf(grid), 
+      crs = crswkt)
+    )
   
   if(! class(grid) == "SpatialPolygonsDataFrame"){
     stop("The loaded shape needs to be a polygon layer")
   }
   
-  
-
   #Getting the bounding box (studyarea)
   bboxMat<- as.matrix(grid@bbox)
   polygonSA <- matrix(c(bboxMat[1,1], bboxMat[2,1],
@@ -114,8 +118,9 @@ getGridFromShp <- function(shapefiles){
                       bboxMat[1,1], bboxMat[2,1]), ncol = 2, nrow = 5, byrow = TRUE)
 
   SpP <- SpatialPolygons(list(Polygons(list(Polygon(polygonSA)), 1) ))
-  proj4string(SpP) <- CRS("+init=epsg:4326")
-
+  # proj4string(SpP) <- CRS("+init=epsg:4326")
+  sp::proj4string(SpP) <- CRS(crswkt)
+  
   return(list("Working grid" = grid,
               "Study area" = SpP))
   
@@ -126,13 +131,16 @@ getGridFromShp <- function(shapefiles){
 #' @param gridsize The size of the grid in km
 #' @param type The type of the grid
 #' @param buffer Boolean if the grid should be bigger than the area
-#' @importFrom BIRDS makeGrid makeDggrid
+# @importFrom BIRDS makeGrid makeDggrid
+#' @importFrom BIRDS makeGrid
 #' @return grid from settings
 getGridFromSettings <- function(area, gridsize, type, buffer){
   
   gridSizeDg <- gridsize/111 #because on average 1 degree is 111 km
+  crswkt <- sf::st_crs(4326)$wkt
+  # suppressWarnings(proj4string(area) <-  CRS("+init=epsg:4326") )
+  sp::proj4string(area) <- CRS(crswkt)
   
-  suppressWarnings(proj4string(area) <-  CRS("+init=epsg:4326") )
   StudyBuff <- rgeos::gBuffer(area, width = ifelse(buffer, gridSizeDg, 0))
 
   if(type == "hx"){
@@ -152,7 +160,9 @@ getGridFromSettings <- function(area, gridsize, type, buffer){
     # 
     grid <- makeGrid(StudyBuff, hexGrid = FALSE, gridSize = gridsize)
   }else{
-    grid <- makeDggrid(area, gridsize, topology=type)
+    # grid <- makeDggrid(area, gridsize, topology=type)
+    message("The option Dggrid is temporally out of service")
+    grid <- NULL
   }
  return(grid)
 }
@@ -296,7 +306,10 @@ grid_mod_server <- function(id, pbd, polygonDraw){
                      
                      SpP <- SpatialPolygons(list(Polygons(list(Polygon(polygonSA)), 1)
                      ))
-                     proj4string(SpP) <- CRS("+init=epsg:4326")
+                     crswkt <- sf::st_crs(4326)$wkt
+                     # proj4string(SpP) <- CRS("+init=epsg:4326")
+                     sp::proj4string(SpP) <- CRS(crswkt)
+                     
                      
                      layerList$layers$others[["Study area"]] <- SpP
                        

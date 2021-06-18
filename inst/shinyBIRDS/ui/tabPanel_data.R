@@ -31,11 +31,11 @@ tagList(
       ),
       tabPanel("Explore Visits", icon = icon("search"), value = "expVis",
                column(12,
-                      esquisserUI(
+                      esquisse_ui(
                         id = "visitsEsquisse",
                         container = esquisseContainer(height = "83vh"),
-                        header = FALSE, # dont display gadget title
-                        choose_data = FALSE # dont display button to change data
+                        header = FALSE # dont display gadget title
+                        # choose_data = FALSE # dont display button to change data
                         )
                       )
                )

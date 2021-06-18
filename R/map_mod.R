@@ -103,7 +103,7 @@ map_mod_server <- function(id, layers, pbd_data, n){
                  
                  #### observer visits ####
                  observeEvent(pbd_data$visits, {
-                   print("Making visits as a layer")
+                   message("Making visits as a layer")
                    vLayer <- unlist(lapply(layersAll$layer, function(x){x$type=="visits"}))
                    if(! is.null(vLayer)){
                      layersAll$layer <- layersAll$layer[! vLayer]
@@ -191,7 +191,7 @@ map_mod_server <- function(id, layers, pbd_data, n){
 # TODO unnecessarily loads ALL the layers every time something changes... 
                        for(i in 1:length(layersAll$layer)){
                          if(layersAll$layer[[i]]$type == "obsData"){
-                           print("Drawing observations to map")
+                           message("Drawing observations to map")
                            bb <- layersAll$layer[[i]]$geom@bbox
                            data <- layersAll$layer[[i]]$geom@data
                            label <- paste(as.character(data$scientificName),
@@ -206,7 +206,7 @@ map_mod_server <- function(id, layers, pbd_data, n){
                              fitBounds(lng1 = bb[1,1], lat1 = bb[2,1], lng2 = bb[1,2], lat2 = bb[2,2])
                            
                          }else if(layersAll$layer[[i]]$type == "visits"){
-                           print("Drawing visits to map")
+                           message("Drawing visits to map")
                            data <- layersAll$layer[[i]]$geom@data
                            label <- paste("Visit:", data$visitUID)
                            proxy %>%

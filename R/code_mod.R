@@ -37,13 +37,14 @@ code_mod_server <- function(id, inputArg, orgVars, visDat, remVars, layers, summ
                    res <- "  library(data.table)\nlibrary(BIRDS)\n"
                    ### Load data ###
                    if(!is.null(inputArg$file)){
+                     if(inputArg$csvQuote == '"') csvQuote <- '\"' else csvQuote <- inputArg$csvQuote
                      res <- paste0(res,
                                    'pbd <- fread("', inputArg$file, '",\n',
                                    '  stringsAsFactors = FALSE,\n',
                                    '  encoding = "', inputArg$csvUTF, '",\n',
                                    '  header = ',  inputArg$csvHeader, ',\n',
                                    '  sep = "', inputArg$csvSep,'",\n',
-                                   '  quote = "',  inputArg$csvQuote, '",\n',
+                                   '  quote = "',  csvQuote, '",\n',
                                    '  dec = "', inputArg$csvDec,'",\n',
                                    '  na.strings = "",\n  data.table = FALSE,\n  fill = TRUE) \n\n'
                                    )

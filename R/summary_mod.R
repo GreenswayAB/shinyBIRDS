@@ -111,7 +111,7 @@ summary_mod_server <- function(id, pbd, layersFromMap){
 
                    DT::datatable(table, 
                              rownames = TRUE,
-                             autoHideNavigation = FALSE,
+                             # autoHideNavigation = FALSE,
                              options = list(dom = "t",
                                             scrollX = FALSE,
                                             scrollY = "30vh")

@@ -3,7 +3,7 @@ shinyServer(function(input, output, session) {
   gridR <- reactiveValues(data=NULL)
   csvInfo <- reactiveValues(msg=NULL, wng=NULL)
   defInfo <- reactiveValues(msg=NULL, wng=NULL)
-  epsgInfo <- reactiveValues(msg=NULL, wng=NULL, code=NULL, proj4=NULL)
+  epsgInfo <- reactiveValues(msg=NULL, wng=NULL, name = NULL, code=NULL, proj4=NULL, wkt=NULL, kind = NULL)
   
   inputArg <- reactiveValues(file=NULL)
   
@@ -16,7 +16,7 @@ shinyServer(function(input, output, session) {
   
   remVars <- reactiveValues(criteria = NULL, percent = NULL, stepChunk = NULL, minCrit = NULL)
     
-  data_stat <- reactiveValues(data = NULL, name = "visitsData")
+  data_stat <- reactiveValues(data = iris, name = "iris")
   # cleancoord <- reactiveValues(x=NULL, logs=NULL)
   
   mapLayers <- map_page_server("mapPage", PBD, n)
@@ -241,7 +241,7 @@ shinyServer(function(input, output, session) {
     datatable(table, class = 'cell-border stripe',
               caption = HTML("The table below shows the data for each observation."), 
               rownames = FALSE,
-              autoHideNavigation = TRUE,
+              # autoHideNavigation = FALSE,
               options = list(
                 dom = 'tp',
                 # dom = 't',
@@ -281,7 +281,7 @@ shinyServer(function(input, output, session) {
                                                            "TRUE" = orgVars$xyCols[1], NULL))
     updateSelectInput(session, "csvLat", selected = switch(as.character(!is.null(orgVars$xyCols)), 
                                                            "TRUE" = orgVars$xyCols[2], NULL))
-    updateTextInput(session, "csvCRS", value = epsgInfo$code)
+    updateTextInput(session, "csvCRS", value = orgVars$dataCRS)
     updateSelectInput(session, "visitCols", selected = orgVars$idCols)
     updateSelectInput(session, "timeCols", selected = orgVars$timeCols)
     updateSelectInput(session, "timeInVis", selected = orgVars$timeInVisits)
@@ -334,10 +334,11 @@ shinyServer(function(input, output, session) {
         stdTaxonRankUpd <- unique(PBD$data[, input$csvTaxonRankCol])
       }
 
-      updateSelectInput(session, "csvTaxonRankVal", 
-                  choices = stdTaxonRankUpd,
-                  selected = switch(as.character(!is.null(orgVars$taxonRankVal)), 
-                                    "TRUE" = orgVars$taxonRankVal, NULL))
+      updateSelectizeInput(session, "csvTaxonRankVal", 
+                          choices = stdTaxonRankUpd,
+                          selected = switch(as.character(!is.null(orgVars$taxonRankVal)), 
+                                            "TRUE" = orgVars$taxonRankVal, NULL),
+                          server = ifelse(length(stdTaxonRankUpd)>100, TRUE, FALSE))
     }
   })
   
@@ -362,19 +363,20 @@ shinyServer(function(input, output, session) {
     req(PBD$data)
     epsgInfo$msg<-""
     epsgInfo$wng<-""
+    epsgInfo$name<-NULL
     epsgInfo$code<-NULL
     epsgInfo$proj4<-NULL
+    epsgInfo$kind<-NULL
+    epsgInfo$wkt<-NULL
     
     if(input$csvCRS != ""){
       searchWeb <- gsub("\ ", "%20", input$csvCRS)
       getEPSG <- tryCatch(GET(urlEPGS, path=paste0("/?q=", searchWeb, "&format=json")),
                           error = function(e){
-                            print(e)
-                            #isolate({epsgInfo$code <- input$csvCRS})
+                            message(e)
                             return(list("status_code" = 0))}, 
                           warning = function(w){
-                            print(w)
-                            #isolate({epsgInfo$code <- input$csvCRS})
+                            message(w)
                             return(list("status_code" = 0))}
       )
       
@@ -384,37 +386,43 @@ shinyServer(function(input, output, session) {
           epsgInfo$wng <- paste0(epsgInfo$wng,"Nothing found")
         } else {
           if (contEPSG$number_result==1){
-            epsgInfo$code <- contEPSG$results[[1]]$code
+            epsgInfo$name <- contEPSG$results[[1]]$name
+            epsgInfo$code <- as.numeric(contEPSG$results[[1]]$code)
             epsgInfo$proj4 <- contEPSG$results[[1]]$proj4
-            epsgInfo$msg <- paste0( contEPSG$results[[1]]$name,
-                                    "<br /> EPSG: ",  epsgInfo$code,
-                                    "<br /> Proj4: ", epsgInfo$proj4)
+            epsgInfo$kind <- contEPSG$results[[1]]$kind
+            epsgInfo$wkt <- contEPSG$results[[1]]$wkt
+            epsgInfo$msg <- paste0( epsgInfo$name,
+                                    "<br/> EPSG: ",  epsgInfo$code,
+                                    "<br/> Kind: ", epsgInfo$kind,
+                                    "<br/> Proj4: ", epsgInfo$proj4)
           } else {
             epsgList <- paste(unlist(
               lapply(contEPSG$results, function(x) paste0(x$name," : ", x$code))),
               collapse = ",<br/>")
-            epsgInfo$wng <-paste0(epsgInfo$wng, "Refine your search, there are ", contEPSG$number_result, " potential matchs.<br/>
+            epsgInfo$wng <-paste0(epsgInfo$wng, 
+                                  "Refine your search, there are ", 
+                                  contEPSG$number_result, " potential matchs.<br/>
                                  Candidates are: <br/>", epsgList)
           }
         }
       } else {epsgInfo$wng <- "Bad request"}
       
-      ## CHeck preliminary result
+      ## Check preliminary result
       if(!is.null(input$csvLat) && !is.null(input$csvLon) && !is.null(epsgInfo$proj4) && epsgInfo$wng == ""){
         xtest<-PBD$data[1:min(nrow(PBD$data), 10), ]
         xyCols <- c(input$csvLon, input$csvLat)
         xyColsl.df <- unlist(BIRDS:::findCols(xyCols, xtest, exact=TRUE))
         testCoord<-tryCatch({
           sp::coordinates(xtest) <- xyColsl.df
-          sp::proj4string(xtest) <- CRS(epsgInfo$proj4)  
+          crswkt <- sf::st_crs(epsgInfo$code)$wkt
+          sp::proj4string(xtest) <- CRS(crswkt) ## because I know where it comes from
         }, error = function(e){
-          # print(str(e$message))
           return(e$message)
         })
         
         if(class(testCoord)=="CRS"){
           epsgInfo$msg <- paste0( epsgInfo$msg,
-                                  "<br /> Seems like a matching CRS")
+                                  "<br/> Seems like a matching CRS")
         } else {
           epsgInfo$wng <- "Given coordinates and CRS doesn´t match. \nTry other columns or CRS"
         }
@@ -455,7 +463,7 @@ shinyServer(function(input, output, session) {
       }
       setProgress(.5)
       orgVars$xyCols <- c(input$csvLon, input$csvLat)
-      orgVars$dataCRS <- paste0("+init=epsg:", epsgInfo$code)
+      orgVars$dataCRS <- epsgInfo$code #paste0("+init=epsg:", epsgInfo$code)
       orgVars$taxonRank <- input$csvTaxonEnable
       setProgress(.8)
       if(orgVars$taxonRank){
@@ -485,11 +493,11 @@ shinyServer(function(input, output, session) {
   ## organise it and make it spatial and plot it in the map
   observeEvent(input$orgData, {
     req(PBD$data)
-    req(epsgInfo$code)
+    req(orgVars$dataCRS)
     # PBD$organised <- NULL
     withProgress( message = "Organizing the observations" , {
       setProgress(.2)
-      print("Organizing...")
+      message("Organizing...")
       PBDdata <- PBD$data[,c(orgVars$sppCol, orgVars$xyCols[1], orgVars$xyCols[2],
                              orgVars$timeCols, orgVars$idCols, 
                              orgVars$taxonRankCol, #orgVars$taxonRankVal, 
@@ -508,7 +516,7 @@ shinyServer(function(input, output, session) {
                                               taxonRank = orgVars$taxonRankVal,
                                               simplifySppName = orgVars$simplifySppName), 
                                 error = function(e){
-                                  print(str(e))
+                                  message(str(e))
                                   shinyalert::shinyalert(title = "An error occured", 
                                                          text = e$message, type = "error")
                                   return(NULL)}
@@ -526,7 +534,7 @@ shinyServer(function(input, output, session) {
     
     datatable(table, class = 'cell-border stripe',
               caption = HTML("The table below shows the data organised by visits."), 
-              autoHideNavigation = TRUE,
+              # autoHideNavigation = FALSE,
               rownames = FALSE,
               options = list(
                 dom = 'tp',
@@ -549,7 +557,9 @@ shinyServer(function(input, output, session) {
                                            visitCol=attr(PBD$organised, "visitCol"), 
                                            sppCol="scientificName"), 
                              error = function(e){
-                               shinyalert::shinyalert(title = "An error occured", text = e$message, type = "error")
+                               shinyalert::shinyalert(title = "An error occured", 
+                                                      text = e$message, 
+                                                      type = "error")
                                return(NULL)
                              })
       setProgress(.8, message = "almost done")
@@ -567,11 +577,14 @@ shinyServer(function(input, output, session) {
   observe({
     req(data_stat$data)
     req(PBD$visits)
-    print("Calling esquisserServer...")
+    message("Calling esquisse server...")
     withProgress( message = "Oppening the canvas..." , {
       setProgress(.2)
-      callModule(module = esquisserServer, 
-                 id = "visitsEsquisse", data = data_stat)  
+      esquisse_server(id = "visitsEsquisse", 
+                      data_rv = data_stat)
+      # callModule(module = esquisse_server, 
+      #            id = "visitsEsquisse", 
+      #            data_rv = data_stat)  
       setProgress(.9)
     })
   })
@@ -616,7 +629,8 @@ shinyServer(function(input, output, session) {
                                       percent = input$percent,
                                       stepChunk = input$stepChunk), 
                      error = function(e){
-                       shinyalert::shinyalert(title = "An error occured", text = e$message, type = "error")
+                       shinyalert::shinyalert(title = "An error occured", 
+                                              text = e$message, type = "error")
                        return(NULL)
                      })
       

@@ -12,6 +12,9 @@ navbarPage(title=div(img(src="./img/BirdsLogo.png", alt="", style="vertical-alig
              tags$style(".container-drag-source, .box-dad {font-size: 18px;}"),
              # tags$style(".tab-content {padding-top: 70px;}"),
              tags$style(".navbar-brand {padding: 11px 15px;}"),
+             tags$html(ribbon_css("https://github.com/Greensway/shinyBIRDS/", 
+                                  position = "right",
+                                  parent_css = list("z-index" = "10000"))),
              tags$link(rel="stylesheet", 
                        href="https://use.fontawesome.com/releases/v5.1.0/css/all.css", 
                        integrity="sha384-lKuwvrZot6UHsBSfcMvOkWwlCMgc0TaWr+30HWe3a4ltaBwTZhyTEggF5tJv8tbt", 
@@ -21,7 +24,6 @@ navbarPage(title=div(img(src="./img/BirdsLogo.png", alt="", style="vertical-alig
              useShinyalert() ## deprecated
            ),
            
-
            tabPanel(title = "Data", icon = icon("binoculars"), value = "data",
                     load_ui_content("ui/tabPanel_data.R"),# end of TABbox
                     # fluidRow(map_page_ui("mapPage")),
@@ -47,23 +49,21 @@ navbarPage(title=div(img(src="./img/BirdsLogo.png", alt="", style="vertical-alig
            ############# Read ME ###################
            navbarMenu( title = "", icon = icon("info"),    
                        tabPanel(title = "About", 
-                                fluidRow(
-                                  column(8,
-                                         HTML('
-                              <center>
-                              <h1><img src="./img/BirdsLogo.png" alt="" style="vertical-align:bottom;float:middle;height:150px;">&nbsp;</h1>
-                              <br>
-                              <h1><strong>Birds</strong>&nbsp;</h1>
-                              </center>
-                              <br>'
-                                         ),
-                                         offset=2)
+                                fluidPage(
+                                  # HTML('<center>
+                                  #       <h1><img src="./img/BirdsLogo.png" alt="" style="vertical-align:bottom;float:middle;height:150px;">&nbsp;</h1>
+                                  #       <br>
+                                  #       <h1><strong>Birds</strong>&nbsp;</h1>
+                                  #       </center>
+                                  #       <br>'),
+                                  tags$iframe(src="https://greensway.github.io/BIRDS/index.html#birds-", 
+                                              frameborder = "no", style='width:98vw;height:91vh;')
                                 )
                        ),
                        ############# Help ###################
                        tabPanel(title = "Help", 
-                                fluidPage(tags$iframe(src="https://greensway.github.io/BIRDS/articles/BIRDS.html", 
-                                                      frameborder = "no", style='width:95vw;height:100vh;')
+                                fluidPage(tags$iframe(src="https://greensway.github.io/BIRDS/articles/technical_details.html", 
+                                                      frameborder = "no", style='width:98vw;height:91vh;')
                                           )
                        )
            )
