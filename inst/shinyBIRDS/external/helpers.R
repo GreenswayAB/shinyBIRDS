@@ -97,11 +97,12 @@ defineVisitsUI<-function(colnames, grids){
   wColV <- switch(any(stdVisitCol %in% PBDcolnames), 
                   stdVisitCol[which(stdVisitCol %in% PBDcolnames)], NULL)
   wColTV <- match(wColT, wColV)
-  if (sum(!is.na(wColTV))>0){
+  if (sum(!is.na(wColTV)) > 0){
     wColV <- wColV[-wColTV]   
   }
   # visitCol.selected <- if (length(wColV)>0) stdVisitCol[wColV] else NULL
-  timeVisOpt <- structure(c("none", "day", "month", "year"), names=c("None", "Day", "Month", "Year"))
+  timeVisOpt <- structure(c("none", "day", "month", "year"), 
+                          names=c("None", "Day", "Month", "Year"))
   
   if(length(grids) > 0){
     gridAlts <- structure(c("", 1:length(grids)), names=c("", names(grids)))

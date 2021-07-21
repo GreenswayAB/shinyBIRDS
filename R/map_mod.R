@@ -19,6 +19,7 @@ map_mod_ui <- function(id){
 #' @return map outputs
 #' @import leaflet
 #' @import leaflet.extras
+#' @import sf
 map_mod_server <- function(id, layers, pbd_data, n){
   
   moduleServer(id,
@@ -38,14 +39,22 @@ map_mod_server <- function(id, layers, pbd_data, n){
                      setView(lng = 0, lat = 0, zoom = 2) %>%
                      setMaxBounds(lng1 = -220, lat1 = 80, lng2 = 220, lat2 = -80) %>%
                      addDrawToolbar(targetGroup = "draw",
-                                    polylineOptions = FALSE, circleOptions = FALSE, markerOptions = FALSE, circleMarkerOptions = FALSE,
-                                    editOptions = drawShapeOptions(stroke = TRUE, color = "#ff0066", weight = 1, opacity = 1,
-                                                                   fill = TRUE, fillColor = "#ff0066", fillOpacity = 0.2),
+                                    polylineOptions = FALSE, circleOptions = FALSE, 
+                                    markerOptions = FALSE, circleMarkerOptions = FALSE,
+                                    editOptions = drawShapeOptions(stroke = TRUE, 
+                                                                   color = "#ff0066",
+                                                                   weight = 1, 
+                                                                   opacity = 1,
+                                                                   fill = TRUE, 
+                                                                   fillColor = "#ff0066", 
+                                                                   fillOpacity = 0.2),
                                     singleFeature = TRUE) %>%
                      # addLayersControl(#baseGroups = c("Google Satellite", "OSM (Hot)","Open Topo", "ESRI Street"),
                      #   overlayGroups = c("PBD","Study Area", "Grid"),
                      #   options = layersControlOptions(collapsed=FALSE,  position = "bottomright")) %>%
-                     addScaleBar(position = "bottomleft", options = scaleBarOptions(imperial=FALSE, maxWidth = 200))
+                     addScaleBar(position = "bottomleft", 
+                                 options = scaleBarOptions(imperial=FALSE, 
+                                                           maxWidth = 200))
                  })
                  
                  #### observe PBD data ####
@@ -91,14 +100,12 @@ map_mod_server <- function(id, layers, pbd_data, n){
                      wPlot <- if (nObs > n) sample(nObs, n) else c(1:nObs)
                      # labelTxt <- if (nObs > n) "PBD: random subset of 500 obs." else "PBD: observations"
                      labelTxt <- "PBD observations"
-                     # PBDpoints <- pbd_data$organised$spdf[wPlot,]
                      PBDpoints <- pbd_data$organised$spdf
                      insert <- length(layersAll$layer)+1
                      names <- c(names(layersAll$layer), labelTxt)
                      layersAll$layer[[insert]] <-  list(geom = PBDpoints, type = "obsData") #lbl = labelTxt
                      names(layersAll$layer) <- names
                    }
-# print(names(layersAll$layer))
                  })
                  
                  #### observer visits ####
@@ -115,8 +122,6 @@ map_mod_server <- function(id, layers, pbd_data, n){
                      labelTxt <- if (nVis > n) "Visits: random subset of 500" else "Visits"
                      insert <- length(layersAll$layer)+1
                      names <- c(names(layersAll$layer), labelTxt)
-                     # layersAll$layer[[insert]] <-  list(geom = BIRDS::spatialVisits(pbd_data$visits)$effort, 
-                     #                                    type = "visits")
                      layersAll$layer[[insert]] <-  list(geom = BIRDS::spatialVisits(pbd_data$visits[wPlot,])$effort, 
                                                         type = "visits")
                      names(layersAll$layer) <- names
@@ -127,7 +132,8 @@ map_mod_server <- function(id, layers, pbd_data, n){
                  #### observe change in the layers ####
                  observeEvent(layers$layers, {
                    #Removing the old grids in layersAll
-                   gridLayers <- unlist(lapply(layersAll$layer, function(x){x$type=="grid"}))
+                   gridLayers <- unlist(lapply(layersAll$layer, 
+                                               function(x){x$type=="grid"}))
                    if(! is.null(gridLayers)){
                      layersAll$layer <- layersAll$layer[! gridLayers]
                    }
@@ -168,9 +174,7 @@ map_mod_server <- function(id, layers, pbd_data, n){
                   #### add layers to map ####
                  # observeEvent(layersAll$layer, {
                  observe({ 
-# print(unlist(lapply(layersAll$layer, FUN = function(x) !is.null(x))))
                    proxy <- leafletProxy(mapId="map")
-                   # if(!any(unlist(lapply(layersAll$layer, FUN = function(x) !is.null(x))))) return()
                    if(any(unlist(lapply(layersAll$layer, FUN = function(x) !is.null(x))))){
 
                      groupNamesGrids <- unlist(lapply(layersAll$layer, function(x){x$type=="grid"}))
@@ -192,70 +196,69 @@ map_mod_server <- function(id, layers, pbd_data, n){
                        for(i in 1:length(layersAll$layer)){
                          if(layersAll$layer[[i]]$type == "obsData"){
                            message("Drawing observations to map")
-                           bb <- layersAll$layer[[i]]$geom@bbox
-                           data <- layersAll$layer[[i]]$geom@data
+                           bb <- as.vector(st_bbox(layersAll$layer[[i]]$geom))
+                           data <- st_drop_geometry(layersAll$layer[[i]]$geom)
                            label <- paste(as.character(data$scientificName),
                                           paste0(data$year,"-", data$month,"-", data$day))
                            proxy %>%
-                             addCircleMarkers(data = layersAll$layer[[i]]$geom, 
+                             addCircleMarkers(data = st_geometry(layersAll$layer[[i]]$geom), 
                                               group = names(layersAll$layer[i]),
                                               color = "black", stroke = FALSE, 
                                               fillOpacity = 0.5, radius = 5,
                                               clusterOptions = markerClusterOptions(),
                                               label = label) %>% 
-                             fitBounds(lng1 = bb[1,1], lat1 = bb[2,1], lng2 = bb[1,2], lat2 = bb[2,2])
+                              fitBounds(lng1 = bb[1], lat1 = bb[2], lng2 = bb[3], lat2 = bb[4])
                            
                          }else if(layersAll$layer[[i]]$type == "visits"){
                            message("Drawing visits to map")
-                           data <- layersAll$layer[[i]]$geom@data
+                           data <- st_drop_geometry(layersAll$layer[[i]]$geom)
                            label <- paste("Visit:", data$visitUID)
                            proxy %>%
-                             addPolygons(data = layersAll$layer[[i]]$geom, 
-                                        group = names(layersAll$layer[i]), 
-                                        color = "red", stroke = TRUE,
-                                        weight = 5, fillOpacity = 0.1,
-                                        label = label)
+                             addPolygons(data = st_geometry(layersAll$layer[[i]]$geom), 
+                                         group = names(layersAll$layer[i]), 
+                                         color = "red", stroke = TRUE,
+                                         weight = 5, fillOpacity = 0.1,
+                                         label = label)
                          }else if(layersAll$layer[[i]]$type == "grid"){
                            proxy %>%
-                             addPolygons(data = layersAll$layer[[i]]$geom,
+                             addPolygons(data = st_geometry(layersAll$layer[[i]]$geom),
                                          group = names(layersAll$layer[i]), 
                                          weight = 2, color = "black", fillOpacity = 0)
                          }else if(layersAll$layer[[i]]$type == "wg"){
                            proxy %>%
-                             addPolygons(data = layersAll$layer[[i]]$geom,
+                             addPolygons(data = st_geometry(layersAll$layer[[i]]$geom),
                                          group = names(layersAll$layer[i]), 
                                          weight = 2, color = "blue", fillOpacity = 0)
                          }else if(layersAll$layer[[i]]$type == "sa"){
-                           bb <- layersAll$layer[[i]]$geom@bbox
+                           bb <- as.vector(st_bbox(layersAll$layer[[i]]$geom))
                            proxy %>%
                              addPolygons(data = layersAll$layer[[i]]$geom,
-                                         group = names(layersAll$layer[i]), weight = 2, color = "#ff0066", fillOpacity = 0) %>%
-                             fitBounds(lng1 = bb[1,1], lat1 = bb[2,1], lng2 = bb[1,2], lat2 = bb[2,2])
+                                         group = names(layersAll$layer[i]), 
+                                         weight = 2, color = "#ff0066", fillOpacity = 0) %>%
+                             fitBounds(lng1 = bb[1], lat1 = bb[2], lng2 = bb[3], lat2 = bb[4])
                          }
                          
                        } #end for loop
                        
                        proxy %>%
                          addLayersControl(overlayGroups = names(layersAll$layer),
-                                          options = layersControlOptions(
-                                            collapsed = FALSE, position = "bottomright"))
+                                          options = layersControlOptions(collapsed = FALSE, 
+                                                                         position = "bottomright"))
                    }else{
                      proxy %>% 
                        clearGroup(c("Study area", "Working grid")) %>% 
                        clearMarkers() %>%
-                       removeLayersControl() #%>% 
-                       # fitBounds(-72, 40, -70, 43)
+                       removeLayersControl()
                    } #end if condition
                    
                  })
                  
                  ## Feature is drawn ##
                  observeEvent(input$map_draw_new_feature, {
-                   nr <-length(unlist(list(input$map_draw_new_feature)[[1]]$geometry$coordinates))/2
-                   d <- matrix(unlist(input$map_draw_new_feature$geometry$coordinates), 
-                              nrow=nr,ncol=2, byrow=TRUE)
-                   drawn$polygon <-sp::SpatialPolygons(list(sp::Polygons(list(sp::Polygon(d)), 1)))
-                   
+                   feat <- input$map_draw_new_feature
+                   coords <- unlist(feat$geometry$coordinates)
+                   coords <- matrix(coords, ncol = 2, byrow = T)
+                   drawn$polygon <- st_sf(st_sfc(st_polygon(list(coords))), crs = st_crs(4326))
                    proxy <- leafletProxy(mapId="map")
                    
                    proxy %>% 

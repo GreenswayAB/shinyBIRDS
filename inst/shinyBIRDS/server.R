@@ -553,16 +553,47 @@ shinyServer(function(input, output, session) {
     #PBDorg<-PBD$organised
     withProgress( message = "Making some calculations for you..." , {
       setProgress(.2)
-      PBD$visits <- tryCatch(BIRDS::exploreVisits(x=PBD$organised, 
-                                           visitCol=attr(PBD$organised, "visitCol"), 
-                                           sppCol="scientificName"), 
-                             error = function(e){
-                               shinyalert::shinyalert(title = "An error occured", 
-                                                      text = e$message, 
-                                                      type = "error")
-                               return(NULL)
-                             })
-      setProgress(.8, message = "almost done")
+      allVisits <- unique(PBD$organised$visitUID)
+      chunkSize <- 5000
+      
+      if(length(allVisits)<=chunkSize){
+        PBD$visits <- tryCatch(BIRDS::exploreVisits(x=PBD$organised, 
+                                                    visitCol=attr(PBD$organised, "visitCol"), 
+                                                    sppCol="scientificName",
+                                                    parallel = TRUE), 
+                               error = function(e){
+                                 shinyalert::shinyalert(title = "An error occured", 
+                                                        text = e$message, 
+                                                        type = "error")
+                                 return(NULL)
+                               })  
+      }else{
+        chunks <- split(allVisits, ceiling(seq_along(allVisits)/chunkSize))
+        nChunks <- length(chunks)
+        increm <- 0.8/nChunks
+        for(v in seq(nChunks)){
+          wInChunk <- which(PBD$organised$spdf$visitUID %in% chunks[[v]])
+          OBtmp <- PBD$organised
+          OBtmp$spdf <- PBD$organised$spdf[wInChunk,]
+          gc()
+          EVtmp <- tryCatch(BIRDS::exploreVisits(x=PBD$organised, 
+                                                 visitCol=attr(PBD$organised, "visitCol"), 
+                                                 sppCol="scientificName",
+                                                 parallel = TRUE), 
+                            error = function(e){
+                              shinyalert::shinyalert(title = "An error occured", 
+                                                     text = e$message, 
+                                                     type = "error")
+                              return(NULL)
+                              }) 
+          
+          if(v == 1) PBD$visits <- EVtmp else PBD$visits <- rbind(PBD$visits, EVtmp)
+          incProgress(increm, message = "almost done")
+        }
+        
+      }
+      
+      setProgress(.85, message = "almost done")
       if(! is.null(PBD$visits)){
         PBD$visits$day <- as.numeric(PBD$visits$day)
         PBD$visits$month <- as.numeric(PBD$visits$month)

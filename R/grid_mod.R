@@ -96,30 +96,17 @@ getGridFromShp <- function(shapefiles){
   }
   
   #Reading the grid
-  grid <- rgdal::readOGR(dsn=getshp)
-  # grid <- spTransform(grid, CRSobj = CRS("+init=epsg:4326"))
-  crswkt <- sf::st_crs(4326)$wkt
-  grid <- sf::as_Spatial(
-    sf::st_transform(
-      sf::st_as_sf(grid), 
-      crs = crswkt)
-    )
-  
-  if(! class(grid) == "SpatialPolygonsDataFrame"){
+  grid <- st_read(dsn=getshp)
+  grid <- sf::st_transform(grid, 
+                           crs = sf::st_crs(4326))
+
+  if(!all(st_geometry_type(grid) %in% c("POLYGON", "MULTIPOLYGON"))){
     stop("The loaded shape needs to be a polygon layer")
   }
   
-  #Getting the bounding box (studyarea)
-  bboxMat<- as.matrix(grid@bbox)
-  polygonSA <- matrix(c(bboxMat[1,1], bboxMat[2,1],
-                      bboxMat[1,1], bboxMat[2,2],
-                      bboxMat[1,2], bboxMat[2,2],
-                      bboxMat[1,2], bboxMat[2,1],
-                      bboxMat[1,1], bboxMat[2,1]), ncol = 2, nrow = 5, byrow = TRUE)
-
-  SpP <- SpatialPolygons(list(Polygons(list(Polygon(polygonSA)), 1) ))
-  # proj4string(SpP) <- CRS("+init=epsg:4326")
-  sp::proj4string(SpP) <- CRS(crswkt)
+  #Getting the bounding box (study area)
+  SpP <- OB2Polygon(grid, shape = "bBox") 
+  st_crs(SpP) <- st_crs(4326)
   
   return(list("Working grid" = grid,
               "Study area" = SpP))
@@ -137,27 +124,14 @@ getGridFromShp <- function(shapefiles){
 getGridFromSettings <- function(area, gridsize, type, buffer){
   
   gridSizeDg <- gridsize/111 #because on average 1 degree is 111 km
-  crswkt <- sf::st_crs(4326)$wkt
-  # suppressWarnings(proj4string(area) <-  CRS("+init=epsg:4326") )
-  sp::proj4string(area) <- CRS(crswkt)
+  gridsizeM <- gridsize/1000
+  st_crs(area) <- st_crs(4326)
   
-  StudyBuff <- rgeos::gBuffer(area, width = ifelse(buffer, gridSizeDg, 0))
+  StudyBuff <- st_buffer(area, dist = ifelse(buffer, gridsizeM, 0))
 
   if(type == "hx"){
-    # points <- spsample(StudyBuff, type = "hexagonal", offset = c(0, 0), cellsize = gridSizeDg)
-    # proj4string(points) <- CRS("+init=epsg:4326")
-    # grid <- sp::HexPoints2SpatialPolygons(points)
     grid <- makeGrid(StudyBuff, gridSize = gridsize)
   }else if(type == "sq"){
-    # points <- spsample(StudyBuff, type = "regular", offset = c(0.5, 0.5), cellsize = gridSizeDg)
-    # proj4string(points) <- CRS("+init=epsg:4326")
-    # grid <- as.SpatialPolygons.GridTopology(points2grid(points), proj4string = CRS("+init=epsg:4326"))
-    # 
-    # #reverse polygones for search in GBIF, must be counter clockwise
-    # for(i in seq(length(grid))){
-    #   grid@polygons[i][[1]]@Polygons[[1]]@coords<-grid@polygons[i][[1]]@Polygons[[1]]@coords[5:1,]
-    # }
-    # 
     grid <- makeGrid(StudyBuff, hexGrid = FALSE, gridSize = gridsize)
   }else{
     # grid <- makeDggrid(area, gridsize, topology=type)
@@ -247,15 +221,12 @@ grid_mod_server <- function(id, pbd, polygonDraw){
                  })
                  
                  observeEvent(polygonDraw$polygon, {
-                   
                    layerList$layers$others[["Study area"]] <- polygonDraw$polygon
-                   
                  })
                  
                  ### ShapeFiles ###
                  
                  ### Upload the shape and make it a grid.
-                 
                  observeEvent(input$shapeFile, {
                    if(nrow(input$shapeFile)>=4 ){
                       tryCatch({
@@ -267,7 +238,6 @@ grid_mod_server <- function(id, pbd, polygonDraw){
                    }else{
                      shapeWr$msg<-"Select all files related to the .shp"
                    }
-                   
                  })
            
                  output$shapeMessage<-renderUI(div(HTML( shapeWr$msg ), class="message"))
@@ -276,7 +246,6 @@ grid_mod_server <- function(id, pbd, polygonDraw){
                  observeEvent(input$goGrid, {
                    
                    if(!is.null(layerList$layers$others[["Study area"]])){
-                     
                      layerList$layers$others[["Working grid"]] <- 
                        tryCatch(getGridFromSettings(layerList$layers$others[["Study area"]],
                                                     input$gridSize,
@@ -289,28 +258,14 @@ grid_mod_server <- function(id, pbd, polygonDraw){
                                                          "error")
                                   return(NULL)
                                 })
-                     
                    }
-                   
                  })
                  
                  observeEvent(input$goExtent, {
-### TODO use  OB2Polygon(df, shape = "bBox") for more shapes
                    if (! is.null(pbd[["organised"]])){
-                     bboxMat <- as.matrix(pbd$organised$spdf@bbox)
-                     polygonSA <- matrix(c(bboxMat[1,1], bboxMat[2,1],
-                                           bboxMat[1,1], bboxMat[2,2],
-                                           bboxMat[1,2], bboxMat[2,2],
-                                           bboxMat[1,2], bboxMat[2,1],
-                                           bboxMat[1,1], bboxMat[2,1]), ncol = 2, nrow = 5, byrow = TRUE)
-                     
-                     SpP <- SpatialPolygons(list(Polygons(list(Polygon(polygonSA)), 1)
-                     ))
-                     crswkt <- sf::st_crs(4326)$wkt
-                     # proj4string(SpP) <- CRS("+init=epsg:4326")
-                     sp::proj4string(SpP) <- CRS(crswkt)
-                     
-                     
+                     SpP <- OB2Polygon(pbd$organised$spdf, shape = "bBox") 
+                     # st_crs(SpP) <- st_crs(4326)
+
                      layerList$layers$others[["Study area"]] <- SpP
                        
                    }
@@ -322,24 +277,21 @@ grid_mod_server <- function(id, pbd, polygonDraw){
                  
                  observeEvent(input$addGrid, {
                    if(! is.null(layerList$layers$others[["Working grid"]])){
-                     name <- input$gridName
+                      name <- input$gridName
+                      layernames <- names(layerList$layers$grids)
                      
-                     layernames <- names(layerList$layers$grids)
-                     
+print(layerList$layers$grids)        
+print(layerList$layers$others[["Working grid"]])        
                      layerList$layers$grids <- append(layerList$layers$grids, 
                                                       layerList$layers$others[["Working grid"]])
-                     
+
                      names(layerList$layers$grids) <- c(layernames, name)
                      
                      ## Remove working grid
                      updateTextInput("gridName",  value = "", session = session )
                      layerList$layers$others[["Working grid"]] <- NULL
                    }
-                   
                  })
-       
                  return(layerList)
-                 
                })
-
 }
