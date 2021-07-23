@@ -123,16 +123,22 @@ getGridFromShp <- function(shapefiles){
 #' @return grid from settings
 getGridFromSettings <- function(area, gridsize, type, buffer){
   
-  gridSizeDg <- gridsize/111 #because on average 1 degree is 111 km
-  gridsizeM <- gridsize/1000
+  # gridSizeDg <- gridsize/111 #because on average 1 degree is 111 km
+  # gridsizeM <- gridsize/1000
   st_crs(area) <- st_crs(4326)
   
-  StudyBuff <- st_buffer(area, dist = ifelse(buffer, gridsizeM, 0))
+  # StudyBuff <- st_buffer(area, dist = ifelse(buffer, gridsizeM, 0))
 
   if(type == "hx"){
-    grid <- makeGrid(StudyBuff, gridSize = gridsize)
+    grid <- makeGrid(StudyBuff, 
+                     hexGrid = TRUE, 
+                     buffer = buffer, 
+                     gridSize = gridsize)
   }else if(type == "sq"){
-    grid <- makeGrid(StudyBuff, hexGrid = FALSE, gridSize = gridsize)
+    grid <- makeGrid(StudyBuff, 
+                     hexGrid = FALSE, 
+                     buffer = buffer, 
+                     gridSize = gridsize)
   }else{
     # grid <- makeDggrid(area, gridsize, topology=type)
     message("The option Dggrid is temporally out of service")
